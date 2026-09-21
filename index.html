@@ -657,96 +657,93 @@
   }
   .calendar-repeat-note { font-size: var(--text-xs); color: var(--color-ink-muted); }
 
-  /* ---------- wandering elephant (decorative, bottom of board) ---------- */
-  .elephant-scene {
+  /* ---------- sign-in gate ---------- */
+  .authgate-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    background: var(--color-canvas);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .authgate-overlay[hidden] { display: none; }
+  .authgate-card {
     width: 100%;
-    max-width: 1200px;
-    margin: 4px auto 0;
-    padding-inline: 16px;
+    max-width: 380px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    padding: 28px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
   }
-  .elephant-track {
-    position: relative;
-    height: 136px;
-    overflow: hidden;
-    pointer-events: none;
+  .authgate-title {
+    font-family: var(--font-display);
+    font-size: var(--text-lg);
+    font-weight: 600;
+    color: var(--color-ink);
   }
-  .elephant-walker {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 132px;
-    height: 136px;
-    pointer-events: none;
-    will-change: transform;
+  .authgate-sub {
+    font-size: var(--text-sm);
+    color: var(--color-ink-muted);
   }
-  .elephant-svg { width: 100%; height: 100%; display: block; }
-
-  .ele-ear { animation: eleEarFlap 2.6s ease-in-out infinite; transform-origin: 165px 45px; }
-  @keyframes eleEarFlap {
-    0%, 100% { transform: rotate(0deg); }
-    50% { transform: rotate(-7deg); }
+  .authgate-input {
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    border: 1px solid var(--color-border-strong);
+    background: var(--color-canvas);
+    color: var(--color-ink);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    min-height: 42px;
+    width: 100%;
   }
-  .ele-tail { animation: eleTailSwish 2.9s ease-in-out infinite; transform-origin: 64px 92px; }
-  @keyframes eleTailSwish {
-    0%, 100% { transform: rotate(0deg); }
-    50% { transform: rotate(10deg); }
+  .authgate-input:focus { outline: 2px solid var(--color-focus); outline-offset: 1px; }
+  .authgate-input:disabled { opacity: 0.6; }
+  .authgate-msg { font-size: var(--text-sm); min-height: 1.2em; margin: 0; }
+  .authgate-msg.is-error { color: var(--color-danger); }
+  .authgate-msg.is-info { color: var(--color-ink-muted); }
+  .authgate-signedout {
+    background: transparent;
+    border: none;
+    color: var(--color-ink-muted);
+    font-size: var(--text-xs);
+    text-decoration: underline;
+    cursor: pointer;
+    align-self: flex-start;
+    padding: 0;
   }
-
-  .elephant-walker.is-walking .ele-leg-front-near,
-  .elephant-walker.is-walking .ele-leg-back-far {
-    animation: eleGaitA 0.68s ease-in-out infinite;
+  .authgate-mode-toggle {
+    background: transparent;
+    border: none;
+    color: var(--color-focus);
+    font-size: var(--text-xs);
+    text-decoration: underline;
+    cursor: pointer;
+    align-self: flex-start;
+    padding: 0;
   }
-  .elephant-walker.is-walking .ele-leg-front-far,
-  .elephant-walker.is-walking .ele-leg-back-near {
-    animation: eleGaitB 0.68s ease-in-out infinite;
-  }
-  @keyframes eleGaitA {
-    0%, 100% { transform: rotate(11deg); }
-    50% { transform: rotate(-11deg); }
-  }
-  @keyframes eleGaitB {
-    0%, 100% { transform: rotate(-11deg); }
-    50% { transform: rotate(11deg); }
-  }
-  .ele-leg-front-near { transform-origin: 181px 118px; }
-  .ele-leg-front-far { transform-origin: 203px 120px; }
-  .ele-leg-back-near { transform-origin: 103px 118px; }
-  .ele-leg-back-far { transform-origin: 123px 120px; }
-
-  .ele-trunk {
-    transform-origin: 215px 88px;
-    transform: rotate(2deg);
-    transition: transform 0.6s ease;
-  }
-  .elephant-walker.is-tooting .ele-trunk { transform: rotate(-140deg); }
-  .elephant-walker.is-tooting .ele-leg-front-near,
-  .elephant-walker.is-tooting .ele-leg-front-far,
-  .elephant-walker.is-tooting .ele-leg-back-near,
-  .elephant-walker.is-tooting .ele-leg-back-far {
-    animation: none;
-    transform: rotate(0deg);
-  }
-  .ele-puff { opacity: 0; }
-  .elephant-walker.is-tooting .ele-puff-1 { animation: elePuff 0.9s ease-out 0.15s; }
-  .elephant-walker.is-tooting .ele-puff-2 { animation: elePuff 0.9s ease-out 0.42s; }
-  .elephant-walker.is-tooting .ele-puff-3 { animation: elePuff 0.9s ease-out 0.7s; }
-  @keyframes elePuff {
-    0% { opacity: 0.9; transform: scale(0.4) translate(0px, 0px); }
-    100% { opacity: 0; transform: scale(1.9) translate(7px, -16px); }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .ele-ear, .ele-tail,
-    .elephant-walker.is-walking .ele-leg-front-near,
-    .elephant-walker.is-walking .ele-leg-back-far,
-    .elephant-walker.is-walking .ele-leg-front-far,
-    .elephant-walker.is-walking .ele-leg-back-near {
-      animation: none;
-    }
-  }
+  .authgate-field[hidden] { display: none; }
 </style>
 </head>
 <body>
+
+<div id="authGateOverlay" class="authgate-overlay">
+  <form id="authGateForm" class="authgate-card">
+    <span class="authgate-title">Assignment Board sign-in</span>
+    <span class="authgate-sub" id="authGateSub">Enter your @plumcore.com email. We'll email you a one-time link to sign in — no password needed.</span>
+    <input id="authEmailInput" class="authgate-input" type="email" placeholder="you@plumcore.com" autocomplete="email" />
+    <input id="authPasswordInput" class="authgate-input authgate-field" type="password" placeholder="Password" autocomplete="current-password" hidden />
+    <button type="submit" id="authSendBtn" class="btn btn-primary">Send sign-in link</button>
+    <p id="authGateMsg" class="authgate-msg" role="status" aria-live="polite"></p>
+    <button type="button" id="authFirstTimeToggle" class="authgate-mode-toggle authgate-field" hidden>First time? Create your password instead</button>
+    <button type="button" id="authModeToggle" class="authgate-mode-toggle">Admin? Sign in with a password instead</button>
+  </form>
+</div>
 
 <div class="page">
   <header class="topbar">
@@ -757,6 +754,7 @@
       </div>
     </div>
     <div class="topbar-right">
+      <button type="button" id="authSignedInAs" class="authgate-signedout" hidden></button>
       <img src="logo.png" alt="Plumcore logo" class="brand-logo" />
     </div>
   </header>
@@ -868,99 +866,6 @@
     </section>
   </main>
 
-  <div class="elephant-scene" aria-hidden="true">
-    <div class="elephant-track" id="elephantTrack">
-      <div class="elephant-walker is-walking" id="elephantWalker">
-        <svg class="elephant-svg" viewBox="0 0 260 180" xmlns="http://www.w3.org/2000/svg" focusable="false" style="overflow:visible;">
-          <defs>
-            <linearGradient id="eleBodyGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#BABABA"/>
-              <stop offset="55%" stop-color="#9C9C9C"/>
-              <stop offset="100%" stop-color="#767676"/>
-            </linearGradient>
-            <linearGradient id="eleEarGrad" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stop-color="#8E8E8E"/>
-              <stop offset="100%" stop-color="#686868"/>
-            </linearGradient>
-            <linearGradient id="eleEarInnerGrad" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stop-color="#A9A2A0"/>
-              <stop offset="100%" stop-color="#8B807D"/>
-            </linearGradient>
-          </defs>
-
-          <ellipse cx="140" cy="174" rx="84" ry="6" fill="#000000" opacity="0.15"/>
-
-          <g class="ele-tail">
-            <path d="M64,92 C46,98 36,112 40,132" fill="none" stroke="#8A8A8A" stroke-width="5" stroke-linecap="round"/>
-            <path d="M40,132 q-3,6 -1,11 M40,132 q2,7 6,10 M40,132 q6,3 9,8" stroke="#5B5B5B" stroke-width="2.5" stroke-linecap="round" fill="none"/>
-          </g>
-
-          <g class="ele-leg ele-leg-back-far">
-            <rect x="113" y="120" width="20" height="42" rx="9" fill="#8B8B8B"/>
-            <ellipse cx="118" cy="160" rx="3" ry="2.2" fill="#EDEDED"/>
-            <ellipse cx="123" cy="161.5" rx="3" ry="2.2" fill="#EDEDED"/>
-            <ellipse cx="128" cy="160" rx="3" ry="2.2" fill="#EDEDED"/>
-          </g>
-
-          <g class="ele-leg ele-leg-back-near">
-            <rect x="92" y="118" width="22" height="46" rx="10" fill="url(#eleBodyGrad)"/>
-            <path d="M95,132 q11,4 19,0 M95,144 q11,4 19,0" stroke="#6E6E6E" stroke-width="1.6" fill="none" opacity="0.6"/>
-            <ellipse cx="97" cy="163" rx="3.2" ry="2.4" fill="#F2F2F2"/>
-            <ellipse cx="103" cy="164.5" rx="3.2" ry="2.4" fill="#F2F2F2"/>
-            <ellipse cx="109" cy="163" rx="3.2" ry="2.4" fill="#F2F2F2"/>
-          </g>
-
-          <ellipse class="ele-body" cx="135" cy="100" rx="75" ry="48" fill="url(#eleBodyGrad)"/>
-          <path d="M92,72 q10,-6 22,-2 M96,112 q14,6 26,2 M158,62 q12,-5 24,0" stroke="#707070" stroke-width="1.6" fill="none" opacity="0.5"/>
-
-          <g class="ele-leg ele-leg-front-far">
-            <rect x="193" y="120" width="20" height="42" rx="9" fill="#8B8B8B"/>
-            <ellipse cx="198" cy="160" rx="3" ry="2.2" fill="#EDEDED"/>
-            <ellipse cx="203" cy="161.5" rx="3" ry="2.2" fill="#EDEDED"/>
-            <ellipse cx="208" cy="160" rx="3" ry="2.2" fill="#EDEDED"/>
-          </g>
-
-          <g class="ele-leg ele-leg-front-near">
-            <rect x="170" y="118" width="22" height="46" rx="10" fill="url(#eleBodyGrad)"/>
-            <path d="M173,132 q11,4 19,0 M173,144 q11,4 19,0" stroke="#6E6E6E" stroke-width="1.6" fill="none" opacity="0.6"/>
-            <ellipse cx="175" cy="163" rx="3.2" ry="2.4" fill="#F2F2F2"/>
-            <ellipse cx="181" cy="164.5" rx="3.2" ry="2.4" fill="#F2F2F2"/>
-            <ellipse cx="187" cy="163" rx="3.2" ry="2.4" fill="#F2F2F2"/>
-          </g>
-
-          <g class="ele-ear">
-            <path d="M165,45 C120,10 95,70 122,118 C145,138 185,128 190,90 C192,70 182,50 165,45 Z" fill="url(#eleEarGrad)" stroke="#57514F" stroke-width="1.6"/>
-            <path d="M160,54 C130,35 118,76 136,108 C150,122 176,114 178,88 C179,72 172,58 160,54 Z" fill="url(#eleEarInnerGrad)" opacity="0.55"/>
-            <path d="M153,62 C136,55 128,80 140,100" fill="none" stroke="#57514F" stroke-width="1.3" opacity="0.55"/>
-          </g>
-
-          <ellipse class="ele-head" cx="204" cy="78" rx="39" ry="36" fill="url(#eleBodyGrad)"/>
-          <path d="M186,58 q10,-5 20,-2" stroke="#7C7C7C" stroke-width="1.4" fill="none" opacity="0.5"/>
-
-          <g class="ele-trunk">
-            <path d="M215,88 C226,94 231,108 229,124" fill="none" stroke="#6E6E6E" stroke-width="19.5" stroke-linecap="round"/>
-            <path d="M229,124 C227,140 222,152 214,160" fill="none" stroke="#6E6E6E" stroke-width="14.5" stroke-linecap="round"/>
-            <path d="M214,160 C208,163 203,161 200,155" fill="none" stroke="#6E6E6E" stroke-width="8.5" stroke-linecap="round"/>
-            <path d="M215,88 C226,94 231,108 229,124" fill="none" stroke="url(#eleBodyGrad)" stroke-width="17" stroke-linecap="round"/>
-            <path d="M229,124 C227,140 222,152 214,160" fill="none" stroke="url(#eleBodyGrad)" stroke-width="12.5" stroke-linecap="round"/>
-            <path d="M214,160 C208,163 203,161 200,155" fill="none" stroke="url(#eleBodyGrad)" stroke-width="7" stroke-linecap="round"/>
-            <path d="M221,98 C225,104 225,110 221,116" fill="none" stroke="#6E6E6E" stroke-width="1.5" opacity="0.5"/>
-            <path d="M219,126 C223,132 223,138 218,144" fill="none" stroke="#6E6E6E" stroke-width="1.4" opacity="0.45"/>
-            <circle class="ele-puff ele-puff-1" cx="200" cy="155" r="4" fill="#FFFFFF"/>
-            <circle class="ele-puff ele-puff-2" cx="200" cy="155" r="4" fill="#FFFFFF"/>
-            <circle class="ele-puff ele-puff-3" cx="200" cy="155" r="4" fill="#FFFFFF"/>
-          </g>
-
-          <path class="ele-tusk" d="M221,98 C233,102 240,111 236,122" fill="none" stroke="#F4EFE2" stroke-width="6.5" stroke-linecap="round"/>
-          <path class="ele-tusk" d="M224,94 C237,97 245,105 242,116" fill="none" stroke="#EDE6D2" stroke-width="5.5" stroke-linecap="round"/>
-
-          <circle cx="215" cy="68" r="3.4" fill="#2B241C"/>
-          <circle cx="216" cy="66.8" r="1" fill="#FFFFFF"/>
-          <path d="M206,60 q8,-5 16,-1" fill="none" stroke="#5A5A5A" stroke-width="1.6" stroke-linecap="round"/>
-        </svg>
-      </div>
-    </div>
-  </div>
 </div>
 
 <div id="calendarOverlay" class="calendar-overlay" hidden>
@@ -981,8 +886,8 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, doc, setDoc, updateDoc, onSnapshot, deleteField } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, deleteField } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getAuth, onAuthStateChanged, isSignInWithEmailLink, sendSignInLinkToEmail, signInWithEmailLink, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 // ---------------------------------------------------------------
 // FIREBASE SETUP — replace the placeholder strings below with your
@@ -1026,10 +931,16 @@ var firebaseAuth = getAuth(firebaseApp);
   var loaded = false;
   var dbUnavailable = false;
   var disconnected = false;
-  var canEdit = true;
+  var canEdit = false;
   var triedInit = false;
   var writeChain = Promise.resolve();
   var els = {};
+  var currentUser = null;
+  var isAdminUser = false;
+  var PLUMCORE_EMAIL_RE = /^[^\s@]+@plumcore\.com$/i;
+  var AUTH_EMAIL_STORAGE_KEY = 'fab_authEmailForSignIn';
+  var authGateMode = 'employee'; // 'employee' (email link) | 'admin' (email + password)
+  var authAdminFirstTime = false;
   var nameDebounce = {};
   var scheduleDebounce = {};
 
@@ -1165,26 +1076,175 @@ var firebaseAuth = getAuth(firebaseApp);
     render();
   }
 
+  // ---------------- Sign-in gate (email link, @plumcore.com only) ----------------
+  function setGateMessage(text, isError) {
+    els.authGateMsg.textContent = text || '';
+    els.authGateMsg.className = 'authgate-msg' + (text ? (isError ? ' is-error' : ' is-info') : '');
+  }
+
+  function setGateBusy(busy) {
+    els.authEmailInput.disabled = busy;
+    els.authPasswordInput.disabled = busy;
+    els.authSendBtn.disabled = busy;
+  }
+
+  function renderGateMode() {
+    var isAdminMode = authGateMode === 'admin';
+    els.authPasswordInput.hidden = !isAdminMode;
+    els.authFirstTimeToggle.hidden = !isAdminMode;
+    if (isAdminMode) {
+      els.authGateSub.textContent = 'Admin sign-in. Enter your @plumcore.com email and password.';
+      els.authModeToggle.textContent = 'Not an admin? Use email link instead';
+      els.authFirstTimeToggle.textContent = authAdminFirstTime
+        ? 'Already have a password? Sign in instead'
+        : 'First time? Create your password instead';
+      els.authSendBtn.textContent = authAdminFirstTime ? 'Create password & sign in' : 'Sign in';
+    } else {
+      els.authGateSub.textContent = "Enter your @plumcore.com email. We'll email you a one-time link to sign in — no password needed.";
+      els.authModeToggle.textContent = 'Admin? Sign in with a password instead';
+      els.authSendBtn.textContent = 'Send sign-in link';
+    }
+    setGateMessage('', false);
+  }
+
+  function onAuthModeToggle() {
+    authGateMode = authGateMode === 'admin' ? 'employee' : 'admin';
+    authAdminFirstTime = false;
+    els.authPasswordInput.value = '';
+    renderGateMode();
+  }
+
+  function onAuthFirstTimeToggle() {
+    authAdminFirstTime = !authAdminFirstTime;
+    renderGateMode();
+  }
+
+  function submitAdminSignIn(email, password) {
+    setGateBusy(true);
+    setGateMessage(authAdminFirstTime ? 'Creating your password…' : 'Signing you in…', false);
+    var authCall = authAdminFirstTime
+      ? createUserWithEmailAndPassword(firebaseAuth, email, password)
+      : signInWithEmailAndPassword(firebaseAuth, email, password);
+    authCall.catch(function (err) {
+      setGateBusy(false);
+      var code = err && err.code;
+      if (code === 'auth/email-already-in-use') {
+        setGateMessage('That email already has a password set. Switch to "Sign in" and use it.', true);
+      } else if (code === 'auth/weak-password') {
+        setGateMessage('Choose a password with at least 6 characters.', true);
+      } else if (code === 'auth/wrong-password' || code === 'auth/invalid-credential') {
+        setGateMessage('Incorrect email or password.', true);
+      } else if (code === 'auth/user-not-found') {
+        setGateMessage('No admin account yet for that email. Use "First time? Create your password instead."', true);
+      } else {
+        setGateMessage("Couldn't sign you in. Try again in a moment.", true);
+      }
+    });
+  }
+
+  function requestSignInLink(email) {
+    var actionCodeSettings = {
+      url: window.location.origin + window.location.pathname,
+      handleCodeInApp: true
+    };
+    setGateBusy(true);
+    setGateMessage('Sending your sign-in link…', false);
+    sendSignInLinkToEmail(firebaseAuth, email, actionCodeSettings).then(function () {
+      try { window.localStorage.setItem(AUTH_EMAIL_STORAGE_KEY, email); } catch (e) {}
+      setGateBusy(false);
+      setGateMessage('Check your email (' + email + ') for a sign-in link, then open it on this device.', false);
+    }).catch(function (err) {
+      setGateBusy(false);
+      setGateMessage("Couldn't send that link. Try again in a moment.", true);
+    });
+  }
+
+  function completeSignInFromLink() {
+    if (!isSignInWithEmailLink(firebaseAuth, window.location.href)) return false;
+    var storedEmail = null;
+    try { storedEmail = window.localStorage.getItem(AUTH_EMAIL_STORAGE_KEY); } catch (e) {}
+    if (!storedEmail) {
+      setGateMessage('Confirm your @plumcore.com email to finish signing in.', false);
+      return true; // gate stays up; wireStaticControls' submit handler will complete the link
+    }
+    finishEmailLinkSignIn(storedEmail);
+    return true;
+  }
+
+  function finishEmailLinkSignIn(email) {
+    setGateBusy(true);
+    setGateMessage('Signing you in…', false);
+    signInWithEmailLink(firebaseAuth, email, window.location.href).then(function () {
+      try { window.localStorage.removeItem(AUTH_EMAIL_STORAGE_KEY); } catch (e) {}
+      window.history.replaceState(null, '', window.location.pathname);
+    }).catch(function (err) {
+      setGateBusy(false);
+      setGateMessage("That sign-in link didn't work — it may have expired. Request a new one.", true);
+      window.history.replaceState(null, '', window.location.pathname);
+    });
+  }
+
+  function onAuthGateSubmit(e) {
+    e.preventDefault();
+    var email = (els.authEmailInput.value || '').trim();
+    if (!PLUMCORE_EMAIL_RE.test(email)) {
+      setGateMessage('Enter a valid @plumcore.com email address.', true);
+      return;
+    }
+    if (authGateMode === 'admin') {
+      var password = els.authPasswordInput.value || '';
+      if (password.length < 6) {
+        setGateMessage('Enter your password (at least 6 characters).', true);
+        return;
+      }
+      submitAdminSignIn(email, password);
+      return;
+    }
+    if (isSignInWithEmailLink(firebaseAuth, window.location.href)) {
+      finishEmailLinkSignIn(email);
+    } else {
+      requestSignInLink(email);
+    }
+  }
+
   // ---------------- DB wiring ----------------
   function boot() {
     render();
+    var pendingLinkCompletion = completeSignInFromLink();
+    if (!pendingLinkCompletion) setGateMessage('', false);
     // Watchdog on whether the FIRST snapshot ever arrives (not just whether
     // auth succeeded) — a Firestore listen can open its channel and then
     // never deliver data, and nothing used to catch that case.
-    var dataTimer = setTimeout(function () {
-      if (loaded) return;
-      dbUnavailable = true; render();
-    }, 15000);
-    signInAnonymously(firebaseAuth).catch(function () {
-      clearTimeout(dataTimer);
-      dbUnavailable = true; loaded = true; render();
-    });
+    var dataTimer = null;
     onAuthStateChanged(firebaseAuth, function (user) {
-      if (!user) return;
+      currentUser = user || null;
+      if (!user) {
+        els.authGateOverlay.hidden = false;
+        els.authSignedInAs.hidden = true;
+        setGateBusy(false);
+        return;
+      }
+      els.authGateOverlay.hidden = true;
+      els.authSignedInAs.hidden = false;
+      els.authSignedInAs.textContent = user.email + ' · Sign out';
       if (docRef) return; // already booted for this page load
+      dataTimer = setTimeout(function () {
+        if (loaded) return;
+        dbUnavailable = true; render();
+      }, 15000);
       dbUnavailable = false;
       dbHandle = firestoreDb;
       docRef = doc(firestoreDb, 'board/week1');
+      getDoc(doc(firestoreDb, 'admins', 'config')).then(function (snap) {
+        var emails = (snap.exists() && Array.isArray(snap.data().emails)) ? snap.data().emails : [];
+        isAdminUser = emails.some(function (e) { return typeof e === 'string' && e.toLowerCase() === user.email.toLowerCase(); });
+        canEdit = isAdminUser;
+        render();
+      }).catch(function () {
+        isAdminUser = false;
+        canEdit = false;
+        render();
+      });
       authReadyResolve();
       onSnapshot(docRef, function (snap) {
         clearTimeout(dataTimer);
@@ -1732,6 +1792,24 @@ var firebaseAuth = getAuth(firebaseApp);
   }
 
   function start() {
+    els.authGateOverlay = q('authGateOverlay');
+    els.authGateForm = q('authGateForm');
+    els.authGateSub = q('authGateSub');
+    els.authEmailInput = q('authEmailInput');
+    els.authPasswordInput = q('authPasswordInput');
+    els.authSendBtn = q('authSendBtn');
+    els.authGateMsg = q('authGateMsg');
+    els.authModeToggle = q('authModeToggle');
+    els.authFirstTimeToggle = q('authFirstTimeToggle');
+    els.authSignedInAs = q('authSignedInAs');
+    els.authGateForm.addEventListener('submit', onAuthGateSubmit);
+    els.authModeToggle.addEventListener('click', onAuthModeToggle);
+    els.authFirstTimeToggle.addEventListener('click', onAuthFirstTimeToggle);
+    els.authSignedInAs.addEventListener('click', function () {
+      signOut(firebaseAuth);
+    });
+    renderGateMode();
+
     els.statusBanner = q('statusBanner');
     els.sup1Input = q('sup1Input');
     els.sup2Input = q('sup2Input');
@@ -1771,78 +1849,6 @@ var firebaseAuth = getAuth(firebaseApp);
   } else {
     start();
   }
-})();
-</script>
-
-<script>
-(function initElephant() {
-  var track = document.getElementById('elephantTrack');
-  var el = document.getElementById('elephantWalker');
-  if (!track || !el) return;
-
-  var reduceMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
-  var elephantWidth = 132;
-  var pos = 12;
-  var dir = 1;
-  var speed = randRange(18, 34);
-  var state = 'walking';
-  var stateTimer = 0;
-  var walkDuration = randRange(6, 14);
-  var pauseDuration = randRange(2, 4);
-  var lastTs = null;
-
-  function randRange(a, b) { return a + Math.random() * (b - a); }
-
-  function applyTransform() {
-    el.style.transform = 'translateX(' + pos.toFixed(1) + 'px) scaleX(' + dir + ')';
-  }
-
-  function setState(next) {
-    state = next;
-    stateTimer = 0;
-    if (next === 'tooting') {
-      el.classList.remove('is-walking');
-      el.classList.add('is-tooting');
-      pauseDuration = randRange(2.4, 4);
-    } else {
-      el.classList.remove('is-tooting');
-      el.classList.add('is-walking');
-      walkDuration = randRange(6, 14);
-      speed = randRange(18, 34);
-      if (Math.random() < 0.35) dir = -dir;
-    }
-  }
-
-  function tick(ts) {
-    if (lastTs == null) lastTs = ts;
-    var dt = Math.min((ts - lastTs) / 1000, 0.25);
-    lastTs = ts;
-
-    if (reduceMotion) {
-      applyTransform();
-      requestAnimationFrame(tick);
-      return;
-    }
-
-    stateTimer += dt;
-
-    if (state === 'walking') {
-      var maxPos = Math.max(0, track.clientWidth - elephantWidth);
-      pos += dir * speed * dt;
-      if (pos <= 0) { pos = 0; dir = 1; }
-      if (pos >= maxPos) { pos = maxPos; dir = -1; }
-      applyTransform();
-      if (stateTimer >= walkDuration) setState('tooting');
-    } else {
-      applyTransform();
-      if (stateTimer >= pauseDuration) setState('walking');
-    }
-
-    requestAnimationFrame(tick);
-  }
-
-  applyTransform();
-  requestAnimationFrame(tick);
 })();
 </script>
 
