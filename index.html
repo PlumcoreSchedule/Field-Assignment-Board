@@ -157,6 +157,16 @@
     justify-content: space-between;
     gap: 10px 16px;
   }
+  .topbar-center-logo {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1;
+  }
+  @media (max-width: 720px) {
+    .topbar-center-logo { display: none; }
+  }
   .topbar-left { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
   .brand-mark {
     font-family: var(--font-mono);
@@ -821,9 +831,9 @@
         <h1 class="page-title">Assignment Board</h1>
       </div>
     </div>
+    <img src="logo.png" alt="Plumcore logo" class="brand-logo topbar-center-logo" />
     <div class="topbar-right">
       <button type="button" id="authSignedInAs" class="authgate-signedout" hidden></button>
-      <img src="logo.png" alt="Plumcore logo" class="brand-logo" />
     </div>
   </header>
 
