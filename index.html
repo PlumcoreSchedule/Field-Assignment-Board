@@ -1,0 +1,1850 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Field Assignment Board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Public+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@600&display=swap">
+<style>
+  :root {
+    --color-canvas: #FAF5EC;
+    --color-surface: #FFFFFF;
+    --color-surface-alt: #F3ECDF;
+    --color-border: #E1D6C2;
+    --color-border-strong: #CBBB9C;
+    --color-ink: #2B241C;
+    --color-ink-muted: #6B5E4C;
+    --color-accent: #B85C2E;
+    --color-accent-ink: #FFFFFF;
+    --color-accent-soft: #F0DCC9;
+    --color-danger: #A8402A;
+    --color-danger-soft: #F4DCD3;
+    --color-sup1: #B33A2E;
+    --color-sup1-ink: #FFFFFF;
+    --color-sup2: #B8862B;
+    --color-sup2-ink: #241C0E;
+    --color-sup3: #3E7C4A;
+    --color-sup3-ink: #FFFFFF;
+    --color-sup4: #2F5FA8;
+    --color-sup4-ink: #FFFFFF;
+    --color-sup5: #1E5631;
+    --color-sup5-ink: #FFFFFF;
+    --color-sup6: #16324F;
+    --color-sup6-ink: #FFFFFF;
+    --color-sup7: #C1600A;
+    --color-sup7-ink: #FFFFFF;
+    --color-empty-bg: #F3ECDF;
+    --color-empty-border: #D8CBAF;
+    --color-focus: #1F6F6F;
+    --shadow-sm: 0 1px 2px rgba(43, 36, 28, 0.10);
+    --shadow-md: 0 6px 18px rgba(43, 36, 28, 0.12);
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 18px;
+
+    --font-display: 'Fraunces', Georgia, 'Iowan Old Style', serif;
+    --font-body: 'Public Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    --font-mono: 'IBM Plex Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+
+    --text-xs: 0.72rem;
+    --text-sm: 0.82rem;
+    --text-base: 0.94rem;
+    --text-md: 1.05rem;
+    --text-lg: 1.3rem;
+    --text-xl: 1.85rem;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --color-canvas: #1C1712;
+      --color-surface: #241E17;
+      --color-surface-alt: #2C251C;
+      --color-border: #40372A;
+      --color-border-strong: #574A37;
+      --color-ink: #F1E8DA;
+      --color-ink-muted: #B7A98F;
+      --color-accent: #E2894F;
+      --color-accent-ink: #241004;
+      --color-accent-soft: #3E2E1E;
+      --color-danger: #E2694A;
+      --color-danger-soft: #3C241C;
+      --color-sup1: #E2776B;
+      --color-sup1-ink: #2A0D08;
+      --color-sup2: #DDAA4C;
+      --color-sup2-ink: #241A05;
+      --color-sup3: #6FBF7B;
+      --color-sup3-ink: #0C2210;
+      --color-sup4: #7FB2E8;
+      --color-sup4-ink: #0B2036;
+      --color-sup5: #4FA868;
+      --color-sup5-ink: #0F2A18;
+      --color-sup6: #5B8FC7;
+      --color-sup6-ink: #0A1B2E;
+      --color-sup7: #E8985A;
+      --color-sup7-ink: #241004;
+      --color-empty-bg: #2C251C;
+      --color-empty-border: #443A2B;
+      --color-focus: #7ED0CA;
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+      --shadow-md: 0 8px 22px rgba(0, 0, 0, 0.45);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --color-canvas: #1C1712;
+    --color-surface: #241E17;
+    --color-surface-alt: #2C251C;
+    --color-border: #40372A;
+    --color-border-strong: #574A37;
+    --color-ink: #F1E8DA;
+    --color-ink-muted: #B7A98F;
+    --color-accent: #E2894F;
+    --color-accent-ink: #241004;
+    --color-accent-soft: #3E2E1E;
+    --color-danger: #E2694A;
+    --color-danger-soft: #3C241C;
+    --color-sup1: #E2776B;
+    --color-sup1-ink: #2A0D08;
+    --color-sup2: #DDAA4C;
+    --color-sup2-ink: #241A05;
+    --color-sup3: #6FBF7B;
+    --color-sup3-ink: #0C2210;
+    --color-sup4: #7FB2E8;
+    --color-sup4-ink: #0B2036;
+    --color-sup5: #4FA868;
+    --color-sup5-ink: #0F2A18;
+    --color-sup6: #5B8FC7;
+    --color-sup6-ink: #0A1B2E;
+    --color-sup7: #E8985A;
+    --color-sup7-ink: #241004;
+    --color-empty-bg: #2C251C;
+    --color-empty-border: #443A2B;
+    --color-focus: #7ED0CA;
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 8px 22px rgba(0, 0, 0, 0.45);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    line-height: 1.45;
+    padding-inline: 16px;
+    padding-block: 12px 28px;
+  }
+
+  h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; margin: 0; }
+
+  .page { max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
+
+  /* ---------- header ---------- */
+  .topbar {
+    position: sticky;
+    top: env(safe-area-inset-top, 0px);
+    z-index: 20;
+    background: var(--color-canvas);
+    padding-block: 10px;
+    margin-inline: -16px;
+    padding-inline: 16px;
+    border-bottom: 1px solid var(--color-border);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px 16px;
+  }
+  .topbar-left { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .brand-mark {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-accent);
+    font-weight: 600;
+  }
+  .page-title { font-size: var(--text-xl); font-weight: 600; color: var(--color-ink); }
+  .title-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .brand-logo { height: 60px; width: auto; display: block; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .brand-logo {
+      background: #FFFFFF;
+      padding: 4px 8px;
+      border-radius: var(--radius-sm);
+    }
+  }
+  :root[data-theme="dark"] .brand-logo {
+    background: #FFFFFF;
+    padding: 4px 8px;
+    border-radius: var(--radius-sm);
+  }
+  .topbar-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+  .btn {
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    padding: 9px 14px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    min-height: 40px;
+    transition: filter 0.12s ease, transform 0.05s ease;
+  }
+  .btn:active { transform: translateY(1px); }
+  .btn:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+  .btn:disabled { cursor: not-allowed; opacity: 0.5; filter: none; }
+
+  .btn-sm { min-height: 34px; padding: 6px 12px; font-size: var(--text-xs); }
+
+  .btn-primary { background: var(--color-accent); color: var(--color-accent-ink); }
+  .btn-primary:hover:not(:disabled) { filter: brightness(1.06); }
+
+  .btn-ghost-danger {
+    background: transparent;
+    color: var(--color-danger);
+    border-color: var(--color-danger);
+  }
+  .btn-ghost-danger:hover:not(:disabled) { background: var(--color-danger-soft); }
+
+  /* ---------- status banner ---------- */
+  .status-banner {
+    border-radius: var(--radius-md);
+    padding: 10px 14px;
+    font-size: var(--text-sm);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid var(--color-border);
+  }
+  .status-banner[hidden] {
+    display: none;
+  }
+  .status-banner::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex: none;
+    background: currentColor;
+  }
+  .status-info { background: var(--color-surface-alt); color: var(--color-ink-muted); border-color: var(--color-border); }
+  .status-info::before { animation: pulse 1.6s ease-in-out infinite; }
+  .status-warning { background: var(--color-accent-soft); color: var(--color-accent); border-color: var(--color-accent); }
+  .status-error { background: var(--color-danger-soft); color: var(--color-danger); border-color: var(--color-danger); }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .status-info::before { animation: none; }
+    * { transition-duration: 0.001ms !important; animation-duration: 0.001ms !important; }
+  }
+
+  /* ---------- org chart: crew ---------- */
+  .crew {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .crew-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .swatch {
+    width: 22px;
+    height: 22px;
+    border-radius: 7px;
+    flex: none;
+    border: 1px solid rgba(0,0,0,0.15);
+  }
+  .swatch-sup1 { background: var(--color-sup1); }
+  .swatch-sup2 { background: var(--color-sup2); }
+  .swatch-sup3 { background: var(--color-sup3); }
+  .swatch-sup4 { background: var(--color-sup4); }
+  .swatch-sup5 { background: var(--color-sup5); }
+  .swatch-sup6 { background: var(--color-sup6); }
+  .swatch-sup7 { background: var(--color-sup7); }
+
+  .crew-field { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1; }
+  .field-label {
+    font-size: var(--text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-ink-muted);
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .crew-input {
+    font-family: var(--font-body);
+    font-size: var(--text-md);
+    font-weight: 600;
+    color: var(--color-ink);
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 2px 0;
+    min-width: 0;
+    width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .crew-input:hover:not(:disabled) { border-bottom-color: var(--color-border-strong); }
+  .crew-input:focus { outline: none; border-bottom-color: var(--color-focus); }
+  .crew-input:disabled { color: var(--color-ink-muted); }
+
+  .crew-lead-card {
+    width: 100%;
+    flex: 0 0 auto;
+    padding: 9px 12px;
+  }
+  .crew-lead-card .swatch { width: 18px; height: 18px; }
+  .crew-lead-card .crew-input { font-size: var(--text-sm); }
+
+  .crew-sub-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-left: 14px;
+    padding-left: 16px;
+    border-left: 3px solid var(--color-border-strong);
+  }
+  .supervisor-branch {
+    flex: 1 1 220px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+  }
+  .branch-stack {
+    flex: 1 1 220px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
+  }
+  .branch-stack .supervisor-branch { flex: none; }
+  .supervisor-branch .crew-card {
+    padding: 9px 12px;
+  }
+  .supervisor-branch .swatch { width: 18px; height: 18px; }
+  .supervisor-branch .crew-input { font-size: var(--text-sm); }
+
+  /* ---------- lead row: general superintendent + datetime, side by side ---------- */
+  .lead-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    gap: 14px;
+  }
+  .lead-row .crew-lead-card { flex: 1 1 320px; width: auto; }
+  .lead-row .datetime-bar { flex: 1 1 260px; margin: 0; }
+
+  /* ---------- slab manager + plumbing foreman, left-aligned under supervisors ---------- */
+  .crew-left-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-left: 14px;
+    padding-left: 16px;
+    border-left: 3px solid var(--color-border-strong);
+  }
+  .crew-left-row .supervisor-branch { flex: 0 1 300px; }
+
+  /* ---------- installer: matches the width of the slab manager + plumbing foreman row above it ---------- */
+  .installer-row { flex: 0 0 auto; width: 316px; max-width: 100%; margin-left: 14px; padding-left: 16px; }
+  .installer-row .crew-card { width: 100%; }
+
+  /* ---------- job foremen ---------- */
+  .foreman-column {
+    margin-left: 12px;
+    padding-left: 14px;
+    border-left: 2px solid var(--color-border);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .foreman-list { display: flex; flex-direction: column; gap: 6px; }
+  .foreman-box {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-left: 4px solid var(--color-border-strong);
+    border-radius: var(--radius-sm);
+    padding: 7px 10px;
+    box-shadow: var(--shadow-sm);
+  }
+  .foreman-box-sup2 { border-left-color: var(--color-sup2); }
+  .foreman-box-sup3 { border-left-color: var(--color-sup3); }
+  .foreman-box-sup4 { border-left-color: var(--color-sup4); }
+  .foreman-box-sup7 { border-left-color: var(--color-sup7); }
+  .foreman-name-text { font-weight: 600; font-size: var(--text-sm); overflow-wrap: anywhere; }
+  .foreman-empty {
+    font-size: var(--text-xs);
+    color: var(--color-ink-muted);
+    font-style: italic;
+    padding: 4px 2px;
+  }
+
+  .add-foreman-form { display: none; }
+  .add-foreman-form input[type="text"] {
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    border: 1px solid var(--color-border-strong);
+    background: var(--color-surface);
+    color: var(--color-ink);
+    border-radius: var(--radius-sm);
+    padding: 7px 9px;
+    min-height: 34px;
+    width: 100%;
+    max-width: 220px;
+  }
+  .add-foreman-form input[type="text"]:focus { outline: 2px solid var(--color-focus); outline-offset: 1px; }
+  .add-foreman-form input[type="text"]:disabled { opacity: 0.55; }
+  .field-error {
+    font-size: var(--text-xs);
+    color: var(--color-danger);
+    margin: 0;
+    flex-basis: 100%;
+  }
+
+  /* ---------- date & time bar ---------- */
+  .datetime-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px 16px;
+    flex-wrap: wrap;
+    background: var(--color-surface-alt);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 8px 12px;
+  }
+  .datetime-date {
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--color-ink);
+  }
+  .datetime-clock {
+    font-family: var(--font-mono);
+    font-size: var(--text-md);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--color-accent);
+  }
+
+  /* ---------- schedule (per-person forecast) ---------- */
+  .foreman-entry { display: flex; flex-direction: column; gap: 6px; }
+  .schedule-toggle-btn {
+    flex: none;
+    font-family: var(--font-body);
+    font-size: var(--text-xs);
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    padding: 5px 9px;
+    min-height: 24px;
+    border: 1px solid var(--color-border-strong);
+    background: var(--color-surface);
+    color: var(--color-ink-muted);
+    cursor: pointer;
+  }
+  .schedule-toggle-btn:hover:not(:disabled) { background: var(--color-accent-soft); color: var(--color-accent); }
+  .schedule-toggle-btn.is-open { background: var(--color-accent); color: var(--color-accent-ink); border-color: var(--color-accent); }
+  .schedule-toggle-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* ---------- full-page schedule calendar ---------- */
+  .calendar-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    background: var(--color-canvas);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .calendar-overlay[hidden] { display: none; }
+  .calendar-overlay-header {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+    padding: 12px 16px;
+  }
+  .calendar-back-btn {
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    padding: 8px 12px;
+    min-height: 38px;
+    border: 1px solid var(--color-border-strong);
+    background: var(--color-surface);
+    color: var(--color-ink);
+    cursor: pointer;
+  }
+  .calendar-back-btn:hover:not(:disabled) { background: var(--color-accent-soft); }
+  .calendar-back-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .calendar-person-name {
+    font-family: var(--font-display);
+    font-size: var(--text-lg);
+    font-weight: 600;
+    color: var(--color-ink);
+  }
+  .calendar-month-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 14px 16px 6px;
+    flex-wrap: wrap;
+  }
+  .calendar-nav-btn, .calendar-today-btn {
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    padding: 8px 14px;
+    min-height: 38px;
+    border: 1px solid var(--color-border-strong);
+    background: var(--color-surface);
+    color: var(--color-ink);
+    cursor: pointer;
+  }
+  .calendar-nav-btn:hover, .calendar-today-btn:hover { background: var(--color-accent-soft); }
+  .calendar-month-label {
+    font-family: var(--font-display);
+    font-size: var(--text-xl);
+    font-weight: 600;
+    min-width: 220px;
+    text-align: center;
+    color: var(--color-ink);
+  }
+  .calendar-weekday-row, .calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+    padding: 0 16px;
+  }
+  .calendar-weekday-row { padding-top: 10px; padding-bottom: 4px; }
+  .calendar-weekday-label {
+    font-size: var(--text-xs);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-ink-muted);
+    text-align: center;
+  }
+  .calendar-grid { padding-bottom: 16px; }
+  .calendar-day-cell {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface);
+    min-height: 76px;
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    cursor: pointer;
+    text-align: left;
+    font-family: inherit;
+  }
+  .calendar-day-cell:hover { border-color: var(--color-border-strong); }
+  .calendar-day-cell.is-other-month { opacity: 0.45; }
+  .calendar-day-cell.is-today { outline: 2px solid var(--color-focus); outline-offset: -2px; }
+  .calendar-day-cell.is-selected { border-color: var(--color-accent); border-width: 2px; }
+  .calendar-day-number {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--color-ink);
+  }
+  .calendar-day-job {
+    font-size: var(--text-xs);
+    font-weight: 600;
+    padding: 3px 5px;
+    border-radius: 4px;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .calendar-day-editor {
+    margin: 4px 16px 24px;
+    background: var(--color-surface-alt);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .calendar-day-editor[hidden] { display: none; }
+  .calendar-day-editor-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .calendar-day-editor-title {
+    font-family: var(--font-display);
+    font-size: var(--text-md);
+    font-weight: 600;
+    color: var(--color-ink);
+  }
+  .calendar-field-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 10px;
+  }
+  .calendar-field { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .calendar-field.span-2 { grid-column: 1 / -1; }
+  .calendar-field-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-ink-muted);
+    font-weight: 600;
+  }
+  .calendar-field input {
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    border: 1px solid var(--color-border-strong);
+    background: var(--color-surface);
+    color: var(--color-ink);
+    border-radius: var(--radius-sm);
+    padding: 6px 8px;
+    min-height: 34px;
+    width: 100%;
+  }
+  .calendar-field input:focus { outline: 2px solid var(--color-focus); outline-offset: 1px; }
+  .calendar-field input:disabled { opacity: 0.55; }
+  .calendar-repeat-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: var(--text-sm);
+    color: var(--color-ink-muted);
+  }
+  .calendar-repeat-row input[type="date"] {
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-sm);
+    padding: 6px 8px;
+    min-height: 34px;
+  }
+  .calendar-repeat-note { font-size: var(--text-xs); color: var(--color-ink-muted); }
+
+  /* ---------- wandering elephant (decorative, bottom of board) ---------- */
+  .elephant-scene {
+    width: 100%;
+    max-width: 1200px;
+    margin: 4px auto 0;
+    padding-inline: 16px;
+  }
+  .elephant-track {
+    position: relative;
+    height: 136px;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .elephant-walker {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 132px;
+    height: 136px;
+    pointer-events: none;
+    will-change: transform;
+  }
+  .elephant-svg { width: 100%; height: 100%; display: block; }
+
+  .ele-ear { animation: eleEarFlap 2.6s ease-in-out infinite; transform-origin: 165px 45px; }
+  @keyframes eleEarFlap {
+    0%, 100% { transform: rotate(0deg); }
+    50% { transform: rotate(-7deg); }
+  }
+  .ele-tail { animation: eleTailSwish 2.9s ease-in-out infinite; transform-origin: 64px 92px; }
+  @keyframes eleTailSwish {
+    0%, 100% { transform: rotate(0deg); }
+    50% { transform: rotate(10deg); }
+  }
+
+  .elephant-walker.is-walking .ele-leg-front-near,
+  .elephant-walker.is-walking .ele-leg-back-far {
+    animation: eleGaitA 0.68s ease-in-out infinite;
+  }
+  .elephant-walker.is-walking .ele-leg-front-far,
+  .elephant-walker.is-walking .ele-leg-back-near {
+    animation: eleGaitB 0.68s ease-in-out infinite;
+  }
+  @keyframes eleGaitA {
+    0%, 100% { transform: rotate(11deg); }
+    50% { transform: rotate(-11deg); }
+  }
+  @keyframes eleGaitB {
+    0%, 100% { transform: rotate(-11deg); }
+    50% { transform: rotate(11deg); }
+  }
+  .ele-leg-front-near { transform-origin: 181px 118px; }
+  .ele-leg-front-far { transform-origin: 203px 120px; }
+  .ele-leg-back-near { transform-origin: 103px 118px; }
+  .ele-leg-back-far { transform-origin: 123px 120px; }
+
+  .ele-trunk {
+    transform-origin: 215px 88px;
+    transform: rotate(2deg);
+    transition: transform 0.6s ease;
+  }
+  .elephant-walker.is-tooting .ele-trunk { transform: rotate(-140deg); }
+  .elephant-walker.is-tooting .ele-leg-front-near,
+  .elephant-walker.is-tooting .ele-leg-front-far,
+  .elephant-walker.is-tooting .ele-leg-back-near,
+  .elephant-walker.is-tooting .ele-leg-back-far {
+    animation: none;
+    transform: rotate(0deg);
+  }
+  .ele-puff { opacity: 0; }
+  .elephant-walker.is-tooting .ele-puff-1 { animation: elePuff 0.9s ease-out 0.15s; }
+  .elephant-walker.is-tooting .ele-puff-2 { animation: elePuff 0.9s ease-out 0.42s; }
+  .elephant-walker.is-tooting .ele-puff-3 { animation: elePuff 0.9s ease-out 0.7s; }
+  @keyframes elePuff {
+    0% { opacity: 0.9; transform: scale(0.4) translate(0px, 0px); }
+    100% { opacity: 0; transform: scale(1.9) translate(7px, -16px); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ele-ear, .ele-tail,
+    .elephant-walker.is-walking .ele-leg-front-near,
+    .elephant-walker.is-walking .ele-leg-back-far,
+    .elephant-walker.is-walking .ele-leg-front-far,
+    .elephant-walker.is-walking .ele-leg-back-near {
+      animation: none;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <header class="topbar">
+    <div class="topbar-left">
+      <span class="brand-mark">Plumcore Plumbing Field OPS</span>
+      <div class="title-row">
+        <h1 class="page-title">Assignment Board</h1>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <img src="logo.png" alt="Plumcore logo" class="brand-logo" />
+    </div>
+  </header>
+
+  <div id="statusBanner" class="status-banner status-info" role="status" aria-live="polite" hidden></div>
+
+  <main class="content" style="display:flex; flex-direction:column; gap:18px;">
+    <section class="crew" aria-label="Field chain of command">
+      <div class="lead-row">
+        <div class="crew-card crew-lead-card">
+        <span class="swatch swatch-sup1" aria-hidden="true"></span>
+        <div class="crew-field">
+          <label class="field-label" for="sup1Input">General Superintendent</label>
+          <input id="sup1Input" class="crew-input" type="text" maxlength="40" autocomplete="off" />
+        </div>
+      </div>
+
+        <div class="datetime-bar">
+          <span class="datetime-date" id="datetimeDate"></span>
+          <span class="datetime-clock" id="datetimeClock"></span>
+        </div>
+      </div>
+
+      <div class="crew-sub-row">
+        <div class="supervisor-branch">
+          <div class="crew-card">
+            <span class="swatch swatch-sup2" aria-hidden="true"></span>
+            <div class="crew-field">
+              <label class="field-label" for="sup2Input">Supervisor</label>
+              <input id="sup2Input" class="crew-input" type="text" maxlength="40" autocomplete="off" />
+            </div>
+          </div>
+          <div class="foreman-column" data-sup="sup2">
+            <span class="field-label">Job Foremen</span>
+            <div id="foremanList-sup2" class="foreman-list"></div>
+            <form id="addForemanForm-sup2" class="add-foreman-form">
+              <input type="text" id="foremanInput-sup2" maxlength="40" autocomplete="off" placeholder="Add a job foreman" />
+              <button type="button" id="addForemanBtn-sup2" class="btn btn-sm btn-primary">Add</button>
+              <p class="field-error" id="foremanError-sup2" hidden></p>
+            </form>
+          </div>
+        </div>
+
+        <div class="supervisor-branch">
+          <div class="crew-card">
+            <span class="swatch swatch-sup3" aria-hidden="true"></span>
+            <div class="crew-field">
+              <label class="field-label" for="sup3Input">Supervisor</label>
+              <input id="sup3Input" class="crew-input" type="text" maxlength="40" autocomplete="off" />
+            </div>
+          </div>
+          <div class="foreman-column" data-sup="sup3">
+            <span class="field-label">Job Foremen</span>
+            <div id="foremanList-sup3" class="foreman-list"></div>
+            <form id="addForemanForm-sup3" class="add-foreman-form">
+              <input type="text" id="foremanInput-sup3" maxlength="40" autocomplete="off" placeholder="Add a job foreman" />
+              <button type="button" id="addForemanBtn-sup3" class="btn btn-sm btn-primary">Add</button>
+              <p class="field-error" id="foremanError-sup3" hidden></p>
+            </form>
+          </div>
+        </div>
+
+        <div class="supervisor-branch">
+          <div class="crew-card">
+            <span class="swatch swatch-sup7" aria-hidden="true"></span>
+            <div class="crew-field">
+              <label class="field-label" for="sup7Input">Utility Supervisor</label>
+              <input id="sup7Input" class="crew-input" type="text" maxlength="40" autocomplete="off" />
+            </div>
+            <button type="button" id="scheduleToggle-sup7" class="schedule-toggle-btn">Schedule</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="crew-left-row">
+        <div class="supervisor-branch">
+          <div class="crew-card">
+            <span class="swatch swatch-sup4" aria-hidden="true"></span>
+            <div class="crew-field">
+              <label class="field-label" for="sup4Input">Layout Manager</label>
+              <input id="sup4Input" class="crew-input" type="text" maxlength="40" autocomplete="off" />
+            </div>
+            <button type="button" id="scheduleToggle-sup4" class="schedule-toggle-btn">Schedule</button>
+          </div>
+        </div>
+
+          <div class="supervisor-branch">
+            <div class="crew-card">
+              <span class="swatch swatch-sup5" aria-hidden="true"></span>
+              <div class="crew-field">
+                <label class="field-label" for="sup5Input">Plumbing Foreman</label>
+                <input id="sup5Input" class="crew-input" type="text" maxlength="40" autocomplete="off" />
+              </div>
+              <button type="button" id="scheduleToggle-sup5" class="schedule-toggle-btn">Schedule</button>
+            </div>
+          </div>
+      </div>
+
+      <div class="supervisor-branch installer-row">
+        <div class="crew-card">
+          <span class="swatch swatch-sup6" aria-hidden="true"></span>
+          <div class="crew-field">
+            <label class="field-label" for="sup6Input">Installer</label>
+            <input id="sup6Input" class="crew-input" type="text" maxlength="40" autocomplete="off" />
+          </div>
+          <button type="button" id="scheduleToggle-sup6" class="schedule-toggle-btn">Schedule</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="elephant-scene" aria-hidden="true">
+    <div class="elephant-track" id="elephantTrack">
+      <div class="elephant-walker is-walking" id="elephantWalker">
+        <svg class="elephant-svg" viewBox="0 0 260 180" xmlns="http://www.w3.org/2000/svg" focusable="false" style="overflow:visible;">
+          <defs>
+            <linearGradient id="eleBodyGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#BABABA"/>
+              <stop offset="55%" stop-color="#9C9C9C"/>
+              <stop offset="100%" stop-color="#767676"/>
+            </linearGradient>
+            <linearGradient id="eleEarGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#8E8E8E"/>
+              <stop offset="100%" stop-color="#686868"/>
+            </linearGradient>
+            <linearGradient id="eleEarInnerGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#A9A2A0"/>
+              <stop offset="100%" stop-color="#8B807D"/>
+            </linearGradient>
+          </defs>
+
+          <ellipse cx="140" cy="174" rx="84" ry="6" fill="#000000" opacity="0.15"/>
+
+          <g class="ele-tail">
+            <path d="M64,92 C46,98 36,112 40,132" fill="none" stroke="#8A8A8A" stroke-width="5" stroke-linecap="round"/>
+            <path d="M40,132 q-3,6 -1,11 M40,132 q2,7 6,10 M40,132 q6,3 9,8" stroke="#5B5B5B" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          </g>
+
+          <g class="ele-leg ele-leg-back-far">
+            <rect x="113" y="120" width="20" height="42" rx="9" fill="#8B8B8B"/>
+            <ellipse cx="118" cy="160" rx="3" ry="2.2" fill="#EDEDED"/>
+            <ellipse cx="123" cy="161.5" rx="3" ry="2.2" fill="#EDEDED"/>
+            <ellipse cx="128" cy="160" rx="3" ry="2.2" fill="#EDEDED"/>
+          </g>
+
+          <g class="ele-leg ele-leg-back-near">
+            <rect x="92" y="118" width="22" height="46" rx="10" fill="url(#eleBodyGrad)"/>
+            <path d="M95,132 q11,4 19,0 M95,144 q11,4 19,0" stroke="#6E6E6E" stroke-width="1.6" fill="none" opacity="0.6"/>
+            <ellipse cx="97" cy="163" rx="3.2" ry="2.4" fill="#F2F2F2"/>
+            <ellipse cx="103" cy="164.5" rx="3.2" ry="2.4" fill="#F2F2F2"/>
+            <ellipse cx="109" cy="163" rx="3.2" ry="2.4" fill="#F2F2F2"/>
+          </g>
+
+          <ellipse class="ele-body" cx="135" cy="100" rx="75" ry="48" fill="url(#eleBodyGrad)"/>
+          <path d="M92,72 q10,-6 22,-2 M96,112 q14,6 26,2 M158,62 q12,-5 24,0" stroke="#707070" stroke-width="1.6" fill="none" opacity="0.5"/>
+
+          <g class="ele-leg ele-leg-front-far">
+            <rect x="193" y="120" width="20" height="42" rx="9" fill="#8B8B8B"/>
+            <ellipse cx="198" cy="160" rx="3" ry="2.2" fill="#EDEDED"/>
+            <ellipse cx="203" cy="161.5" rx="3" ry="2.2" fill="#EDEDED"/>
+            <ellipse cx="208" cy="160" rx="3" ry="2.2" fill="#EDEDED"/>
+          </g>
+
+          <g class="ele-leg ele-leg-front-near">
+            <rect x="170" y="118" width="22" height="46" rx="10" fill="url(#eleBodyGrad)"/>
+            <path d="M173,132 q11,4 19,0 M173,144 q11,4 19,0" stroke="#6E6E6E" stroke-width="1.6" fill="none" opacity="0.6"/>
+            <ellipse cx="175" cy="163" rx="3.2" ry="2.4" fill="#F2F2F2"/>
+            <ellipse cx="181" cy="164.5" rx="3.2" ry="2.4" fill="#F2F2F2"/>
+            <ellipse cx="187" cy="163" rx="3.2" ry="2.4" fill="#F2F2F2"/>
+          </g>
+
+          <g class="ele-ear">
+            <path d="M165,45 C120,10 95,70 122,118 C145,138 185,128 190,90 C192,70 182,50 165,45 Z" fill="url(#eleEarGrad)" stroke="#57514F" stroke-width="1.6"/>
+            <path d="M160,54 C130,35 118,76 136,108 C150,122 176,114 178,88 C179,72 172,58 160,54 Z" fill="url(#eleEarInnerGrad)" opacity="0.55"/>
+            <path d="M153,62 C136,55 128,80 140,100" fill="none" stroke="#57514F" stroke-width="1.3" opacity="0.55"/>
+          </g>
+
+          <ellipse class="ele-head" cx="204" cy="78" rx="39" ry="36" fill="url(#eleBodyGrad)"/>
+          <path d="M186,58 q10,-5 20,-2" stroke="#7C7C7C" stroke-width="1.4" fill="none" opacity="0.5"/>
+
+          <g class="ele-trunk">
+            <path d="M215,88 C226,94 231,108 229,124" fill="none" stroke="#6E6E6E" stroke-width="19.5" stroke-linecap="round"/>
+            <path d="M229,124 C227,140 222,152 214,160" fill="none" stroke="#6E6E6E" stroke-width="14.5" stroke-linecap="round"/>
+            <path d="M214,160 C208,163 203,161 200,155" fill="none" stroke="#6E6E6E" stroke-width="8.5" stroke-linecap="round"/>
+            <path d="M215,88 C226,94 231,108 229,124" fill="none" stroke="url(#eleBodyGrad)" stroke-width="17" stroke-linecap="round"/>
+            <path d="M229,124 C227,140 222,152 214,160" fill="none" stroke="url(#eleBodyGrad)" stroke-width="12.5" stroke-linecap="round"/>
+            <path d="M214,160 C208,163 203,161 200,155" fill="none" stroke="url(#eleBodyGrad)" stroke-width="7" stroke-linecap="round"/>
+            <path d="M221,98 C225,104 225,110 221,116" fill="none" stroke="#6E6E6E" stroke-width="1.5" opacity="0.5"/>
+            <path d="M219,126 C223,132 223,138 218,144" fill="none" stroke="#6E6E6E" stroke-width="1.4" opacity="0.45"/>
+            <circle class="ele-puff ele-puff-1" cx="200" cy="155" r="4" fill="#FFFFFF"/>
+            <circle class="ele-puff ele-puff-2" cx="200" cy="155" r="4" fill="#FFFFFF"/>
+            <circle class="ele-puff ele-puff-3" cx="200" cy="155" r="4" fill="#FFFFFF"/>
+          </g>
+
+          <path class="ele-tusk" d="M221,98 C233,102 240,111 236,122" fill="none" stroke="#F4EFE2" stroke-width="6.5" stroke-linecap="round"/>
+          <path class="ele-tusk" d="M224,94 C237,97 245,105 242,116" fill="none" stroke="#EDE6D2" stroke-width="5.5" stroke-linecap="round"/>
+
+          <circle cx="215" cy="68" r="3.4" fill="#2B241C"/>
+          <circle cx="216" cy="66.8" r="1" fill="#FFFFFF"/>
+          <path d="M206,60 q8,-5 16,-1" fill="none" stroke="#5A5A5A" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="calendarOverlay" class="calendar-overlay" hidden>
+  <div class="calendar-overlay-header">
+    <button type="button" id="calendarBackBtn" class="calendar-back-btn">‹ Back to board</button>
+    <span class="calendar-person-name" id="calendarPersonName"></span>
+  </div>
+  <div class="calendar-month-nav">
+    <button type="button" id="calendarPrevBtn" class="calendar-nav-btn">‹ Prev</button>
+    <span class="calendar-month-label" id="calendarMonthLabel"></span>
+    <button type="button" id="calendarNextBtn" class="calendar-nav-btn">Next ›</button>
+    <button type="button" id="calendarTodayBtn" class="calendar-today-btn">Today</button>
+  </div>
+  <div class="calendar-weekday-row" id="calendarWeekdayRow"></div>
+  <div class="calendar-grid" id="calendarGrid"></div>
+  <div class="calendar-day-editor" id="calendarDayEditor" hidden></div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, doc, setDoc, updateDoc, onSnapshot, deleteField } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+// ---------------------------------------------------------------
+// FIREBASE SETUP — replace the placeholder strings below with your
+// own project's values from the Firebase console (Project settings
+// > General > "Your apps" > SDK setup and configuration > Config).
+// See the setup guide for exactly where to find these.
+// ---------------------------------------------------------------
+var firebaseConfig = {
+  apiKey: "AIzaSyCBCPQR92hDeZO9wcqiZ8-qFrW0DR0kz1s",
+  authDomain: "plumcore-assignment-board.firebaseapp.com",
+  projectId: "plumcore-assignment-board",
+  storageBucket: "plumcore-assignment-board.firebasestorage.app",
+  messagingSenderId: "479311710386",
+  appId: "1:479311710386:web:53bd200e8bbb81df8b21ab"
+};
+var firebaseApp = initializeApp(firebaseConfig);
+var firestoreDb = getFirestore(firebaseApp);
+var firebaseAuth = getAuth(firebaseApp);
+
+(function () {
+  'use strict';
+
+  var SUP_KEYS = ['sup2', 'sup3'];
+  var SUP_FALLBACK = { sup1Name: 'General Superintendent', sup2Name: 'Supervisor 1', sup3Name: 'Supervisor 2', sup4Name: 'Layout Manager', sup5Name: 'Plumbing Foreman', sup6Name: 'Installer', sup7Name: 'Charlie Cheetum' };
+
+  var state = {
+    sup1Name: 'General Superintendent',
+    sup2Name: 'Supervisor 1',
+    sup3Name: 'Supervisor 2',
+    sup4Name: 'Layout Manager',
+    sup5Name: 'Plumbing Foreman',
+    sup6Name: 'Installer',
+    sup7Name: 'Charlie Cheetum',
+    foremen: { sup2: [], sup3: [] }
+  };
+  // Last server-confirmed supervisor names, used to roll back a name
+  // edit locally if the write turns out not to be permitted.
+  var confirmedNames = { sup1Name: 'General Superintendent', sup2Name: 'Supervisor 1', sup3Name: 'Supervisor 2', sup4Name: 'Layout Manager', sup5Name: 'Plumbing Foreman', sup6Name: 'Installer', sup7Name: 'Charlie Cheetum' };
+
+  var docRef = null;
+  var loaded = false;
+  var dbUnavailable = false;
+  var disconnected = false;
+  var canEdit = true;
+  var triedInit = false;
+  var writeChain = Promise.resolve();
+  var els = {};
+  var nameDebounce = {};
+  var scheduleDebounce = {};
+
+  // ---------------- Forecast schedule helpers ----------------
+  function pad2(n) { return n < 10 ? '0' + n : '' + n; }
+  function dateKey(d) { return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
+  function addDays(d, n) { var r = new Date(d); r.setDate(r.getDate() + n); return r; }
+  function firstOfMonth(d) { return new Date(d.getFullYear(), d.getMonth(), 1); }
+  var MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  var MONTH_NAMES_FULL = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  var DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  function fmtDayLabel(d) { return DAY_NAMES[d.getDay()] + ', ' + MONTH_NAMES[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear(); }
+
+  // Which person's full-page schedule calendar is currently open (or null),
+  // which month it's showing, and which single day (if any) is expanded
+  // for editing inside that calendar.
+  var calendarOpenPerson = null;
+  var calendarViewDate = firstOfMonth(new Date());
+  var calendarSelectedDk = null;
+  var calendarRepeatNote = '';
+
+  // Stable color per job name, so a day's card always matches the color of
+  // its job, and changes color whenever the job name changes.
+  var JOB_HUES = [28, 190, 265, 340, 100, 210, 45, 305, 150, 5];
+  function hashString(s) {
+    var h = 0;
+    for (var i = 0; i < s.length; i++) { h = (h * 31 + s.charCodeAt(i)) | 0; }
+    return Math.abs(h);
+  }
+  function colorForJobName(jobName) {
+    var key = (jobName || '').trim().toLowerCase();
+    if (!key) return null;
+    var hue = JOB_HUES[hashString(key) % JOB_HUES.length];
+    return { bg: 'hsla(' + hue + ', 55%, 55%, 0.18)', border: 'hsl(' + hue + ', 50%, 45%)' };
+  }
+
+  function q(id) { return document.getElementById(id); }
+
+  function enqueueWrite(fn) {
+    writeChain = writeChain.then(fn, fn);
+    return writeChain;
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function cloneForemen(f) {
+    return { sup2: (f.sup2 || []).slice(), sup3: (f.sup3 || []).slice() };
+  }
+
+  // Each person's forecast schedule lives in its own "schedules/<slug>"
+  // document (not the main board doc), so it can carry a looser write
+  // rule: any signed-in viewer can fill it in, while the org chart itself
+  // (names, foremen) stays admin-only.
+  function slugify(s) {
+    return String(s).toLowerCase().replace(/[^a-z0-9_\-.~:@+]/g, '-');
+  }
+
+  function cloneDayMap(days) {
+    var out = {};
+    Object.keys(days || {}).forEach(function (dk) {
+      var e = days[dk] || {};
+      out[dk] = {
+        jobName: typeof e.jobName === 'string' ? e.jobName : '',
+        po: typeof e.po === 'string' ? e.po : '',
+        address: typeof e.address === 'string' ? e.address : '',
+        stage: typeof e.stage === 'string' ? e.stage : ''
+      };
+    });
+    return out;
+  }
+
+  var dbHandle = null;
+  var scheduleDocsCache = {};
+  var scheduleSubs = {};
+  var authReadyResolve = null;
+  var authReady = new Promise(function (res) { authReadyResolve = res; });
+  var scheduleReadyResolvers = {};
+  var scheduleReadyPromises = {};
+  var lastWriteError = '';
+
+  function ensureScheduleSub(personKey) {
+    if (scheduleSubs[personKey]) return;
+    scheduleSubs[personKey] = true; // claim immediately so a second call can't double-queue
+    scheduleReadyPromises[personKey] = new Promise(function (res) {
+      scheduleReadyResolvers[personKey] = res;
+    });
+    authReady.then(function () {
+      var ref = doc(dbHandle, 'schedules', slugify(personKey));
+      scheduleSubs[personKey] = onSnapshot(ref, function (snap) {
+        scheduleDocsCache[personKey] = snap.exists() ? cloneDayMap(snap.data()) : {};
+        if (scheduleReadyResolvers[personKey]) { scheduleReadyResolvers[personKey](); scheduleReadyResolvers[personKey] = null; }
+        render();
+      }, function () {
+        scheduleDocsCache[personKey] = scheduleDocsCache[personKey] || {};
+        if (scheduleReadyResolvers[personKey]) { scheduleReadyResolvers[personKey](); scheduleReadyResolvers[personKey] = null; }
+        render();
+      });
+    });
+  }
+
+  function inputForName(which) {
+    if (which === 'sup1Name') return els.sup1Input;
+    if (which === 'sup2Name') return els.sup2Input;
+    if (which === 'sup3Name') return els.sup3Input;
+    if (which === 'sup4Name') return els.sup4Input;
+    if (which === 'sup5Name') return els.sup5Input;
+    if (which === 'sup7Name') return els.sup7Input;
+    return els.sup6Input;
+  }
+
+  function handleWriteError(err, opts) {
+    opts = opts || {};
+    if (err && err.code === 'permission-denied') {
+      canEdit = false;
+      if (opts.revertName) {
+        state[opts.revertName] = confirmedNames[opts.revertName];
+      }
+    } else if (err && err.code === 'unauthenticated') {
+      canEdit = false;
+      disconnected = true;
+    } else if (err && err.code === 'not-found') {
+      triedInit = false;
+      lastWriteError = "Couldn't save — the board record is missing. Reload the page.";
+    } else if (err) {
+      lastWriteError = "Couldn't save your change. Try again.";
+    }
+    // unavailable / resource-exhausted / deadline-exceeded / aborted:
+    // transient — leave canEdit as-is.
+    render();
+  }
+
+  // ---------------- DB wiring ----------------
+  function boot() {
+    render();
+    // Watchdog on whether the FIRST snapshot ever arrives (not just whether
+    // auth succeeded) — a Firestore listen can open its channel and then
+    // never deliver data, and nothing used to catch that case.
+    var dataTimer = setTimeout(function () {
+      if (loaded) return;
+      dbUnavailable = true; render();
+    }, 15000);
+    signInAnonymously(firebaseAuth).catch(function () {
+      clearTimeout(dataTimer);
+      dbUnavailable = true; loaded = true; render();
+    });
+    onAuthStateChanged(firebaseAuth, function (user) {
+      if (!user) return;
+      if (docRef) return; // already booted for this page load
+      dbUnavailable = false;
+      dbHandle = firestoreDb;
+      docRef = doc(firestoreDb, 'board/week1');
+      authReadyResolve();
+      onSnapshot(docRef, function (snap) {
+        clearTimeout(dataTimer);
+        loaded = true;
+        disconnected = false;
+        if (snap.exists()) {
+          var data = snap.data() || {};
+          state.sup1Name = (typeof data.sup1Name === 'string' && data.sup1Name) ? data.sup1Name : SUP_FALLBACK.sup1Name;
+          state.sup2Name = (typeof data.sup2Name === 'string' && data.sup2Name) ? data.sup2Name : SUP_FALLBACK.sup2Name;
+          state.sup3Name = (typeof data.sup3Name === 'string' && data.sup3Name) ? data.sup3Name : SUP_FALLBACK.sup3Name;
+          state.sup4Name = (typeof data.sup4Name === 'string' && data.sup4Name) ? data.sup4Name : SUP_FALLBACK.sup4Name;
+          state.sup5Name = (typeof data.sup5Name === 'string' && data.sup5Name) ? data.sup5Name : SUP_FALLBACK.sup5Name;
+          state.sup6Name = (typeof data.sup6Name === 'string' && data.sup6Name) ? data.sup6Name : SUP_FALLBACK.sup6Name;
+          state.sup7Name = (typeof data.sup7Name === 'string' && data.sup7Name) ? data.sup7Name : 'Charlie Cheetum';
+          var f = (data.foremen && typeof data.foremen === 'object') ? data.foremen : {};
+          state.foremen = {
+            sup2: Array.isArray(f.sup2) ? f.sup2.filter(function (t) { return typeof t === 'string' && t; }) : [],
+            sup3: Array.isArray(f.sup3) ? f.sup3.filter(function (t) { return typeof t === 'string' && t; }) : []
+          };
+          confirmedNames.sup1Name = state.sup1Name;
+          confirmedNames.sup2Name = state.sup2Name;
+          confirmedNames.sup3Name = state.sup3Name;
+          confirmedNames.sup4Name = state.sup4Name;
+          confirmedNames.sup5Name = state.sup5Name;
+          confirmedNames.sup6Name = state.sup6Name;
+          confirmedNames.sup7Name = state.sup7Name;
+        } else if (!triedInit) {
+          triedInit = true;
+          setDoc(docRef, {
+            sup1Name: state.sup1Name,
+            sup2Name: state.sup2Name,
+            sup3Name: state.sup3Name,
+            sup4Name: state.sup4Name,
+            sup5Name: state.sup5Name,
+            sup6Name: state.sup6Name,
+            sup7Name: state.sup7Name,
+            foremen: state.foremen
+          }).catch(function (err) { handleWriteError(err); });
+        }
+        render();
+      }, function (err) {
+        clearTimeout(dataTimer);
+        if (!loaded) { dbUnavailable = true; } else { disconnected = true; }
+        render();
+      });
+    });
+  }
+
+  // ---------------- Write actions ----------------
+  function saveSupName(which) {
+    var raw = inputForName(which).value;
+    var fallback = SUP_FALLBACK[which];
+    var v = raw.trim().slice(0, 40) || fallback;
+    state[which] = v;
+    render();
+    var patch = {}; patch[which] = v;
+    lastWriteError = '';
+    authReady.then(function () {
+      enqueueWrite(function () {
+        return updateDoc(docRef, patch).catch(function (err) { handleWriteError(err, { revertName: which }); });
+      });
+    });
+  }
+
+  function onSupInput(which, value) {
+    state[which] = value;
+    render();
+    clearTimeout(nameDebounce[which]);
+    nameDebounce[which] = setTimeout(function () { saveSupName(which); }, 500);
+  }
+
+  function addForeman(supKey, name, errorEl) {
+    var v = name.trim().slice(0, 40);
+    errorEl.hidden = true;
+    if (!v) return false;
+    var list = state.foremen[supKey] || [];
+    if (list.indexOf(v) !== -1) {
+      errorEl.textContent = v + ' is already listed under this supervisor.';
+      errorEl.hidden = false;
+      return false;
+    }
+    var merged = cloneForemen(state.foremen);
+    merged[supKey] = list.concat([v]);
+    lastWriteError = '';
+    authReady.then(function () {
+      enqueueWrite(function () {
+        return updateDoc(docRef, { foremen: merged }).catch(function (err) { handleWriteError(err); });
+      });
+    });
+    return true;
+  }
+
+  function removeForeman(supKey, name) {
+    var merged = cloneForemen(state.foremen);
+    merged[supKey] = (merged[supKey] || []).filter(function (n) { return n !== name; });
+    lastWriteError = '';
+    authReady.then(function () {
+      enqueueWrite(function () {
+        return updateDoc(docRef, { foremen: merged }).catch(function (err) { handleWriteError(err); });
+      });
+    });
+  }
+
+  function clearAllForemen() {
+    if (!window.confirm('Remove all Job Foremen from every supervisor? This cannot be undone.')) return;
+    lastWriteError = '';
+    authReady.then(function () {
+      enqueueWrite(function () {
+        return updateDoc(docRef, { foremen: { sup2: [], sup3: [] } }).catch(function (err) { handleWriteError(err); });
+      });
+    });
+  }
+
+  function saveScheduleEntry(personKey, dk, fields) {
+    var readyPromise = scheduleReadyPromises[personKey];
+    if (!dbHandle || !readyPromise) return; // panel was never opened via ensureScheduleSub; shouldn't happen from the UI
+    var jobName = (fields.jobName || '').trim().slice(0, 60);
+    var po = (fields.po || '').trim().slice(0, 30);
+    var address = (fields.address || '').trim().slice(0, 100);
+    var stage = (fields.stage || '').trim().slice(0, 60);
+    var isEmpty = !jobName && !po && !address && !stage;
+    readyPromise.then(function () {
+      var ref = doc(dbHandle, 'schedules', slugify(personKey));
+      var localDayMap = cloneDayMap(scheduleDocsCache[personKey]);
+      var patch = {};
+      if (isEmpty) {
+        delete localDayMap[dk];
+        patch[dk] = deleteField();
+      } else {
+        localDayMap[dk] = { jobName: jobName, po: po, address: address, stage: stage };
+        patch[dk] = localDayMap[dk];
+      }
+      scheduleDocsCache[personKey] = localDayMap;
+      lastWriteError = '';
+      enqueueWrite(function () {
+        return setDoc(ref, patch, { merge: true }).catch(function (err) { handleScheduleWriteError(err); });
+      });
+    });
+  }
+
+  // Schedule writes use their own (looser) rule, so a rejection here
+  // means connectivity/lifecycle trouble, not an admin-only board edit —
+  // never flips the board's canEdit flag.
+  function handleScheduleWriteError(err) {
+    if (err && err.code === 'unauthenticated') {
+      disconnected = true;
+    } else if (err && err.code === 'permission-denied') {
+      lastWriteError = "Couldn't save this schedule entry — you may not have edit access.";
+    } else if (err) {
+      lastWriteError = "Couldn't save this schedule entry. Try again.";
+    }
+    render();
+  }
+
+  function displayNameForPersonKey(personKey) {
+    if (personKey.indexOf('foreman:') === 0) {
+      var parts = personKey.split(':');
+      return parts[2] || personKey;
+    }
+    return state[personKey + 'Name'] || personKey;
+  }
+
+  function openCalendarView(personKey) {
+    calendarOpenPerson = personKey;
+    calendarViewDate = firstOfMonth(new Date());
+    calendarSelectedDk = null;
+    calendarRepeatNote = '';
+    ensureScheduleSub(personKey);
+    els.calendarOverlay.hidden = false;
+    renderCalendarOverlay();
+  }
+
+  function closeCalendarView() {
+    calendarOpenPerson = null;
+    calendarSelectedDk = null;
+    els.calendarOverlay.hidden = true;
+  }
+
+  function shiftCalendarMonth(delta) {
+    calendarViewDate = new Date(calendarViewDate.getFullYear(), calendarViewDate.getMonth() + delta, 1);
+    calendarSelectedDk = null;
+    calendarRepeatNote = '';
+    renderCalendarOverlay();
+  }
+
+  function resetCalendarToToday() {
+    calendarViewDate = firstOfMonth(new Date());
+    calendarSelectedDk = null;
+    calendarRepeatNote = '';
+    renderCalendarOverlay();
+  }
+
+  function selectCalendarDay(dk) {
+    calendarSelectedDk = (calendarSelectedDk === dk) ? null : dk;
+    calendarRepeatNote = '';
+    renderCalendarOverlay();
+  }
+
+  // ---------------- Rendering ----------------
+  function renderStatusBanner() {
+    var banner = els.statusBanner;
+    if (lastWriteError) {
+      banner.hidden = false;
+      banner.className = 'status-banner status-error';
+      banner.textContent = lastWriteError;
+      return;
+    }
+    if (dbUnavailable) {
+      banner.hidden = false;
+      banner.className = 'status-banner status-error';
+      banner.textContent = "Can't connect to the shared board right now. Check your connection and reopen this page.";
+      return;
+    }
+    if (disconnected) {
+      banner.hidden = false;
+      banner.className = 'status-banner status-warning';
+      banner.textContent = 'Connection lost — showing the last saved version. Reopen the page to reconnect.';
+      return;
+    }
+    if (!loaded) {
+      banner.hidden = false;
+      banner.className = 'status-banner status-info';
+      banner.textContent = 'Connecting to the shared board…';
+      return;
+    }
+    if (!canEdit) {
+      banner.hidden = false;
+      banner.className = 'status-banner status-info';
+      banner.textContent = 'View only — ask your project manager for edit access to make changes here.';
+      return;
+    }
+    banner.hidden = true;
+  }
+
+  function syncCrewInputs() {
+    if (document.activeElement !== els.sup1Input) els.sup1Input.value = state.sup1Name;
+    if (document.activeElement !== els.sup2Input) els.sup2Input.value = state.sup2Name;
+    if (document.activeElement !== els.sup3Input) els.sup3Input.value = state.sup3Name;
+    if (document.activeElement !== els.sup4Input) els.sup4Input.value = state.sup4Name;
+    if (document.activeElement !== els.sup5Input) els.sup5Input.value = state.sup5Name;
+    if (document.activeElement !== els.sup6Input) els.sup6Input.value = state.sup6Name;
+    if (document.activeElement !== els.sup7Input) els.sup7Input.value = state.sup7Name;
+    var disable = !canEdit || dbUnavailable;
+    els.sup1Input.disabled = disable;
+    els.sup2Input.disabled = disable;
+    els.sup3Input.disabled = disable;
+    els.sup4Input.disabled = disable;
+    els.sup5Input.disabled = disable;
+    els.sup6Input.disabled = disable;
+    els.sup7Input.disabled = disable;
+  }
+
+  // ---------------- Full-page schedule calendar ----------------
+  var WEEKDAY_HEADERS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+  function buildWeekdayRow() {
+    if (els.calendarWeekdayRow.childNodes.length) return;
+    WEEKDAY_HEADERS.forEach(function (label) {
+      var el = document.createElement('span');
+      el.className = 'calendar-weekday-label';
+      el.textContent = label;
+      els.calendarWeekdayRow.appendChild(el);
+    });
+  }
+
+  function renderCalendarGrid(personKey, disableControls) {
+    var grid = els.calendarGrid;
+    grid.innerHTML = '';
+    var entries = scheduleDocsCache[personKey] || {};
+    var year = calendarViewDate.getFullYear();
+    var month = calendarViewDate.getMonth();
+    var firstDay = new Date(year, month, 1);
+    var gridStart = addDays(firstDay, -firstDay.getDay());
+    var todayKey = dateKey(new Date());
+
+    for (var i = 0; i < 42; i++) {
+      (function () {
+        var date = addDays(gridStart, i);
+        var dk = dateKey(date);
+        var entry = entries[dk];
+
+        var cell = document.createElement('button');
+        cell.type = 'button';
+        cell.className = 'calendar-day-cell';
+        if (date.getMonth() !== month) cell.classList.add('is-other-month');
+        if (dk === todayKey) cell.classList.add('is-today');
+        if (dk === calendarSelectedDk) cell.classList.add('is-selected');
+
+        var num = document.createElement('span');
+        num.className = 'calendar-day-number';
+        num.textContent = String(date.getDate());
+        cell.appendChild(num);
+
+        if (entry && entry.jobName) {
+          var chip = document.createElement('span');
+          chip.className = 'calendar-day-job';
+          chip.textContent = entry.jobName;
+          var c = colorForJobName(entry.jobName);
+          if (c) {
+            chip.style.background = c.bg;
+            chip.style.color = 'var(--color-ink)';
+            chip.style.borderLeft = '3px solid ' + c.border;
+          }
+          cell.appendChild(chip);
+        }
+
+        cell.addEventListener('click', function () { selectCalendarDay(dk); });
+        grid.appendChild(cell);
+      })();
+    }
+  }
+
+  function renderDayEditor(personKey, disableControls) {
+    var editor = els.calendarDayEditor;
+    editor.innerHTML = '';
+    if (!calendarSelectedDk) { editor.hidden = true; return; }
+    editor.hidden = false;
+
+    var dk = calendarSelectedDk;
+    var dp = dk.split('-');
+    var date = new Date(parseInt(dp[0], 10), parseInt(dp[1], 10) - 1, parseInt(dp[2], 10));
+    var entries = scheduleDocsCache[personKey] || {};
+    var entry = entries[dk] || { jobName: '', po: '', address: '', stage: '' };
+
+    var head = document.createElement('div');
+    head.className = 'calendar-day-editor-head';
+    var title = document.createElement('span');
+    title.className = 'calendar-day-editor-title';
+    title.textContent = fmtDayLabel(date);
+    head.appendChild(title);
+    var closeBtn = document.createElement('button');
+    closeBtn.type = 'button';
+    closeBtn.className = 'calendar-back-btn';
+    closeBtn.textContent = 'Close';
+    closeBtn.addEventListener('click', function () { calendarSelectedDk = null; renderCalendarOverlay(); });
+    head.appendChild(closeBtn);
+    editor.appendChild(head);
+
+    var fieldGrid = document.createElement('div');
+    fieldGrid.className = 'calendar-field-grid';
+    editor.appendChild(fieldGrid);
+
+    function makeField(labelText, value, maxLen, spanFull) {
+      var wrap = document.createElement('div');
+      wrap.className = 'calendar-field' + (spanFull ? ' span-2' : '');
+      var lbl = document.createElement('span');
+      lbl.className = 'calendar-field-label';
+      lbl.textContent = labelText;
+      wrap.appendChild(lbl);
+      var input = document.createElement('input');
+      input.type = 'text';
+      input.maxLength = maxLen;
+      input.value = value;
+      input.disabled = disableControls;
+      wrap.appendChild(input);
+      fieldGrid.appendChild(wrap);
+      return input;
+    }
+
+    var jobNameInput = makeField('Job Name', entry.jobName, 60, false);
+    var poInput = makeField('PO #', entry.po, 30, false);
+    var addressInput = makeField('Address', entry.address, 100, true);
+    var stageInput = makeField('Stage of Work', entry.stage, 60, true);
+
+    var save = function () {
+      saveScheduleEntry(personKey, dk, {
+        jobName: jobNameInput.value,
+        po: poInput.value,
+        address: addressInput.value,
+        stage: stageInput.value
+      });
+      renderCalendarGrid(personKey, disableControls);
+    };
+    jobNameInput.addEventListener('blur', save);
+    poInput.addEventListener('blur', save);
+    addressInput.addEventListener('blur', save);
+    stageInput.addEventListener('blur', save);
+
+    var clearBtn = document.createElement('button');
+    clearBtn.type = 'button';
+    clearBtn.className = 'calendar-back-btn';
+    clearBtn.textContent = 'Clear this day';
+    clearBtn.disabled = disableControls;
+    clearBtn.addEventListener('click', function () {
+      jobNameInput.value = ''; poInput.value = ''; addressInput.value = ''; stageInput.value = '';
+      save();
+    });
+    editor.appendChild(clearBtn);
+
+    var repeatRow = document.createElement('div');
+    repeatRow.className = 'calendar-repeat-row';
+    var repeatLabel = document.createElement('span');
+    repeatLabel.textContent = 'Copy this entry through:';
+    repeatRow.appendChild(repeatLabel);
+    var repeatInput = document.createElement('input');
+    repeatInput.type = 'date';
+    repeatInput.min = dk;
+    repeatInput.disabled = disableControls;
+    repeatRow.appendChild(repeatInput);
+    var applyBtn = document.createElement('button');
+    applyBtn.type = 'button';
+    applyBtn.className = 'calendar-back-btn';
+    applyBtn.textContent = 'Apply';
+    applyBtn.disabled = disableControls;
+    editor.appendChild(repeatRow);
+
+    var note = document.createElement('div');
+    note.className = 'calendar-repeat-note';
+    note.textContent = calendarRepeatNote;
+
+    applyBtn.addEventListener('click', function () {
+      if (!repeatInput.value) return;
+      var ep = repeatInput.value.split('-');
+      var endDate = new Date(parseInt(ep[0], 10), parseInt(ep[1], 10) - 1, parseInt(ep[2], 10));
+      if (endDate < date) return;
+      var values = { jobName: jobNameInput.value, po: poInput.value, address: addressInput.value, stage: stageInput.value };
+      var count = 0;
+      var cur = date;
+      while (cur <= endDate) {
+        saveScheduleEntry(personKey, dateKey(cur), values);
+        count++;
+        cur = addDays(cur, 1);
+      }
+      calendarRepeatNote = 'Applied to ' + count + ' day' + (count === 1 ? '' : 's') + '.';
+      note.textContent = calendarRepeatNote;
+      renderCalendarGrid(personKey, disableControls);
+    });
+    repeatRow.appendChild(applyBtn);
+    editor.appendChild(note);
+  }
+
+  function renderCalendarOverlay() {
+    if (!calendarOpenPerson) return;
+    var personKey = calendarOpenPerson;
+    var disableControls = dbUnavailable;
+    els.calendarPersonName.textContent = displayNameForPersonKey(personKey);
+    els.calendarMonthLabel.textContent = MONTH_NAMES_FULL[calendarViewDate.getMonth()] + ' ' + calendarViewDate.getFullYear();
+    buildWeekdayRow();
+    renderCalendarGrid(personKey, disableControls);
+    renderDayEditor(personKey, disableControls);
+  }
+
+  function renderForemen() {
+    var disableControls = !canEdit || dbUnavailable;
+
+    SUP_KEYS.forEach(function (supKey) {
+      if (document.activeElement !== els.foremanInput[supKey]) {
+        els.foremanInput[supKey].disabled = disableControls;
+      }
+      els.addForemanBtn[supKey].disabled = disableControls;
+      var listEl = els.foremanList[supKey];
+      listEl.innerHTML = '';
+      var names = state.foremen[supKey] || [];
+
+      if (!names.length) {
+        var empty = document.createElement('p');
+        empty.className = 'foreman-empty';
+        empty.textContent = loaded ? 'No Job Foremen yet.' : 'Loading…';
+        listEl.appendChild(empty);
+      } else {
+        names.forEach(function (name) {
+          var personKey = 'foreman:' + supKey + ':' + name;
+
+          var entryWrap = document.createElement('div');
+          entryWrap.className = 'foreman-entry';
+
+          var box = document.createElement('div');
+          box.className = 'foreman-box foreman-box-' + supKey;
+          var nameSpan = document.createElement('span');
+          nameSpan.className = 'foreman-name-text';
+          nameSpan.textContent = name;
+          box.appendChild(nameSpan);
+
+          var scheduleBtn = document.createElement('button');
+          scheduleBtn.type = 'button';
+          scheduleBtn.className = 'schedule-toggle-btn';
+          scheduleBtn.textContent = 'Schedule';
+          scheduleBtn.disabled = dbUnavailable;
+          scheduleBtn.addEventListener('click', function () { openCalendarView(personKey); });
+          box.appendChild(scheduleBtn);
+
+          entryWrap.appendChild(box);
+          listEl.appendChild(entryWrap);
+        });
+      }
+    });
+  }
+
+  var DATETIME_DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+  function renderDateTimeBar() {
+    var now = new Date();
+    els.datetimeDate.textContent = DATETIME_DAY_NAMES[now.getDay()] + ', ' + MONTH_NAMES_FULL[now.getMonth()] + ' ' + now.getDate() + ', ' + now.getFullYear();
+    var h = now.getHours();
+    var ampm = h >= 12 ? 'PM' : 'AM';
+    var h12 = h % 12; if (h12 === 0) h12 = 12;
+    els.datetimeClock.textContent = h12 + ':' + pad2(now.getMinutes()) + ':' + pad2(now.getSeconds()) + ' ' + ampm;
+  }
+
+  function render() {
+    renderStatusBanner();
+    syncCrewInputs();
+    renderForemen();
+    ['sup4', 'sup5', 'sup6', 'sup7'].forEach(function (supKey) {
+      els.scheduleToggle[supKey].disabled = dbUnavailable;
+    });
+    if (calendarOpenPerson) renderCalendarOverlay();
+  }
+
+  function wireStaticControls() {
+    els.sup1Input.addEventListener('input', function (e) { onSupInput('sup1Name', e.target.value); });
+    els.sup2Input.addEventListener('input', function (e) { onSupInput('sup2Name', e.target.value); });
+    els.sup3Input.addEventListener('input', function (e) { onSupInput('sup3Name', e.target.value); });
+    els.sup4Input.addEventListener('input', function (e) { onSupInput('sup4Name', e.target.value); });
+    els.sup5Input.addEventListener('input', function (e) { onSupInput('sup5Name', e.target.value); });
+    els.sup6Input.addEventListener('input', function (e) { onSupInput('sup6Name', e.target.value); });
+    els.sup7Input.addEventListener('input', function (e) { onSupInput('sup7Name', e.target.value); });
+    els.sup1Input.addEventListener('blur', function () { clearTimeout(nameDebounce.sup1Name); saveSupName('sup1Name'); });
+    els.sup2Input.addEventListener('blur', function () { clearTimeout(nameDebounce.sup2Name); saveSupName('sup2Name'); });
+    els.sup3Input.addEventListener('blur', function () { clearTimeout(nameDebounce.sup3Name); saveSupName('sup3Name'); });
+    els.sup4Input.addEventListener('blur', function () { clearTimeout(nameDebounce.sup4Name); saveSupName('sup4Name'); });
+    els.sup5Input.addEventListener('blur', function () { clearTimeout(nameDebounce.sup5Name); saveSupName('sup5Name'); });
+    els.sup6Input.addEventListener('blur', function () { clearTimeout(nameDebounce.sup6Name); saveSupName('sup6Name'); });
+    els.sup7Input.addEventListener('blur', function () { clearTimeout(nameDebounce.sup7Name); saveSupName('sup7Name'); });
+
+    ['sup4', 'sup5', 'sup6', 'sup7'].forEach(function (supKey) {
+      els.scheduleToggle[supKey].addEventListener('click', function () { openCalendarView(supKey); });
+    });
+
+    els.calendarBackBtn.addEventListener('click', closeCalendarView);
+    els.calendarPrevBtn.addEventListener('click', function () { shiftCalendarMonth(-1); });
+    els.calendarNextBtn.addEventListener('click', function () { shiftCalendarMonth(1); });
+    els.calendarTodayBtn.addEventListener('click', resetCalendarToToday);
+
+    ['sup2', 'sup3'].forEach(function (supKey) {
+      var submitForeman = function (e) {
+        if (e) e.preventDefault();
+        var input = els.foremanInput[supKey];
+        var ok = addForeman(supKey, input.value, els.foremanError[supKey]);
+        if (ok) input.value = '';
+      };
+      els.addForemanForm[supKey].addEventListener('submit', submitForeman);
+      els.addForemanBtn[supKey].addEventListener('click', submitForeman);
+    });
+  }
+
+  function start() {
+    els.statusBanner = q('statusBanner');
+    els.sup1Input = q('sup1Input');
+    els.sup2Input = q('sup2Input');
+    els.sup3Input = q('sup3Input');
+    els.sup4Input = q('sup4Input');
+    els.sup5Input = q('sup5Input');
+    els.sup6Input = q('sup6Input');
+    els.sup7Input = q('sup7Input');
+    els.foremanList = { sup2: q('foremanList-sup2'), sup3: q('foremanList-sup3') };
+    els.foremanInput = { sup2: q('foremanInput-sup2'), sup3: q('foremanInput-sup3') };
+    els.foremanError = { sup2: q('foremanError-sup2'), sup3: q('foremanError-sup3') };
+    els.addForemanForm = { sup2: q('addForemanForm-sup2'), sup3: q('addForemanForm-sup3') };
+    els.addForemanBtn = { sup2: q('addForemanBtn-sup2'), sup3: q('addForemanBtn-sup3') };
+
+    els.datetimeDate = q('datetimeDate');
+    els.datetimeClock = q('datetimeClock');
+    els.scheduleToggle = { sup4: q('scheduleToggle-sup4'), sup5: q('scheduleToggle-sup5'), sup6: q('scheduleToggle-sup6'), sup7: q('scheduleToggle-sup7') };
+    els.calendarOverlay = q('calendarOverlay');
+    els.calendarBackBtn = q('calendarBackBtn');
+    els.calendarPersonName = q('calendarPersonName');
+    els.calendarPrevBtn = q('calendarPrevBtn');
+    els.calendarNextBtn = q('calendarNextBtn');
+    els.calendarTodayBtn = q('calendarTodayBtn');
+    els.calendarMonthLabel = q('calendarMonthLabel');
+    els.calendarWeekdayRow = q('calendarWeekdayRow');
+    els.calendarGrid = q('calendarGrid');
+    els.calendarDayEditor = q('calendarDayEditor');
+
+    wireStaticControls();
+    renderDateTimeBar();
+    setInterval(renderDateTimeBar, 1000);
+    boot();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', start);
+  } else {
+    start();
+  }
+})();
+</script>
+
+<script>
+(function initElephant() {
+  var track = document.getElementById('elephantTrack');
+  var el = document.getElementById('elephantWalker');
+  if (!track || !el) return;
+
+  var reduceMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  var elephantWidth = 132;
+  var pos = 12;
+  var dir = 1;
+  var speed = randRange(18, 34);
+  var state = 'walking';
+  var stateTimer = 0;
+  var walkDuration = randRange(6, 14);
+  var pauseDuration = randRange(2, 4);
+  var lastTs = null;
+
+  function randRange(a, b) { return a + Math.random() * (b - a); }
+
+  function applyTransform() {
+    el.style.transform = 'translateX(' + pos.toFixed(1) + 'px) scaleX(' + dir + ')';
+  }
+
+  function setState(next) {
+    state = next;
+    stateTimer = 0;
+    if (next === 'tooting') {
+      el.classList.remove('is-walking');
+      el.classList.add('is-tooting');
+      pauseDuration = randRange(2.4, 4);
+    } else {
+      el.classList.remove('is-tooting');
+      el.classList.add('is-walking');
+      walkDuration = randRange(6, 14);
+      speed = randRange(18, 34);
+      if (Math.random() < 0.35) dir = -dir;
+    }
+  }
+
+  function tick(ts) {
+    if (lastTs == null) lastTs = ts;
+    var dt = Math.min((ts - lastTs) / 1000, 0.25);
+    lastTs = ts;
+
+    if (reduceMotion) {
+      applyTransform();
+      requestAnimationFrame(tick);
+      return;
+    }
+
+    stateTimer += dt;
+
+    if (state === 'walking') {
+      var maxPos = Math.max(0, track.clientWidth - elephantWidth);
+      pos += dir * speed * dt;
+      if (pos <= 0) { pos = 0; dir = 1; }
+      if (pos >= maxPos) { pos = maxPos; dir = -1; }
+      applyTransform();
+      if (stateTimer >= walkDuration) setState('tooting');
+    } else {
+      applyTransform();
+      if (stateTimer >= pauseDuration) setState('walking');
+    }
+
+    requestAnimationFrame(tick);
+  }
+
+  applyTransform();
+  requestAnimationFrame(tick);
+})();
+</script>
+
+</body>
+</html>
