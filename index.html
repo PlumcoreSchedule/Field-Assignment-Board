@@ -1217,6 +1217,13 @@ var firebaseAuth = getAuth(firebaseApp);
     // never deliver data, and nothing used to catch that case.
     var dataTimer = null;
     onAuthStateChanged(firebaseAuth, function (user) {
+      if (user && user.isAnonymous) {
+        // Leftover anonymous session from before sign-in was required.
+        // Clear it so the real sign-in gate shows instead of a broken
+        // "signed in as null" state that Firestore will reject anyway.
+        signOut(firebaseAuth);
+        return;
+      }
       currentUser = user || null;
       if (!user) {
         els.authGateOverlay.hidden = false;
