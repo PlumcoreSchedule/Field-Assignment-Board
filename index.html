@@ -662,7 +662,10 @@
     position: fixed;
     inset: 0;
     z-index: 60;
-    background: var(--color-canvas);
+    background:
+      radial-gradient(circle at 18% 8%, rgba(184, 92, 46, 0.10), transparent 55%),
+      radial-gradient(circle at 88% 92%, rgba(31, 111, 111, 0.09), transparent 50%),
+      var(--color-canvas);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -671,26 +674,46 @@
   .authgate-overlay[hidden] { display: none; }
   .authgate-card {
     width: 100%;
-    max-width: 380px;
+    max-width: 400px;
     background: var(--color-surface);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-md);
-    padding: 28px 24px;
+    padding: 32px 28px 28px;
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 16px;
   }
+  .authgate-logo {
+    height: 38px;
+    width: auto;
+    align-self: flex-start;
+    background: #FFFFFF;
+    padding: 5px 9px;
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-sm);
+  }
+  .authgate-eyebrow {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-accent);
+    font-weight: 600;
+  }
+  .authgate-heading { display: flex; flex-direction: column; gap: 5px; }
   .authgate-title {
     font-family: var(--font-display);
-    font-size: var(--text-lg);
+    font-size: 1.55rem;
     font-weight: 600;
     color: var(--color-ink);
   }
   .authgate-sub {
     font-size: var(--text-sm);
     color: var(--color-ink-muted);
+    line-height: 1.5;
   }
+  .authgate-fields { display: flex; flex-direction: column; gap: 10px; }
   .authgate-input {
     font-family: var(--font-body);
     font-size: var(--text-base);
@@ -698,35 +721,72 @@
     background: var(--color-canvas);
     color: var(--color-ink);
     border-radius: var(--radius-sm);
-    padding: 10px 12px;
-    min-height: 42px;
+    padding: 11px 13px;
+    min-height: 44px;
     width: 100%;
+    transition: border-color 0.12s ease, box-shadow 0.12s ease;
   }
-  .authgate-input:focus { outline: 2px solid var(--color-focus); outline-offset: 1px; }
+  .authgate-input:focus { outline: none; border-color: var(--color-focus); box-shadow: 0 0 0 3px rgba(31, 111, 111, 0.16); }
   .authgate-input:disabled { opacity: 0.6; }
+  .authgate-card .btn-primary { width: 100%; min-height: 46px; font-size: var(--text-base); margin-top: 2px; }
   .authgate-msg { font-size: var(--text-sm); min-height: 1.2em; margin: 0; }
   .authgate-msg.is-error { color: var(--color-danger); }
   .authgate-msg.is-info { color: var(--color-ink-muted); }
+  .authgate-toggles {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 14px;
+    border-top: 1px solid var(--color-border);
+  }
   .authgate-signedout {
-    background: transparent;
-    border: none;
-    color: var(--color-ink-muted);
-    font-size: var(--text-xs);
-    text-decoration: underline;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--color-surface-alt);
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    padding: 5px 12px 5px 5px;
+    color: var(--color-ink);
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    font-weight: 600;
     cursor: pointer;
-    align-self: flex-start;
-    padding: 0;
+    transition: background 0.12s ease, border-color 0.12s ease;
+  }
+  .authgate-signedout:hover { background: var(--color-accent-soft); border-color: var(--color-accent); }
+  .authgate-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--color-accent);
+    color: var(--color-accent-ink);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-body);
+    font-size: 11px;
+    font-weight: 700;
+    flex: none;
+  }
+  .authgate-signout-label {
+    color: var(--color-ink-muted);
+    font-weight: 500;
+    padding-left: 8px;
+    border-left: 1px solid var(--color-border-strong);
   }
   .authgate-mode-toggle {
     background: transparent;
     border: none;
     color: var(--color-focus);
     font-size: var(--text-xs);
-    text-decoration: underline;
+    font-weight: 600;
+    text-decoration: none;
     cursor: pointer;
     align-self: flex-start;
     padding: 0;
   }
+  .authgate-mode-toggle:hover { text-decoration: underline; }
   .authgate-field[hidden] { display: none; }
 </style>
 </head>
@@ -734,14 +794,22 @@
 
 <div id="authGateOverlay" class="authgate-overlay">
   <form id="authGateForm" class="authgate-card">
-    <span class="authgate-title">Assignment Board sign-in</span>
-    <span class="authgate-sub" id="authGateSub">Enter your @plumcore.com email. We'll email you a one-time link to sign in — no password needed.</span>
-    <input id="authEmailInput" class="authgate-input" type="email" placeholder="you@plumcore.com" autocomplete="email" />
-    <input id="authPasswordInput" class="authgate-input authgate-field" type="password" placeholder="Password" autocomplete="current-password" hidden />
-    <button type="submit" id="authSendBtn" class="btn btn-primary">Send sign-in link</button>
-    <p id="authGateMsg" class="authgate-msg" role="status" aria-live="polite"></p>
-    <button type="button" id="authFirstTimeToggle" class="authgate-mode-toggle authgate-field" hidden>First time? Create your password instead</button>
-    <button type="button" id="authModeToggle" class="authgate-mode-toggle">Admin? Sign in with a password instead</button>
+    <img src="logo.png" alt="Plumcore logo" class="authgate-logo" />
+    <div class="authgate-heading">
+      <span class="authgate-eyebrow">Plumcore Plumbing Field Ops</span>
+      <span class="authgate-title">Assignment Board sign-in</span>
+      <span class="authgate-sub" id="authGateSub">Enter your @plumcore.com email. We'll email you a one-time link to sign in — no password needed.</span>
+    </div>
+    <div class="authgate-fields">
+      <input id="authEmailInput" class="authgate-input" type="email" placeholder="you@plumcore.com" autocomplete="email" />
+      <input id="authPasswordInput" class="authgate-input authgate-field" type="password" placeholder="Password" autocomplete="current-password" hidden />
+      <button type="submit" id="authSendBtn" class="btn btn-primary">Send sign-in link</button>
+      <p id="authGateMsg" class="authgate-msg" role="status" aria-live="polite"></p>
+    </div>
+    <div class="authgate-toggles">
+      <button type="button" id="authFirstTimeToggle" class="authgate-mode-toggle authgate-field" hidden>First time? Create your password instead</button>
+      <button type="button" id="authModeToggle" class="authgate-mode-toggle">Admin? Sign in with a password instead</button>
+    </div>
   </form>
 </div>
 
@@ -978,6 +1046,38 @@ var firebaseAuth = getAuth(firebaseApp);
   }
 
   function q(id) { return document.getElementById(id); }
+
+  // Turns "jonathan@plumcore.com" into "Jonathan", "5-8@plumcore.com" into
+  // "5 8", etc. — just the human-friendly part before the @, for a
+  // cleaner "signed in as" chip than the full email address.
+  function displayNameFromEmail(email) {
+    var local = String(email || '').split('@')[0];
+    var parts = local.split(/[._-]+/).filter(Boolean);
+    if (!parts.length) return local;
+    return parts.map(function (p) {
+      if (/^[0-9]+$/.test(p)) return p;
+      return p.charAt(0).toUpperCase() + p.slice(1).toLowerCase();
+    }).join(' ');
+  }
+
+  function renderSignedInAs(email) {
+    var displayName = displayNameFromEmail(email);
+    var initial = (displayName.trim().charAt(0) || '?').toUpperCase();
+    els.authSignedInAs.innerHTML = '';
+    var avatar = document.createElement('span');
+    avatar.className = 'authgate-avatar';
+    avatar.textContent = initial;
+    var nameSpan = document.createElement('span');
+    nameSpan.className = 'authgate-signedin-name';
+    nameSpan.textContent = displayName;
+    var signOutSpan = document.createElement('span');
+    signOutSpan.className = 'authgate-signout-label';
+    signOutSpan.textContent = 'Sign out';
+    els.authSignedInAs.title = email;
+    els.authSignedInAs.appendChild(avatar);
+    els.authSignedInAs.appendChild(nameSpan);
+    els.authSignedInAs.appendChild(signOutSpan);
+  }
 
   function enqueueWrite(fn) {
     writeChain = writeChain.then(fn, fn);
@@ -1233,7 +1333,7 @@ var firebaseAuth = getAuth(firebaseApp);
       }
       els.authGateOverlay.hidden = true;
       els.authSignedInAs.hidden = false;
-      els.authSignedInAs.textContent = user.email + ' · Sign out';
+      renderSignedInAs(user.email);
       if (docRef) return; // already booted for this page load
       dataTimer = setTimeout(function () {
         if (loaded) return;
