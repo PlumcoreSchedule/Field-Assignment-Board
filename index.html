@@ -1604,7 +1604,10 @@ var firebaseAuth = getAuth(firebaseApp);
     if (document.activeElement !== els.sup5Input) els.sup5Input.value = state.sup5Name;
     if (document.activeElement !== els.sup6Input) els.sup6Input.value = state.sup6Name;
     if (document.activeElement !== els.sup7Input) els.sup7Input.value = state.sup7Name;
-    var disable = !canEdit || dbUnavailable;
+    // Leadership names are locked for everyone, admins included — changes
+    // are made only when Jonathan asks Claude to update them (see
+    // window.__fabSetLeadershipName below), never by typing into these boxes.
+    var disable = true;
     els.sup1Input.disabled = disable;
     els.sup2Input.disabled = disable;
     els.sup3Input.disabled = disable;
@@ -1805,7 +1808,11 @@ var firebaseAuth = getAuth(firebaseApp);
   }
 
   function renderForemen() {
-    var disableControls = !canEdit || dbUnavailable;
+    // Job Foremen names are locked too — same rule as the leadership
+    // names above: nobody edits names by clicking into a box. Admins keep
+    // editing only the individual Schedule (see the Schedule buttons
+    // below, still gated on dbUnavailable only, not on this).
+    var disableControls = true;
 
     SUP_KEYS.forEach(function (supKey) {
       if (document.activeElement !== els.foremanInput[supKey]) {
@@ -1954,6 +1961,93 @@ var firebaseAuth = getAuth(firebaseApp);
     els.calendarWeekdayRow = q('calendarWeekdayRow');
     els.calendarGrid = q('calendarGrid');
     els.calendarDayEditor = q('calendarDayEditor');
+
+    // ---------------- Admin-only name updates (console-only, no UI control) ----------------
+    // The leadership name fields above are permanently disabled (see
+    // syncCrewInputs) so nobody can edit them by clicking in — on purpose.
+    // Jonathan asks Claude to change a name, and Claude runs this from the
+    // browser console while signed in as an admin. Not linked from any
+    // button or menu.
+    var LEADERSHIP_NAME_KEYS = ['sup1Name', 'sup2Name', 'sup3Name', 'sup4Name', 'sup5Name', 'sup6Name', 'sup7Name'];
+    window.__fabSetLeadershipName = function (which, value) {
+      if (LEADERSHIP_NAME_KEYS.indexOf(which) === -1) {
+        return Promise.reject(new Error('Unknown field "' + which + '". Valid: ' + LEADERSHIP_NAME_KEYS.join(', ')));
+      }
+      if (!docRef) {
+        return Promise.reject(new Error('Board not loaded yet — try again in a moment.'));
+      }
+      var fallback = SUP_FALLBACK[which];
+      var v = String(value || '').trim().slice(0, 40) || fallback;
+      state[which] = v;
+      render();
+      var patch = {}; patch[which] = v;
+      lastWriteError = '';
+      return authReady.then(function () {
+        return enqueueWrite(function () {
+          return updateDoc(docRef, patch).catch(function (err) {
+            handleWriteError(err, { revertName: which });
+            throw err;
+          });
+        });
+      });
+    };
+    window.__fabGetLeadershipNames = function () {
+      var out = {};
+      LEADERSHIP_NAME_KEYS.forEach(function (k) { out[k] = state[k]; });
+      return out;
+    };
+
+    // Job Foremen add/remove is locked in the UI the same way (see
+    // renderForemen) — these are the console-only equivalents.
+    window.__fabAddForeman = function (supKey, name) {
+      if (SUP_KEYS.indexOf(supKey) === -1) {
+        return Promise.reject(new Error('Unknown supervisor key "' + supKey + '". Valid: ' + SUP_KEYS.join(', ')));
+      }
+      if (!docRef) {
+        return Promise.reject(new Error('Board not loaded yet — try again in a moment.'));
+      }
+      var v = String(name || '').trim().slice(0, 40);
+      if (!v) {
+        return Promise.reject(new Error('Name cannot be empty.'));
+      }
+      var list = state.foremen[supKey] || [];
+      if (list.indexOf(v) !== -1) {
+        return Promise.reject(new Error(v + ' is already listed under this supervisor.'));
+      }
+      var merged = cloneForemen(state.foremen);
+      merged[supKey] = list.concat([v]);
+      lastWriteError = '';
+      return authReady.then(function () {
+        return enqueueWrite(function () {
+          return updateDoc(docRef, { foremen: merged }).catch(function (err) {
+            handleWriteError(err);
+            throw err;
+          });
+        });
+      });
+    };
+    window.__fabRemoveForeman = function (supKey, name) {
+      if (SUP_KEYS.indexOf(supKey) === -1) {
+        return Promise.reject(new Error('Unknown supervisor key "' + supKey + '". Valid: ' + SUP_KEYS.join(', ')));
+      }
+      if (!docRef) {
+        return Promise.reject(new Error('Board not loaded yet — try again in a moment.'));
+      }
+      var merged = cloneForemen(state.foremen);
+      merged[supKey] = (merged[supKey] || []).filter(function (n) { return n !== name; });
+      lastWriteError = '';
+      return authReady.then(function () {
+        return enqueueWrite(function () {
+          return updateDoc(docRef, { foremen: merged }).catch(function (err) {
+            handleWriteError(err);
+            throw err;
+          });
+        });
+      });
+    };
+    window.__fabGetForemen = function () {
+      return cloneForemen(state.foremen);
+    };
 
     wireStaticControls();
     renderDateTimeBar();
