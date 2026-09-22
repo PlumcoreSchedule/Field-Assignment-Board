@@ -353,7 +353,7 @@
   .supervisor-branch .swatch { width: 18px; height: 18px; }
   .supervisor-branch .crew-input { font-size: var(--text-sm); }
 
-  /* ---------- lead row: general superintendent + datetime, side by side ---------- */
+  /* ---------- lead row: supervisors + datetime, side by side ---------- */
   .lead-row {
     display: flex;
     flex-wrap: wrap;
@@ -361,7 +361,8 @@
     gap: 14px;
   }
   .lead-row .crew-lead-card { flex: 1 1 320px; width: auto; }
-  .lead-row .datetime-bar { flex: 1 1 260px; margin: 0; }
+  .lead-row .supervisor-branch { flex: 2 1 240px; }
+  .lead-row .datetime-bar { flex: 0 1 190px; margin: 0; align-self: flex-start; }
 
   /* ---------- slab manager + plumbing foreman, left-aligned under supervisors ---------- */
   .crew-left-row {
@@ -459,6 +460,15 @@
     letter-spacing: 0.04em;
     color: var(--color-accent);
   }
+  .datetime-bar-compact {
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 2px;
+    padding: 6px 10px;
+  }
+  .datetime-bar-compact .datetime-date { font-size: var(--text-xs); }
+  .datetime-bar-compact .datetime-clock { font-size: var(--text-sm); }
 
   /* ---------- schedule (per-person forecast) ---------- */
   .foreman-entry { display: flex; flex-direction: column; gap: 6px; }
@@ -841,22 +851,15 @@
 
   <main class="content" style="display:flex; flex-direction:column; gap:18px;">
     <section class="crew" aria-label="Field chain of command">
-      <div class="lead-row">
-        <div class="crew-card crew-lead-card">
+      <div class="crew-card crew-lead-card" hidden style="display:none" aria-hidden="true">
         <span class="swatch swatch-sup1" aria-hidden="true"></span>
         <div class="crew-field">
           <label class="field-label" for="sup1Input">General Superintendent</label>
-          <input id="sup1Input" class="crew-input" type="text" maxlength="40" autocomplete="off" />
+          <input id="sup1Input" class="crew-input" type="text" maxlength="40" autocomplete="off" tabindex="-1" />
         </div>
       </div>
 
-        <div class="datetime-bar">
-          <span class="datetime-date" id="datetimeDate"></span>
-          <span class="datetime-clock" id="datetimeClock"></span>
-        </div>
-      </div>
-
-      <div class="crew-sub-row">
+      <div class="lead-row">
         <div class="supervisor-branch">
           <div class="crew-card">
             <span class="swatch swatch-sup2" aria-hidden="true"></span>
@@ -895,6 +898,13 @@
           </div>
         </div>
 
+        <div class="datetime-bar datetime-bar-compact">
+          <span class="datetime-date" id="datetimeDate"></span>
+          <span class="datetime-clock" id="datetimeClock"></span>
+        </div>
+      </div>
+
+      <div class="crew-sub-row">
         <div class="supervisor-branch">
           <div class="crew-card">
             <span class="swatch swatch-sup7" aria-hidden="true"></span>
@@ -1861,7 +1871,7 @@ var firebaseAuth = getAuth(firebaseApp);
 
   function renderDateTimeBar() {
     var now = new Date();
-    els.datetimeDate.textContent = DATETIME_DAY_NAMES[now.getDay()] + ', ' + MONTH_NAMES_FULL[now.getMonth()] + ' ' + now.getDate() + ', ' + now.getFullYear();
+    els.datetimeDate.textContent = (now.getMonth() + 1) + '/' + now.getDate() + '/' + now.getFullYear();
     var h = now.getHours();
     var ampm = h >= 12 ? 'PM' : 'AM';
     var h12 = h % 12; if (h12 === 0) h12 = 12;
