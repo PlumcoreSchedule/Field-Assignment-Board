@@ -191,8 +191,7 @@
     padding: 4px 8px;
     border-radius: var(--radius-sm);
   }
-  .topbar-right { display: flex; flex-direction: column; align-items: stretch; gap: 8px; flex-wrap: wrap; width: calc(50% - 135px); }
-  .topbar-right .authgate-signedout { align-self: flex-end; }
+  .topbar-right { display: flex; flex-direction: column; align-items: stretch; gap: 8px; flex-wrap: wrap; }
 
   .btn {
     font-family: var(--font-body);
@@ -678,6 +677,77 @@
     min-height: 34px;
   }
   .calendar-repeat-note { font-size: var(--text-xs); color: var(--color-ink-muted); }
+  .calendar-color-row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+  .calendar-color-row-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-ink-muted);
+    font-weight: 600;
+    margin-right: 2px;
+  }
+  .calendar-color-dot {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 2px solid var(--color-border-strong);
+    cursor: pointer;
+    padding: 0;
+  }
+  .calendar-color-dot.is-selected { border-color: var(--color-ink); box-shadow: 0 0 0 2px var(--color-focus); }
+  .calendar-color-dot:disabled { cursor: not-allowed; opacity: 0.6; }
+
+  /* ---------- per-supervisor project list ---------- */
+  .projects-list { display: flex; flex-direction: column; gap: 10px; padding: 16px; max-width: 900px; margin: 0 auto; width: 100%; }
+  .project-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1.3fr 1.3fr 1.3fr auto;
+    gap: 8px;
+    align-items: end;
+    background: var(--color-surface-alt);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 10px;
+  }
+  @media (max-width: 720px) {
+    .project-row { grid-template-columns: 1fr 1fr; }
+  }
+  .project-field { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .project-field-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-ink-muted);
+    font-weight: 600;
+  }
+  .project-field input {
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    border: 1px solid var(--color-border-strong);
+    background: var(--color-surface);
+    color: var(--color-ink);
+    border-radius: var(--radius-sm);
+    padding: 6px 8px;
+    min-height: 34px;
+    width: 100%;
+  }
+  .project-field input:disabled { opacity: 0.55; }
+  .project-remove-btn {
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    padding: 8px 12px;
+    min-height: 34px;
+    border: 1px solid var(--color-border-strong);
+    background: var(--color-surface);
+    color: var(--color-danger);
+    cursor: pointer;
+  }
+  .project-remove-btn:hover:not(:disabled) { background: var(--color-danger-soft); }
+  .project-remove-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .projects-empty { color: var(--color-ink-muted); font-size: var(--text-sm); padding: 4px; }
+  #projectsAddBtn { margin: 0 16px 24px; }
 
   /* ---------- sign-in gate ---------- */
   .authgate-overlay {
@@ -873,6 +943,7 @@
               <label class="field-label" for="sup2Input">Supervisor</label>
               <input id="sup2Input" class="crew-input" type="text" maxlength="40" autocomplete="off" />
             </div>
+            <button type="button" id="projectsToggle-sup2" class="schedule-toggle-btn">Projects</button>
           </div>
           <div class="foreman-column" data-sup="sup2">
             <span class="field-label">Job Foremen</span>
@@ -892,6 +963,7 @@
               <label class="field-label" for="sup3Input">Supervisor</label>
               <input id="sup3Input" class="crew-input" type="text" maxlength="40" autocomplete="off" />
             </div>
+            <button type="button" id="projectsToggle-sup3" class="schedule-toggle-btn">Projects</button>
           </div>
           <div class="foreman-column" data-sup="sup3">
             <span class="field-label">Job Foremen</span>
@@ -969,6 +1041,15 @@
   <div class="calendar-weekday-row" id="calendarWeekdayRow"></div>
   <div class="calendar-grid" id="calendarGrid"></div>
   <div class="calendar-day-editor" id="calendarDayEditor" hidden></div>
+</div>
+
+<div id="projectsOverlay" class="calendar-overlay" hidden>
+  <div class="calendar-overlay-header">
+    <button type="button" id="projectsBackBtn" class="calendar-back-btn">‹ Back to board</button>
+    <span class="calendar-person-name" id="projectsPersonName"></span>
+  </div>
+  <div class="projects-list" id="projectsList"></div>
+  <button type="button" id="projectsAddBtn" class="btn btn-sm btn-primary">Add project</button>
 </div>
 
 <script type="module">
@@ -1049,18 +1130,15 @@ var firebaseAuth = getAuth(firebaseApp);
   var calendarSelectedDk = null;
   var calendarRepeatNote = '';
 
-  // Stable color per job name, so a day's card always matches the color of
-  // its job, and changes color whenever the job name changes.
-  var JOB_HUES = [28, 190, 265, 340, 100, 210, 45, 305, 150, 5];
-  function hashString(s) {
-    var h = 0;
-    for (var i = 0; i < s.length; i++) { h = (h * 31 + s.charCodeAt(i)) | 0; }
-    return Math.abs(h);
-  }
-  function colorForJobName(jobName) {
-    var key = (jobName || '').trim().toLowerCase();
-    if (!key) return null;
-    var hue = JOB_HUES[hashString(key) % JOB_HUES.length];
+  // A day's color is no longer derived automatically from its job name —
+  // admins pick one manually from this fixed palette (stored as entry.color,
+  // one of these keys, or '' for none).
+  var DAY_COLOR_KEYS = ['black', 'red', 'orange', 'yellow', 'green', 'blue', 'purple'];
+  var DAY_COLOR_HUES = { red: 0, orange: 28, yellow: 48, green: 140, blue: 213, purple: 275 };
+  function colorForKey(key) {
+    if (!key || DAY_COLOR_KEYS.indexOf(key) === -1) return null;
+    if (key === 'black') return { bg: 'rgba(0, 0, 0, 0.30)', border: '#000000' };
+    var hue = DAY_COLOR_HUES[key];
     return { bg: 'hsla(' + hue + ', 55%, 55%, 0.18)', border: 'hsl(' + hue + ', 50%, 45%)' };
   }
 
@@ -1133,7 +1211,8 @@ var firebaseAuth = getAuth(firebaseApp);
         pm: typeof e.pm === 'string' ? e.pm : '',
         contractor: typeof e.contractor === 'string' ? e.contractor : '',
         superintendent: typeof e.superintendent === 'string' ? e.superintendent : '',
-        superintendentPhone: typeof e.superintendentPhone === 'string' ? e.superintendentPhone : ''
+        superintendentPhone: typeof e.superintendentPhone === 'string' ? e.superintendentPhone : '',
+        color: (typeof e.color === 'string' && DAY_COLOR_KEYS.indexOf(e.color) !== -1) ? e.color : ''
       };
     });
     return out;
@@ -1166,6 +1245,76 @@ var firebaseAuth = getAuth(firebaseApp);
         render();
       });
     });
+  }
+
+  // ---------------- Per-supervisor project list (Jimmy/Chris "Projects" tab) ----------------
+  // Same shape as the schedules/* sync above, but the whole list lives in one
+  // doc per supervisor (projects/sup2, projects/sup3) as an `items` array —
+  // there's no per-day keying to worry about, so writes just replace the
+  // whole array. Same looser "any signed-in user can edit" rule as Schedule.
+  function cloneProjectsList(items) {
+    return (Array.isArray(items) ? items : []).map(function (it) {
+      it = it || {};
+      return {
+        id: (typeof it.id === 'string' && it.id) ? it.id : (Date.now().toString(36) + Math.random().toString(36).slice(2, 8)),
+        job: typeof it.job === 'string' ? it.job : '',
+        startDate: typeof it.startDate === 'string' ? it.startDate : '',
+        contractor: typeof it.contractor === 'string' ? it.contractor : '',
+        contact: typeof it.contact === 'string' ? it.contact : '',
+        pm: typeof it.pm === 'string' ? it.pm : ''
+      };
+    });
+  }
+
+  var projectsDocsCache = {};
+  var projectsSubs = {};
+  var projectsReadyResolvers = {};
+  var projectsReadyPromises = {};
+
+  function ensureProjectsSub(supKey) {
+    if (projectsSubs[supKey]) return;
+    projectsSubs[supKey] = true;
+    projectsReadyPromises[supKey] = new Promise(function (res) {
+      projectsReadyResolvers[supKey] = res;
+    });
+    authReady.then(function () {
+      var ref = doc(dbHandle, 'projects', slugify(supKey));
+      projectsSubs[supKey] = onSnapshot(ref, function (snap) {
+        projectsDocsCache[supKey] = snap.exists() ? cloneProjectsList(snap.data().items) : [];
+        if (projectsReadyResolvers[supKey]) { projectsReadyResolvers[supKey](); projectsReadyResolvers[supKey] = null; }
+        render();
+      }, function () {
+        projectsDocsCache[supKey] = projectsDocsCache[supKey] || [];
+        if (projectsReadyResolvers[supKey]) { projectsReadyResolvers[supKey](); projectsReadyResolvers[supKey] = null; }
+        render();
+      });
+    });
+  }
+
+  function saveProjectsList(supKey, items) {
+    var readyPromise = projectsReadyPromises[supKey];
+    if (!dbHandle || !readyPromise) return;
+    var cleaned = cloneProjectsList(items);
+    readyPromise.then(function () {
+      var ref = doc(dbHandle, 'projects', slugify(supKey));
+      projectsDocsCache[supKey] = cleaned;
+      lastWriteError = '';
+      render();
+      enqueueWrite(function () {
+        return setDoc(ref, { items: cleaned }, { merge: true }).catch(function (err) { handleProjectsWriteError(err); });
+      });
+    });
+  }
+
+  function handleProjectsWriteError(err) {
+    if (err && err.code === 'unauthenticated') {
+      disconnected = true;
+    } else if (err && err.code === 'permission-denied') {
+      lastWriteError = "Couldn't save this project list — you may not have edit access.";
+    } else if (err) {
+      lastWriteError = "Couldn't save this project list. Try again.";
+    }
+    render();
   }
 
   function inputForName(which) {
@@ -1499,7 +1648,8 @@ var firebaseAuth = getAuth(firebaseApp);
     var contractor = (fields.contractor || '').trim().slice(0, 60);
     var superintendent = (fields.superintendent || '').trim().slice(0, 60);
     var superintendentPhone = (fields.superintendentPhone || '').trim().slice(0, 20);
-    var isEmpty = !jobName && !po && !address && !stage && !pm && !contractor && !superintendent && !superintendentPhone;
+    var color = DAY_COLOR_KEYS.indexOf(fields.color) !== -1 ? fields.color : '';
+    var isEmpty = !jobName && !po && !address && !stage && !pm && !contractor && !superintendent && !superintendentPhone && !color;
     readyPromise.then(function () {
       var ref = doc(dbHandle, 'schedules', slugify(personKey));
       var localDayMap = cloneDayMap(scheduleDocsCache[personKey]);
@@ -1508,7 +1658,7 @@ var firebaseAuth = getAuth(firebaseApp);
         delete localDayMap[dk];
         patch[dk] = deleteField();
       } else {
-        localDayMap[dk] = { jobName: jobName, po: po, address: address, stage: stage, pm: pm, contractor: contractor, superintendent: superintendent, superintendentPhone: superintendentPhone };
+        localDayMap[dk] = { jobName: jobName, po: po, address: address, stage: stage, pm: pm, contractor: contractor, superintendent: superintendent, superintendentPhone: superintendentPhone, color: color };
         patch[dk] = localDayMap[dk];
       }
       scheduleDocsCache[personKey] = localDayMap;
@@ -1555,6 +1705,19 @@ var firebaseAuth = getAuth(firebaseApp);
     calendarOpenPerson = null;
     calendarSelectedDk = null;
     els.calendarOverlay.hidden = true;
+  }
+
+  var projectsOpenSup = null;
+  function openProjectsView(supKey) {
+    projectsOpenSup = supKey;
+    ensureProjectsSub(supKey);
+    els.projectsOverlay.hidden = false;
+    renderProjectsOverlay();
+  }
+
+  function closeProjectsView() {
+    projectsOpenSup = null;
+    els.projectsOverlay.hidden = true;
   }
 
   function shiftCalendarMonth(delta) {
@@ -1679,7 +1842,7 @@ var firebaseAuth = getAuth(firebaseApp);
           var chip = document.createElement('span');
           chip.className = 'calendar-day-job';
           chip.textContent = entry.jobName;
-          var c = colorForJobName(entry.jobName);
+          var c = colorForKey(entry.color);
           if (c) {
             chip.style.background = c.bg;
             chip.style.color = 'var(--color-ink)';
@@ -1704,7 +1867,7 @@ var firebaseAuth = getAuth(firebaseApp);
     var dp = dk.split('-');
     var date = new Date(parseInt(dp[0], 10), parseInt(dp[1], 10) - 1, parseInt(dp[2], 10));
     var entries = scheduleDocsCache[personKey] || {};
-    var entry = entries[dk] || { jobName: '', po: '', address: '', stage: '', pm: '', contractor: '', superintendent: '', superintendentPhone: '' };
+    var entry = entries[dk] || { jobName: '', po: '', address: '', stage: '', pm: '', contractor: '', superintendent: '', superintendentPhone: '', color: '' };
 
     var head = document.createElement('div');
     head.className = 'calendar-day-editor-head';
@@ -1750,6 +1913,8 @@ var firebaseAuth = getAuth(firebaseApp);
     var superintendentInput = makeField('Superintendent', entry.superintendent, 60, false);
     var superintendentPhoneInput = makeField('Superintendent Phone', entry.superintendentPhone, 20, false);
 
+    var currentColor = entry.color || '';
+
     var save = function () {
       saveScheduleEntry(personKey, dk, {
         jobName: jobNameInput.value,
@@ -1759,7 +1924,8 @@ var firebaseAuth = getAuth(firebaseApp);
         pm: pmInput.value,
         contractor: contractorInput.value,
         superintendent: superintendentInput.value,
-        superintendentPhone: superintendentPhoneInput.value
+        superintendentPhone: superintendentPhoneInput.value,
+        color: currentColor
       });
       renderCalendarGrid(personKey, disableControls);
     };
@@ -1772,6 +1938,34 @@ var firebaseAuth = getAuth(firebaseApp);
     superintendentInput.addEventListener('blur', save);
     superintendentPhoneInput.addEventListener('blur', save);
 
+    // Color is admin-only — anyone signed in can fill out the rest of a
+    // day's schedule entry, but only an admin can pick/change its color.
+    var colorDisabled = disableControls || !canEdit;
+    var colorRow = document.createElement('div');
+    colorRow.className = 'calendar-color-row';
+    var colorLabel = document.createElement('span');
+    colorLabel.className = 'calendar-color-row-label';
+    colorLabel.textContent = 'Color';
+    colorRow.appendChild(colorLabel);
+    var colorDots = {};
+    DAY_COLOR_KEYS.forEach(function (key) {
+      var dot = document.createElement('button');
+      dot.type = 'button';
+      dot.className = 'calendar-color-dot';
+      dot.title = key.charAt(0).toUpperCase() + key.slice(1);
+      dot.style.background = colorForKey(key).border;
+      dot.disabled = colorDisabled;
+      dot.addEventListener('click', function () {
+        currentColor = (currentColor === key) ? '' : key;
+        DAY_COLOR_KEYS.forEach(function (k) { colorDots[k].classList.toggle('is-selected', currentColor === k); });
+        save();
+      });
+      colorDots[key] = dot;
+      colorRow.appendChild(dot);
+    });
+    DAY_COLOR_KEYS.forEach(function (k) { colorDots[k].classList.toggle('is-selected', currentColor === k); });
+    editor.appendChild(colorRow);
+
     var clearBtn = document.createElement('button');
     clearBtn.type = 'button';
     clearBtn.className = 'calendar-back-btn';
@@ -1780,6 +1974,8 @@ var firebaseAuth = getAuth(firebaseApp);
     clearBtn.addEventListener('click', function () {
       jobNameInput.value = ''; poInput.value = ''; addressInput.value = ''; stageInput.value = '';
       pmInput.value = ''; contractorInput.value = ''; superintendentInput.value = ''; superintendentPhoneInput.value = '';
+      currentColor = '';
+      DAY_COLOR_KEYS.forEach(function (k) { colorDots[k].classList.remove('is-selected'); });
       save();
     });
     editor.appendChild(clearBtn);
@@ -1835,6 +2031,81 @@ var firebaseAuth = getAuth(firebaseApp);
     buildWeekdayRow();
     renderCalendarGrid(personKey, disableControls);
     renderDayEditor(personKey, disableControls);
+  }
+
+  function renderProjectsOverlay() {
+    if (!projectsOpenSup) return;
+    var supKey = projectsOpenSup;
+    var disableControls = dbUnavailable;
+    els.projectsPersonName.textContent = displayNameForPersonKey(supKey) + ' — Projects';
+    els.projectsAddBtn.disabled = disableControls;
+
+    var list = els.projectsList;
+    list.innerHTML = '';
+    var items = projectsDocsCache[supKey] || [];
+
+    if (!items.length) {
+      var empty = document.createElement('div');
+      empty.className = 'projects-empty';
+      empty.textContent = 'No projects yet.';
+      list.appendChild(empty);
+    }
+
+    items.forEach(function (item, idx) {
+      var row = document.createElement('div');
+      row.className = 'project-row';
+
+      function makeProjectField(labelText, key, type) {
+        var wrap = document.createElement('div');
+        wrap.className = 'project-field';
+        var lbl = document.createElement('span');
+        lbl.className = 'project-field-label';
+        lbl.textContent = labelText;
+        wrap.appendChild(lbl);
+        var input = document.createElement('input');
+        input.type = type || 'text';
+        if (type !== 'date') input.maxLength = 80;
+        input.value = item[key];
+        input.disabled = disableControls;
+        input.addEventListener('blur', function () {
+          var current = (projectsDocsCache[supKey] || []).slice();
+          if (!current[idx]) return;
+          var updated = {
+            id: current[idx].id,
+            job: current[idx].job,
+            startDate: current[idx].startDate,
+            contractor: current[idx].contractor,
+            contact: current[idx].contact,
+            pm: current[idx].pm
+          };
+          updated[key] = input.value;
+          current[idx] = updated;
+          saveProjectsList(supKey, current);
+        });
+        wrap.appendChild(input);
+        return wrap;
+      }
+
+      row.appendChild(makeProjectField('Job', 'job', 'text'));
+      row.appendChild(makeProjectField('Start Date', 'startDate', 'date'));
+      row.appendChild(makeProjectField('Contractor', 'contractor', 'text'));
+      row.appendChild(makeProjectField('Contact', 'contact', 'text'));
+      row.appendChild(makeProjectField('PM', 'pm', 'text'));
+
+      var removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.className = 'project-remove-btn';
+      removeBtn.textContent = 'Remove';
+      removeBtn.disabled = disableControls;
+      removeBtn.addEventListener('click', function () {
+        var current = (projectsDocsCache[supKey] || []).slice();
+        current.splice(idx, 1);
+        saveProjectsList(supKey, current);
+      });
+      row.appendChild(removeBtn);
+
+      list.appendChild(row);
+    });
   }
 
   function renderForemen() {
@@ -1905,7 +2176,11 @@ var firebaseAuth = getAuth(firebaseApp);
     ['sup4', 'sup5', 'sup6', 'sup7'].forEach(function (supKey) {
       els.scheduleToggle[supKey].disabled = dbUnavailable;
     });
+    ['sup2', 'sup3'].forEach(function (supKey) {
+      els.projectsToggle[supKey].disabled = dbUnavailable;
+    });
     if (calendarOpenPerson) renderCalendarOverlay();
+    if (projectsOpenSup) renderProjectsOverlay();
   }
 
   function wireStaticControls() {
@@ -1942,6 +2217,20 @@ var firebaseAuth = getAuth(firebaseApp);
       };
       els.addForemanForm[supKey].addEventListener('submit', submitForeman);
       els.addForemanBtn[supKey].addEventListener('click', submitForeman);
+    });
+
+    ['sup2', 'sup3'].forEach(function (supKey) {
+      els.projectsToggle[supKey].addEventListener('click', function () { openProjectsView(supKey); });
+    });
+    els.projectsBackBtn.addEventListener('click', closeProjectsView);
+    els.projectsAddBtn.addEventListener('click', function () {
+      if (!projectsOpenSup) return;
+      var current = (projectsDocsCache[projectsOpenSup] || []).slice();
+      current.push({
+        id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
+        job: '', startDate: '', contractor: '', contact: '', pm: ''
+      });
+      saveProjectsList(projectsOpenSup, current);
     });
   }
 
@@ -1991,6 +2280,13 @@ var firebaseAuth = getAuth(firebaseApp);
     els.calendarWeekdayRow = q('calendarWeekdayRow');
     els.calendarGrid = q('calendarGrid');
     els.calendarDayEditor = q('calendarDayEditor');
+
+    els.projectsToggle = { sup2: q('projectsToggle-sup2'), sup3: q('projectsToggle-sup3') };
+    els.projectsOverlay = q('projectsOverlay');
+    els.projectsBackBtn = q('projectsBackBtn');
+    els.projectsPersonName = q('projectsPersonName');
+    els.projectsList = q('projectsList');
+    els.projectsAddBtn = q('projectsAddBtn');
 
     // ---------------- Admin-only name updates (console-only, no UI control) ----------------
     // The leadership name fields above are permanently disabled (see
