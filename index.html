@@ -985,6 +985,7 @@
                 <input id="sup7Input" class="crew-input" type="text" maxlength="40" autocomplete="off" />
               </div>
               <button type="button" id="scheduleToggle-sup7" class="schedule-toggle-btn">Schedule</button>
+              <button type="button" id="projectsToggle-sup7" class="schedule-toggle-btn">Projects</button>
             </div>
           </div>
 
@@ -2183,7 +2184,7 @@ var firebaseAuth = getAuth(firebaseApp);
     ['sup4', 'sup5', 'sup6', 'sup7'].forEach(function (supKey) {
       els.scheduleToggle[supKey].disabled = dbUnavailable;
     });
-    ['sup2', 'sup3'].forEach(function (supKey) {
+    ['sup2', 'sup3', 'sup7'].forEach(function (supKey) {
       els.projectsToggle[supKey].disabled = dbUnavailable;
     });
     if (calendarOpenPerson) renderCalendarOverlay();
@@ -2226,7 +2227,7 @@ var firebaseAuth = getAuth(firebaseApp);
       els.addForemanBtn[supKey].addEventListener('click', submitForeman);
     });
 
-    ['sup2', 'sup3'].forEach(function (supKey) {
+    ['sup2', 'sup3', 'sup7'].forEach(function (supKey) {
       els.projectsToggle[supKey].addEventListener('click', function () { openProjectsView(supKey); });
     });
     els.projectsBackBtn.addEventListener('click', closeProjectsView);
@@ -2288,7 +2289,7 @@ var firebaseAuth = getAuth(firebaseApp);
     els.calendarGrid = q('calendarGrid');
     els.calendarDayEditor = q('calendarDayEditor');
 
-    els.projectsToggle = { sup2: q('projectsToggle-sup2'), sup3: q('projectsToggle-sup3') };
+    els.projectsToggle = { sup2: q('projectsToggle-sup2'), sup3: q('projectsToggle-sup3'), sup7: q('projectsToggle-sup7') };
     els.projectsOverlay = q('projectsOverlay');
     els.projectsBackBtn = q('projectsBackBtn');
     els.projectsPersonName = q('projectsPersonName');
