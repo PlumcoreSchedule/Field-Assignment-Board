@@ -191,7 +191,7 @@
     padding: 4px 8px;
     border-radius: var(--radius-sm);
   }
-  .topbar-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .topbar-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; flex-wrap: wrap; }
 
   .btn {
     font-family: var(--font-body);
@@ -845,6 +845,10 @@
     <img src="logo.png" alt="Plumcore logo" class="brand-logo topbar-center-logo" />
     <div class="topbar-right">
       <button type="button" id="authSignedInAs" class="authgate-signedout" hidden></button>
+      <div class="datetime-bar datetime-bar-compact">
+        <span class="datetime-date" id="datetimeDate"></span>
+        <span class="datetime-clock" id="datetimeClock"></span>
+      </div>
     </div>
   </header>
 
@@ -900,11 +904,6 @@
         </div>
 
         <div class="branch-stack">
-          <div class="datetime-bar datetime-bar-compact">
-            <span class="datetime-date" id="datetimeDate"></span>
-            <span class="datetime-clock" id="datetimeClock"></span>
-          </div>
-
           <div class="supervisor-branch">
             <div class="crew-card">
               <span class="swatch swatch-sup7" aria-hidden="true"></span>
