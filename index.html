@@ -361,8 +361,9 @@
     gap: 14px;
   }
   .lead-row .crew-lead-card { flex: 1 1 320px; width: auto; }
-  .lead-row .supervisor-branch { flex: 2 1 240px; }
-  .lead-row .datetime-bar { flex: 0 1 190px; margin: 0; align-self: flex-start; }
+  .lead-row > .supervisor-branch { flex: 1 1 240px; }
+  .lead-row .branch-stack { flex: 1 1 240px; }
+  .lead-row .branch-stack .supervisor-branch { flex: none; }
 
   /* ---------- slab manager + plumbing foreman, left-aligned under supervisors ---------- */
   .crew-left-row {
@@ -898,24 +899,37 @@
           </div>
         </div>
 
-        <div class="datetime-bar datetime-bar-compact">
-          <span class="datetime-date" id="datetimeDate"></span>
-          <span class="datetime-clock" id="datetimeClock"></span>
+        <div class="branch-stack">
+          <div class="datetime-bar datetime-bar-compact">
+            <span class="datetime-date" id="datetimeDate"></span>
+            <span class="datetime-clock" id="datetimeClock"></span>
+          </div>
+
+          <div class="supervisor-branch">
+            <div class="crew-card">
+              <span class="swatch swatch-sup7" aria-hidden="true"></span>
+              <div class="crew-field">
+                <label class="field-label" for="sup7Input">Utility Supervisor</label>
+                <input id="sup7Input" class="crew-input" type="text" maxlength="40" autocomplete="off" />
+              </div>
+              <button type="button" id="scheduleToggle-sup7" class="schedule-toggle-btn">Schedule</button>
+            </div>
+          </div>
+
+          <div class="supervisor-branch">
+            <div class="crew-card">
+              <span class="swatch swatch-sup5" aria-hidden="true"></span>
+              <div class="crew-field">
+                <label class="field-label" for="sup5Input">Plumbing Foreman</label>
+                <input id="sup5Input" class="crew-input" type="text" maxlength="40" autocomplete="off" />
+              </div>
+              <button type="button" id="scheduleToggle-sup5" class="schedule-toggle-btn">Schedule</button>
+            </div>
+          </div>
         </div>
       </div>
 
       <div class="crew-sub-row">
-        <div class="supervisor-branch">
-          <div class="crew-card">
-            <span class="swatch swatch-sup7" aria-hidden="true"></span>
-            <div class="crew-field">
-              <label class="field-label" for="sup7Input">Utility Supervisor</label>
-              <input id="sup7Input" class="crew-input" type="text" maxlength="40" autocomplete="off" />
-            </div>
-            <button type="button" id="scheduleToggle-sup7" class="schedule-toggle-btn">Schedule</button>
-          </div>
-        </div>
-
         <div class="supervisor-branch">
           <div class="crew-card">
             <span class="swatch swatch-sup4" aria-hidden="true"></span>
@@ -924,17 +938,6 @@
               <input id="sup4Input" class="crew-input" type="text" maxlength="40" autocomplete="off" />
             </div>
             <button type="button" id="scheduleToggle-sup4" class="schedule-toggle-btn">Schedule</button>
-          </div>
-        </div>
-
-        <div class="supervisor-branch">
-          <div class="crew-card">
-            <span class="swatch swatch-sup5" aria-hidden="true"></span>
-            <div class="crew-field">
-              <label class="field-label" for="sup5Input">Plumbing Foreman</label>
-              <input id="sup5Input" class="crew-input" type="text" maxlength="40" autocomplete="off" />
-            </div>
-            <button type="button" id="scheduleToggle-sup5" class="schedule-toggle-btn">Schedule</button>
           </div>
         </div>
       </div>
