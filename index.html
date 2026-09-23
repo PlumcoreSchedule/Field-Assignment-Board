@@ -1101,6 +1101,7 @@ var firebaseAuth = getAuth(firebaseApp);
   var disconnected = false;
   var canEdit = false;
   var triedInit = false;
+  var boardMissing = false;
   var writeChain = Promise.resolve();
   var els = {};
   var currentUser = null;
@@ -1550,18 +1551,18 @@ var firebaseAuth = getAuth(firebaseApp);
           confirmedNames.sup5Name = state.sup5Name;
           confirmedNames.sup6Name = state.sup6Name;
           confirmedNames.sup7Name = state.sup7Name;
-        } else if (!triedInit) {
+        } else {
+          // The shared board doc came back missing. This used to auto-recreate
+          // it with blank default names/foremen — which is exactly how real
+          // data got silently overwritten (a reconnect or a transient blip can
+          // make Firestore report "not found" even when the doc is really
+          // there). Never auto-write here. Just surface it loudly and stop;
+          // an admin has to look at this on purpose before anything is
+          // touched. See window.__fabForceInitBoard if a board genuinely
+          // needs to be created for the first time.
           triedInit = true;
-          setDoc(docRef, {
-            sup1Name: state.sup1Name,
-            sup2Name: state.sup2Name,
-            sup3Name: state.sup3Name,
-            sup4Name: state.sup4Name,
-            sup5Name: state.sup5Name,
-            sup6Name: state.sup6Name,
-            sup7Name: state.sup7Name,
-            foremen: state.foremen
-          }).catch(function (err) { handleWriteError(err); });
+          boardMissing = true;
+          dbUnavailable = true;
         }
         render();
       }, function (err) {
@@ -1747,6 +1748,12 @@ var firebaseAuth = getAuth(firebaseApp);
       banner.hidden = false;
       banner.className = 'status-banner status-error';
       banner.textContent = lastWriteError;
+      return;
+    }
+    if (boardMissing) {
+      banner.hidden = false;
+      banner.className = 'status-banner status-error';
+      banner.textContent = "The shared board data couldn't be found. Nothing has been changed — contact your admin before doing anything else here.";
       return;
     }
     if (dbUnavailable) {
@@ -2373,6 +2380,38 @@ var firebaseAuth = getAuth(firebaseApp);
     };
     window.__fabGetForemen = function () {
       return cloneForemen(state.foremen);
+    };
+
+    // Deliberate, explicit escape hatch for the one legitimate case where
+    // board/week1 really doesn't exist yet (a brand-new deployment). Unlike
+    // the old auto-recreate behavior this replaced, it does nothing on its
+    // own — it only runs when Claude calls it by hand with real values, and
+    // it refuses outright if the doc turns out to already exist, so it can
+    // never be the thing that silently overwrites real data again.
+    window.__fabForceInitBoard = function (values) {
+      if (!docRef) {
+        return Promise.reject(new Error('Board not loaded yet — try again in a moment.'));
+      }
+      values = values || {};
+      return getDoc(docRef).then(function (snap) {
+        if (snap.exists()) {
+          throw new Error('Refusing: board/week1 already exists. Use __fabSetLeadershipName / __fabAddForeman to edit it instead.');
+        }
+        var payload = {
+          sup1Name: typeof values.sup1Name === 'string' && values.sup1Name ? values.sup1Name : SUP_FALLBACK.sup1Name,
+          sup2Name: typeof values.sup2Name === 'string' && values.sup2Name ? values.sup2Name : SUP_FALLBACK.sup2Name,
+          sup3Name: typeof values.sup3Name === 'string' && values.sup3Name ? values.sup3Name : SUP_FALLBACK.sup3Name,
+          sup4Name: typeof values.sup4Name === 'string' && values.sup4Name ? values.sup4Name : SUP_FALLBACK.sup4Name,
+          sup5Name: typeof values.sup5Name === 'string' && values.sup5Name ? values.sup5Name : SUP_FALLBACK.sup5Name,
+          sup6Name: typeof values.sup6Name === 'string' && values.sup6Name ? values.sup6Name : SUP_FALLBACK.sup6Name,
+          sup7Name: typeof values.sup7Name === 'string' && values.sup7Name ? values.sup7Name : SUP_FALLBACK.sup7Name,
+          foremen: (values.foremen && typeof values.foremen === 'object') ? {
+            sup2: Array.isArray(values.foremen.sup2) ? values.foremen.sup2.filter(function (t) { return typeof t === 'string' && t; }) : [],
+            sup3: Array.isArray(values.foremen.sup3) ? values.foremen.sup3.filter(function (t) { return typeof t === 'string' && t; }) : []
+          } : { sup2: [], sup3: [] }
+        };
+        return setDoc(docRef, payload);
+      });
     };
 
     wireStaticControls();
