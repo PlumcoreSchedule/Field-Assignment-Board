@@ -729,6 +729,99 @@
   .calendar-off-btn.is-marked-off:hover:not(:disabled) { background: var(--color-danger); }
   .calendar-off-btn:disabled { cursor: not-allowed; opacity: 0.6; }
 
+  /* Marked "holiday" (admin-applied company holiday, independent of the
+     automatic US holiday text below): a green X drawn corner-to-corner
+     over the day box. */
+  .calendar-day-cell.is-holiday::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    background:
+      linear-gradient(to bottom right, transparent calc(50% - 1.5px), #1F9D4C calc(50% - 1.5px), #1F9D4C calc(50% + 1.5px), transparent calc(50% + 1.5px)),
+      linear-gradient(to bottom left, transparent calc(50% - 1.5px), #1F9D4C calc(50% - 1.5px), #1F9D4C calc(50% + 1.5px), transparent calc(50% + 1.5px));
+  }
+  .calendar-holiday-btn {
+    flex: none;
+    font-family: var(--font-body);
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-radius: var(--radius-sm);
+    padding: 3px 8px;
+    height: 22px;
+    border: 1px solid var(--color-border-strong);
+    background: var(--color-surface);
+    color: var(--color-ink-muted);
+    cursor: pointer;
+    margin-left: 2px;
+  }
+  .calendar-holiday-btn:hover:not(:disabled) { background: rgba(31, 157, 76, 0.16); color: #1F9D4C; border-color: #1F9D4C; }
+  .calendar-holiday-btn.is-marked-holiday { background: #1F9D4C; color: #FFFFFF; border-color: #1F9D4C; }
+  .calendar-holiday-btn.is-marked-holiday:hover:not(:disabled) { background: #1F9D4C; }
+  .calendar-holiday-btn:disabled { cursor: not-allowed; opacity: 0.6; }
+
+  /* Automatic US holiday label shown on every calendar day box (text
+     always; a small animated icon for four of them). Not stored, not
+     per-person - purely computed from the date. */
+  .calendar-day-holiday {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 9px;
+    line-height: 1.2;
+    font-weight: 600;
+    color: var(--color-ink-muted);
+    max-width: 100%;
+  }
+  .calendar-holiday-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .calendar-holiday-icon {
+    display: inline-block;
+    font-size: 12px;
+    line-height: 1;
+    flex: none;
+  }
+  @keyframes holiday-xmas-blink {
+    0%, 100% { text-shadow: 0 0 2px #2ecc71, 0 0 4px #2ecc71; }
+    25% { text-shadow: 0 0 2px #e74c3c, 0 0 4px #e74c3c; }
+    50% { text-shadow: 0 0 2px #f1c40f, 0 0 4px #f1c40f; }
+    75% { text-shadow: 0 0 2px #3498db, 0 0 4px #3498db; }
+  }
+  .calendar-holiday-christmas .calendar-holiday-icon {
+    animation: holiday-xmas-blink 2s steps(1, end) infinite;
+  }
+  @keyframes holiday-turkey-gobble {
+    0%, 100% { transform: rotate(0deg) scale(1); }
+    20% { transform: rotate(-8deg) scale(1.05); }
+    40% { transform: rotate(6deg) scale(0.97); }
+    60% { transform: rotate(-4deg) scale(1.03); }
+    80% { transform: rotate(3deg) scale(1); }
+  }
+  .calendar-holiday-thanksgiving .calendar-holiday-icon {
+    animation: holiday-turkey-gobble 1.6s ease-in-out infinite;
+  }
+  @keyframes holiday-fireworks-burst {
+    0% { transform: scale(0.6); opacity: 0.5; filter: brightness(1); }
+    50% { transform: scale(1.25); opacity: 1; filter: brightness(1.4); }
+    100% { transform: scale(0.6); opacity: 0.5; filter: brightness(1); }
+  }
+  .calendar-holiday-july4 .calendar-holiday-icon {
+    animation: holiday-fireworks-burst 1.1s ease-in-out infinite;
+  }
+  @keyframes holiday-pumpkin-glow {
+    0%, 100% { filter: drop-shadow(0 0 1px #ff9d1f) drop-shadow(0 0 2px #ff7300); }
+    50% { filter: drop-shadow(0 0 4px #ffb347) drop-shadow(0 0 7px #ff8c00); }
+  }
+  .calendar-holiday-halloween .calendar-holiday-icon {
+    animation: holiday-pumpkin-glow 1.8s ease-in-out infinite;
+  }
+
   /* ---------- per-supervisor project list ---------- */
   .projects-list { display: flex; flex-direction: column; gap: 10px; padding: 16px; max-width: 900px; margin: 0 auto; width: 100%; }
   .project-row {
@@ -1156,6 +1249,50 @@ var firebaseAuth = getAuth(firebaseApp);
   var DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   function fmtDayLabel(d) { return DAY_NAMES[d.getDay()] + ', ' + MONTH_NAMES[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear(); }
 
+  // ---------------- US holidays (computed from the date, shown on every
+  // calendar automatically — not stored, not per-person) ----------------
+  // Federal holidays plus Halloween (not federal, but requested). Four of
+  // these carry a "kind" and get a small animated icon next to their text
+  // label: Christmas, Thanksgiving, Independence Day and Halloween. This
+  // is separate from the admin-only "Holiday" toggle below, which marks a
+  // day with a green X regardless of whether it's a real US holiday.
+  function nthWeekdayOfMonth(year, month, weekday, n) {
+    var d = new Date(year, month, 1);
+    var offset = (weekday - d.getDay() + 7) % 7;
+    return new Date(year, month, 1 + offset + (n - 1) * 7);
+  }
+  function lastWeekdayOfMonth(year, month, weekday) {
+    var lastDay = new Date(year, month + 1, 0);
+    var offset = (lastDay.getDay() - weekday + 7) % 7;
+    return new Date(year, month, lastDay.getDate() - offset);
+  }
+  var HOLIDAY_ICONS = { christmas: '🎄', thanksgiving: '🦃', july4: '🎆', halloween: '🎃' };
+  var usHolidayCache = {};
+  function usHolidaysForYear(year) {
+    if (usHolidayCache[year]) return usHolidayCache[year];
+    var map = {};
+    function add(date, name, kind) {
+      map[dateKey(date)] = { name: name, kind: kind || null };
+    }
+    add(new Date(year, 0, 1), "New Year's Day");
+    add(nthWeekdayOfMonth(year, 0, 1, 3), 'MLK Jr. Day');
+    add(nthWeekdayOfMonth(year, 1, 1, 3), 'Presidents Day');
+    add(lastWeekdayOfMonth(year, 4, 1), 'Memorial Day');
+    add(new Date(year, 5, 19), 'Juneteenth');
+    add(new Date(year, 6, 4), 'Independence Day', 'july4');
+    add(nthWeekdayOfMonth(year, 8, 1, 1), 'Labor Day');
+    add(nthWeekdayOfMonth(year, 9, 1, 2), 'Columbus Day');
+    add(new Date(year, 9, 31), 'Halloween', 'halloween');
+    add(new Date(year, 10, 11), 'Veterans Day');
+    add(nthWeekdayOfMonth(year, 10, 4, 4), 'Thanksgiving', 'thanksgiving');
+    add(new Date(year, 11, 25), 'Christmas', 'christmas');
+    usHolidayCache[year] = map;
+    return map;
+  }
+  function holidayForDate(date) {
+    return usHolidaysForYear(date.getFullYear())[dateKey(date)] || null;
+  }
+
   // Which person's full-page schedule calendar is currently open (or null),
   // which month it's showing, and which single day (if any) is expanded
   // for editing inside that calendar.
@@ -1247,7 +1384,8 @@ var firebaseAuth = getAuth(firebaseApp);
         superintendent: typeof e.superintendent === 'string' ? e.superintendent : '',
         superintendentPhone: typeof e.superintendentPhone === 'string' ? e.superintendentPhone : '',
         color: (typeof e.color === 'string' && DAY_COLOR_KEYS.indexOf(e.color) !== -1) ? e.color : '',
-        off: e.off === true
+        off: e.off === true,
+        holiday: e.holiday === true
       };
     });
     return out;
@@ -1685,7 +1823,8 @@ var firebaseAuth = getAuth(firebaseApp);
     var superintendentPhone = (fields.superintendentPhone || '').trim().slice(0, 20);
     var color = DAY_COLOR_KEYS.indexOf(fields.color) !== -1 ? fields.color : '';
     var off = fields.off === true;
-    var isEmpty = !jobName && !po && !address && !stage && !pm && !contractor && !superintendent && !superintendentPhone && !color && !off;
+    var holiday = fields.holiday === true;
+    var isEmpty = !jobName && !po && !address && !stage && !pm && !contractor && !superintendent && !superintendentPhone && !color && !off && !holiday;
     readyPromise.then(function () {
       var ref = doc(dbHandle, 'schedules', slugify(personKey));
       var localDayMap = cloneDayMap(scheduleDocsCache[personKey]);
@@ -1694,7 +1833,7 @@ var firebaseAuth = getAuth(firebaseApp);
         delete localDayMap[dk];
         patch[dk] = deleteField();
       } else {
-        localDayMap[dk] = { jobName: jobName, po: po, address: address, stage: stage, pm: pm, contractor: contractor, superintendent: superintendent, superintendentPhone: superintendentPhone, color: color, off: off };
+        localDayMap[dk] = { jobName: jobName, po: po, address: address, stage: stage, pm: pm, contractor: contractor, superintendent: superintendent, superintendentPhone: superintendentPhone, color: color, off: off, holiday: holiday };
         patch[dk] = localDayMap[dk];
       }
       scheduleDocsCache[personKey] = localDayMap;
@@ -1875,11 +2014,33 @@ var firebaseAuth = getAuth(firebaseApp);
         if (dk === todayKey) cell.classList.add('is-today');
         if (dk === calendarSelectedDk) cell.classList.add('is-selected');
         if (entry && entry.off) cell.classList.add('is-off');
+        if (entry && entry.holiday) cell.classList.add('is-holiday');
 
         var num = document.createElement('span');
         num.className = 'calendar-day-number';
         num.textContent = String(date.getDate());
         cell.appendChild(num);
+
+        // US holiday label — computed from the date itself, shown on every
+        // calendar automatically, never stored. Four holidays also get a
+        // small animated icon (see the calendar-holiday-* CSS).
+        var hol = holidayForDate(date);
+        if (hol) {
+          var holWrap = document.createElement('span');
+          holWrap.className = 'calendar-day-holiday' + (hol.kind ? ' calendar-holiday-' + hol.kind : '');
+          if (hol.kind) {
+            var holIcon = document.createElement('span');
+            holIcon.className = 'calendar-holiday-icon';
+            holIcon.textContent = HOLIDAY_ICONS[hol.kind];
+            holIcon.setAttribute('aria-hidden', 'true');
+            holWrap.appendChild(holIcon);
+          }
+          var holText = document.createElement('span');
+          holText.className = 'calendar-holiday-text';
+          holText.textContent = hol.name;
+          holWrap.appendChild(holText);
+          cell.appendChild(holWrap);
+        }
 
         if (entry && entry.jobName) {
           var chip = document.createElement('span');
@@ -1910,7 +2071,7 @@ var firebaseAuth = getAuth(firebaseApp);
     var dp = dk.split('-');
     var date = new Date(parseInt(dp[0], 10), parseInt(dp[1], 10) - 1, parseInt(dp[2], 10));
     var entries = scheduleDocsCache[personKey] || {};
-    var entry = entries[dk] || { jobName: '', po: '', address: '', stage: '', pm: '', contractor: '', superintendent: '', superintendentPhone: '', color: '', off: false };
+    var entry = entries[dk] || { jobName: '', po: '', address: '', stage: '', pm: '', contractor: '', superintendent: '', superintendentPhone: '', color: '', off: false, holiday: false };
 
     var head = document.createElement('div');
     head.className = 'calendar-day-editor-head';
@@ -1958,6 +2119,7 @@ var firebaseAuth = getAuth(firebaseApp);
 
     var currentColor = entry.color || '';
     var currentOff = entry.off === true;
+    var currentHoliday = entry.holiday === true;
 
     var save = function () {
       saveScheduleEntry(personKey, dk, {
@@ -1970,7 +2132,8 @@ var firebaseAuth = getAuth(firebaseApp);
         superintendent: superintendentInput.value,
         superintendentPhone: superintendentPhoneInput.value,
         color: currentColor,
-        off: currentOff
+        off: currentOff,
+        holiday: currentHoliday
       });
       renderCalendarGrid(personKey, disableControls);
     };
@@ -2028,6 +2191,24 @@ var firebaseAuth = getAuth(firebaseApp);
       save();
     });
     colorRow.appendChild(offBtn);
+
+    // "Holiday" is a separate, admin-only manual mark (green X) — it does
+    // NOT auto-set itself from the US holiday list above; an admin picks
+    // which days actually get treated as a company holiday. Same toggle
+    // pattern as Off: saves immediately, carried along by "Apply".
+    var holidayBtn = document.createElement('button');
+    holidayBtn.type = 'button';
+    holidayBtn.className = 'calendar-holiday-btn';
+    holidayBtn.textContent = 'Holiday';
+    holidayBtn.title = 'Mark this day as a company holiday';
+    holidayBtn.disabled = colorDisabled;
+    if (currentHoliday) holidayBtn.classList.add('is-marked-holiday');
+    holidayBtn.addEventListener('click', function () {
+      currentHoliday = !currentHoliday;
+      holidayBtn.classList.toggle('is-marked-holiday', currentHoliday);
+      save();
+    });
+    colorRow.appendChild(holidayBtn);
     editor.appendChild(colorRow);
 
     var clearBtn = document.createElement('button');
@@ -2040,8 +2221,10 @@ var firebaseAuth = getAuth(firebaseApp);
       pmInput.value = ''; contractorInput.value = ''; superintendentInput.value = ''; superintendentPhoneInput.value = '';
       currentColor = '';
       currentOff = false;
+      currentHoliday = false;
       DAY_COLOR_KEYS.forEach(function (k) { colorDots[k].classList.remove('is-selected'); });
       offBtn.classList.remove('is-marked-off');
+      holidayBtn.classList.remove('is-marked-holiday');
       save();
     });
     editor.appendChild(clearBtn);
@@ -2072,7 +2255,7 @@ var firebaseAuth = getAuth(firebaseApp);
       var ep = repeatInput.value.split('-');
       var endDate = new Date(parseInt(ep[0], 10), parseInt(ep[1], 10) - 1, parseInt(ep[2], 10));
       if (endDate < date) return;
-      var values = { jobName: jobNameInput.value, po: poInput.value, address: addressInput.value, stage: stageInput.value, pm: pmInput.value, contractor: contractorInput.value, superintendent: superintendentInput.value, superintendentPhone: superintendentPhoneInput.value, off: currentOff };
+      var values = { jobName: jobNameInput.value, po: poInput.value, address: addressInput.value, stage: stageInput.value, pm: pmInput.value, contractor: contractorInput.value, superintendent: superintendentInput.value, superintendentPhone: superintendentPhoneInput.value, off: currentOff, holiday: currentHoliday };
       var count = 0;
       var cur = date;
       while (cur <= endDate) {
