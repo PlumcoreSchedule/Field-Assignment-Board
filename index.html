@@ -627,6 +627,13 @@
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+  /* Task 2 / Task 3 job chips on the month grid - same shape as the
+     primary job chip, but muted since only Task 1 carries a color. */
+  .calendar-day-job-secondary {
+    background: var(--color-surface-alt);
+    border-left: 3px solid var(--color-border-strong);
+    color: var(--color-ink-muted);
+  }
   .calendar-day-editor {
     margin: 4px 16px 24px;
     background: var(--color-surface-alt);
@@ -677,6 +684,32 @@
   }
   .calendar-field input:focus { outline: 2px solid var(--color-focus); outline-offset: 1px; }
   .calendar-field input:disabled { opacity: 0.55; }
+  .calendar-task-tabs-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .calendar-task-tab-btn {
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    padding: 6px 10px;
+    min-height: 32px;
+    border: 1px solid var(--color-border-strong);
+    background: var(--color-surface);
+    color: var(--color-ink-muted);
+    cursor: pointer;
+  }
+  .calendar-task-tab-btn:hover:not(:disabled) { background: var(--color-accent-soft); }
+  .calendar-task-tab-btn.is-active { background: var(--color-accent-soft); color: var(--color-ink); border-color: var(--color-accent); }
+  .calendar-task-tab-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .calendar-task-block { padding-top: 8px; margin-top: 2px; border-top: 1px dashed var(--color-border); }
+  .calendar-task-block[hidden] { display: none; }
+  .calendar-task-block-label {
+    grid-column: 1 / -1;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-ink-muted);
+    font-weight: 700;
+  }
   .calendar-repeat-row {
     display: flex;
     align-items: center;
@@ -1386,22 +1419,29 @@ var firebaseAuth = getAuth(firebaseApp);
   }
 
   function cloneDayMap(days) {
+    function sanitizeTask(t) {
+      t = t || {};
+      return {
+        jobName: typeof t.jobName === 'string' ? t.jobName : '',
+        po: typeof t.po === 'string' ? t.po : '',
+        address: typeof t.address === 'string' ? t.address : '',
+        stage: typeof t.stage === 'string' ? t.stage : '',
+        pm: typeof t.pm === 'string' ? t.pm : '',
+        contractor: typeof t.contractor === 'string' ? t.contractor : '',
+        superintendent: typeof t.superintendent === 'string' ? t.superintendent : '',
+        superintendentPhone: typeof t.superintendentPhone === 'string' ? t.superintendentPhone : ''
+      };
+    }
     var out = {};
     Object.keys(days || {}).forEach(function (dk) {
       var e = days[dk] || {};
-      out[dk] = {
-        jobName: typeof e.jobName === 'string' ? e.jobName : '',
-        po: typeof e.po === 'string' ? e.po : '',
-        address: typeof e.address === 'string' ? e.address : '',
-        stage: typeof e.stage === 'string' ? e.stage : '',
-        pm: typeof e.pm === 'string' ? e.pm : '',
-        contractor: typeof e.contractor === 'string' ? e.contractor : '',
-        superintendent: typeof e.superintendent === 'string' ? e.superintendent : '',
-        superintendentPhone: typeof e.superintendentPhone === 'string' ? e.superintendentPhone : '',
-        color: (typeof e.color === 'string' && DAY_COLOR_KEYS.indexOf(e.color) !== -1) ? e.color : '',
-        off: e.off === true,
-        holiday: e.holiday === true
-      };
+      var base = sanitizeTask(e);
+      base.task2 = sanitizeTask(e.task2);
+      base.task3 = sanitizeTask(e.task3);
+      base.color = (typeof e.color === 'string' && DAY_COLOR_KEYS.indexOf(e.color) !== -1) ? e.color : '';
+      base.off = e.off === true;
+      base.holiday = e.holiday === true;
+      out[dk] = base;
     });
     return out;
   }
@@ -1828,18 +1868,29 @@ var firebaseAuth = getAuth(firebaseApp);
   function saveScheduleEntry(personKey, dk, fields) {
     var readyPromise = scheduleReadyPromises[personKey];
     if (!dbHandle || !readyPromise) return; // panel was never opened via ensureScheduleSub; shouldn't happen from the UI
-    var jobName = (fields.jobName || '').trim().slice(0, 60);
-    var po = (fields.po || '').trim().slice(0, 30);
-    var address = (fields.address || '').trim().slice(0, 100);
-    var stage = (fields.stage || '').trim().slice(0, 60);
-    var pm = (fields.pm || '').trim().slice(0, 60);
-    var contractor = (fields.contractor || '').trim().slice(0, 60);
-    var superintendent = (fields.superintendent || '').trim().slice(0, 60);
-    var superintendentPhone = (fields.superintendentPhone || '').trim().slice(0, 20);
+    function sanitizeTask(t) {
+      t = t || {};
+      return {
+        jobName: (t.jobName || '').trim().slice(0, 60),
+        po: (t.po || '').trim().slice(0, 30),
+        address: (t.address || '').trim().slice(0, 100),
+        stage: (t.stage || '').trim().slice(0, 60),
+        pm: (t.pm || '').trim().slice(0, 60),
+        contractor: (t.contractor || '').trim().slice(0, 60),
+        superintendent: (t.superintendent || '').trim().slice(0, 60),
+        superintendentPhone: (t.superintendentPhone || '').trim().slice(0, 20)
+      };
+    }
+    function taskHasData(t) {
+      return !!(t.jobName || t.po || t.address || t.stage || t.pm || t.contractor || t.superintendent || t.superintendentPhone);
+    }
+    var task1 = sanitizeTask(fields);
+    var task2 = sanitizeTask(fields.task2);
+    var task3 = sanitizeTask(fields.task3);
     var color = DAY_COLOR_KEYS.indexOf(fields.color) !== -1 ? fields.color : '';
     var off = fields.off === true;
     var holiday = fields.holiday === true;
-    var isEmpty = !jobName && !po && !address && !stage && !pm && !contractor && !superintendent && !superintendentPhone && !color && !off && !holiday;
+    var isEmpty = !taskHasData(task1) && !taskHasData(task2) && !taskHasData(task3) && !color && !off && !holiday;
     readyPromise.then(function () {
       var ref = doc(dbHandle, 'schedules', slugify(personKey));
       var localDayMap = cloneDayMap(scheduleDocsCache[personKey]);
@@ -1848,7 +1899,12 @@ var firebaseAuth = getAuth(firebaseApp);
         delete localDayMap[dk];
         patch[dk] = deleteField();
       } else {
-        localDayMap[dk] = { jobName: jobName, po: po, address: address, stage: stage, pm: pm, contractor: contractor, superintendent: superintendent, superintendentPhone: superintendentPhone, color: color, off: off, holiday: holiday };
+        localDayMap[dk] = {
+          jobName: task1.jobName, po: task1.po, address: task1.address, stage: task1.stage,
+          pm: task1.pm, contractor: task1.contractor, superintendent: task1.superintendent, superintendentPhone: task1.superintendentPhone,
+          task2: task2, task3: task3,
+          color: color, off: off, holiday: holiday
+        };
         patch[dk] = localDayMap[dk];
       }
       scheduleDocsCache[personKey] = localDayMap;
@@ -2069,6 +2125,18 @@ var firebaseAuth = getAuth(firebaseApp);
           }
           cell.appendChild(chip);
         }
+        if (entry && entry.task2 && entry.task2.jobName) {
+          var chip2 = document.createElement('span');
+          chip2.className = 'calendar-day-job calendar-day-job-secondary';
+          chip2.textContent = entry.task2.jobName;
+          cell.appendChild(chip2);
+        }
+        if (entry && entry.task3 && entry.task3.jobName) {
+          var chip3 = document.createElement('span');
+          chip3.className = 'calendar-day-job calendar-day-job-secondary';
+          chip3.textContent = entry.task3.jobName;
+          cell.appendChild(chip3);
+        }
 
         cell.addEventListener('click', function () { selectCalendarDay(dk); });
         grid.appendChild(cell);
@@ -2086,7 +2154,10 @@ var firebaseAuth = getAuth(firebaseApp);
     var dp = dk.split('-');
     var date = new Date(parseInt(dp[0], 10), parseInt(dp[1], 10) - 1, parseInt(dp[2], 10));
     var entries = scheduleDocsCache[personKey] || {};
+    var emptyTask = { jobName: '', po: '', address: '', stage: '', pm: '', contractor: '', superintendent: '', superintendentPhone: '' };
     var entry = entries[dk] || { jobName: '', po: '', address: '', stage: '', pm: '', contractor: '', superintendent: '', superintendentPhone: '', color: '', off: false, holiday: false };
+    var task2Source = entry.task2 || emptyTask;
+    var task3Source = entry.task3 || emptyTask;
 
     var head = document.createElement('div');
     head.className = 'calendar-day-editor-head';
@@ -2102,11 +2173,36 @@ var firebaseAuth = getAuth(firebaseApp);
     head.appendChild(closeBtn);
     editor.appendChild(head);
 
+    // Task 2 / Task 3 toggle buttons - sit right at the top of the day
+    // editor, above the Task 1 fields.
+    var taskTabsRow = document.createElement('div');
+    taskTabsRow.className = 'calendar-task-tabs-row';
+    editor.appendChild(taskTabsRow);
+
+    var TASK_FIELD_KEYS = ['jobName', 'po', 'address', 'stage', 'pm', 'contractor', 'superintendent', 'superintendentPhone'];
+
+    function hasTaskData(t) {
+      return !!(t.jobName || t.po || t.address || t.stage || t.pm || t.contractor || t.superintendent || t.superintendentPhone);
+    }
+
+    function makeTaskTabBtn(labelText) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'calendar-task-tab-btn';
+      btn.textContent = labelText;
+      btn.disabled = disableControls;
+      taskTabsRow.appendChild(btn);
+      return btn;
+    }
+
+    var task2Btn = makeTaskTabBtn('Task 2');
+    var task3Btn = makeTaskTabBtn('Task 3');
+
     var fieldGrid = document.createElement('div');
     fieldGrid.className = 'calendar-field-grid';
     editor.appendChild(fieldGrid);
 
-    function makeField(labelText, value, maxLen, spanFull) {
+    function makeField(grid, labelText, value, maxLen, spanFull) {
       var wrap = document.createElement('div');
       wrap.className = 'calendar-field' + (spanFull ? ' span-2' : '');
       var lbl = document.createElement('span');
@@ -2119,18 +2215,65 @@ var firebaseAuth = getAuth(firebaseApp);
       input.value = value;
       input.disabled = disableControls;
       wrap.appendChild(input);
-      fieldGrid.appendChild(wrap);
+      grid.appendChild(wrap);
       return input;
     }
 
-    var jobNameInput = makeField('Job Name', entry.jobName, 60, false);
-    var poInput = makeField('PO #', entry.po, 30, false);
-    var addressInput = makeField('Address', entry.address, 100, true);
-    var stageInput = makeField('Stage of Work', entry.stage, 60, true);
-    var pmInput = makeField('PM', entry.pm, 60, false);
-    var contractorInput = makeField('Contractor', entry.contractor, 60, false);
-    var superintendentInput = makeField('Superintendent', entry.superintendent, 60, false);
-    var superintendentPhoneInput = makeField('Superintendent Phone', entry.superintendentPhone, 20, false);
+    var jobNameInput = makeField(fieldGrid, 'Job Name', entry.jobName, 60, false);
+    var poInput = makeField(fieldGrid, 'PO #', entry.po, 30, false);
+    var addressInput = makeField(fieldGrid, 'Address', entry.address, 100, true);
+    var stageInput = makeField(fieldGrid, 'Stage of Work', entry.stage, 60, true);
+    var pmInput = makeField(fieldGrid, 'PM', entry.pm, 60, false);
+    var contractorInput = makeField(fieldGrid, 'Contractor', entry.contractor, 60, false);
+    var superintendentInput = makeField(fieldGrid, 'Superintendent', entry.superintendent, 60, false);
+    var superintendentPhoneInput = makeField(fieldGrid, 'Superintendent Phone', entry.superintendentPhone, 20, false);
+
+    function buildTaskBlock(labelText, source) {
+      var block = document.createElement('div');
+      block.className = 'calendar-field-grid calendar-task-block';
+      var label = document.createElement('span');
+      label.className = 'calendar-task-block-label';
+      label.textContent = labelText;
+      block.appendChild(label);
+      var f = {
+        block: block,
+        jobName: makeField(block, 'Job Name', source.jobName, 60, false),
+        po: makeField(block, 'PO #', source.po, 30, false),
+        address: makeField(block, 'Address', source.address, 100, true),
+        stage: makeField(block, 'Stage of Work', source.stage, 60, true),
+        pm: makeField(block, 'PM', source.pm, 60, false),
+        contractor: makeField(block, 'Contractor', source.contractor, 60, false),
+        superintendent: makeField(block, 'Superintendent', source.superintendent, 60, false),
+        superintendentPhone: makeField(block, 'Superintendent Phone', source.superintendentPhone, 20, false)
+      };
+      editor.appendChild(block);
+      return f;
+    }
+
+    var task2 = buildTaskBlock('Task 2', task2Source);
+    var task3 = buildTaskBlock('Task 3', task3Source);
+
+    function setTaskOpen(fields, btn, open) {
+      fields.block.hidden = !open;
+      btn.classList.toggle('is-active', open);
+    }
+    setTaskOpen(task2, task2Btn, hasTaskData(task2Source));
+    setTaskOpen(task3, task3Btn, hasTaskData(task3Source));
+    task2Btn.addEventListener('click', function () { setTaskOpen(task2, task2Btn, task2.block.hidden); });
+    task3Btn.addEventListener('click', function () { setTaskOpen(task3, task3Btn, task3.block.hidden); });
+
+    function readTask(fields) {
+      return {
+        jobName: fields.jobName.value,
+        po: fields.po.value,
+        address: fields.address.value,
+        stage: fields.stage.value,
+        pm: fields.pm.value,
+        contractor: fields.contractor.value,
+        superintendent: fields.superintendent.value,
+        superintendentPhone: fields.superintendentPhone.value
+      };
+    }
 
     var currentColor = entry.color || '';
     var currentOff = entry.off === true;
@@ -2146,6 +2289,8 @@ var firebaseAuth = getAuth(firebaseApp);
         contractor: contractorInput.value,
         superintendent: superintendentInput.value,
         superintendentPhone: superintendentPhoneInput.value,
+        task2: readTask(task2),
+        task3: readTask(task3),
         color: currentColor,
         off: currentOff,
         holiday: currentHoliday
@@ -2160,6 +2305,7 @@ var firebaseAuth = getAuth(firebaseApp);
     contractorInput.addEventListener('blur', save);
     superintendentInput.addEventListener('blur', save);
     superintendentPhoneInput.addEventListener('blur', save);
+    TASK_FIELD_KEYS.forEach(function (k) { task2[k].addEventListener('blur', save); task3[k].addEventListener('blur', save); });
 
     // Color is admin-only — anyone signed in can fill out the rest of a
     // day's schedule entry, but only an admin can pick/change its color.
@@ -2234,6 +2380,7 @@ var firebaseAuth = getAuth(firebaseApp);
     clearBtn.addEventListener('click', function () {
       jobNameInput.value = ''; poInput.value = ''; addressInput.value = ''; stageInput.value = '';
       pmInput.value = ''; contractorInput.value = ''; superintendentInput.value = ''; superintendentPhoneInput.value = '';
+      TASK_FIELD_KEYS.forEach(function (k) { task2[k].value = ''; task3[k].value = ''; });
       currentColor = '';
       currentOff = false;
       currentHoliday = false;
@@ -2252,6 +2399,9 @@ var firebaseAuth = getAuth(firebaseApp);
     var repeatInput = document.createElement('input');
     repeatInput.type = 'date';
     repeatInput.min = dk;
+    repeatInput.value = dk; // Fix: without an explicit value, iOS Safari's
+                            // native date wheel opens on today's date
+                            // instead of the day being edited.
     repeatInput.disabled = disableControls;
     repeatRow.appendChild(repeatInput);
     var applyBtn = document.createElement('button');
@@ -2270,7 +2420,7 @@ var firebaseAuth = getAuth(firebaseApp);
       var ep = repeatInput.value.split('-');
       var endDate = new Date(parseInt(ep[0], 10), parseInt(ep[1], 10) - 1, parseInt(ep[2], 10));
       if (endDate < date) return;
-      var values = { jobName: jobNameInput.value, po: poInput.value, address: addressInput.value, stage: stageInput.value, pm: pmInput.value, contractor: contractorInput.value, superintendent: superintendentInput.value, superintendentPhone: superintendentPhoneInput.value, off: currentOff, holiday: currentHoliday };
+      var values = { jobName: jobNameInput.value, po: poInput.value, address: addressInput.value, stage: stageInput.value, pm: pmInput.value, contractor: contractorInput.value, superintendent: superintendentInput.value, superintendentPhone: superintendentPhoneInput.value, task2: readTask(task2), task3: readTask(task3), off: currentOff, holiday: currentHoliday };
       var count = 0;
       var cur = date;
       while (cur <= endDate) {
