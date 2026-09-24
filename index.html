@@ -600,7 +600,9 @@
   .calendar-day-cell.is-other-month { opacity: 0.45; }
   .calendar-day-cell.is-today { outline: 2px solid var(--color-focus); outline-offset: -2px; }
   .calendar-day-cell.is-selected { border-color: var(--color-accent); border-width: 2px; }
-  /* Marked "off" (job foreman not at work): a black X drawn corner-to-corner over the day box. */
+  /* Marked "off" (job foreman not at work): a red X drawn corner-to-corner
+     over the day box (var(--color-danger) so it stays visible against the
+     dark-mode background too, instead of a fixed black). */
   .calendar-day-cell.is-off::after {
     content: "";
     position: absolute;
@@ -608,8 +610,8 @@
     pointer-events: none;
     border-radius: inherit;
     background:
-      linear-gradient(to bottom right, transparent calc(50% - 1.5px), #000 calc(50% - 1.5px), #000 calc(50% + 1.5px), transparent calc(50% + 1.5px)),
-      linear-gradient(to bottom left, transparent calc(50% - 1.5px), #000 calc(50% - 1.5px), #000 calc(50% + 1.5px), transparent calc(50% + 1.5px));
+      linear-gradient(to bottom right, transparent calc(50% - 1.5px), var(--color-danger) calc(50% - 1.5px), var(--color-danger) calc(50% + 1.5px), transparent calc(50% + 1.5px)),
+      linear-gradient(to bottom left, transparent calc(50% - 1.5px), var(--color-danger) calc(50% - 1.5px), var(--color-danger) calc(50% + 1.5px), transparent calc(50% + 1.5px));
   }
   .calendar-day-number {
     font-family: var(--font-mono);
