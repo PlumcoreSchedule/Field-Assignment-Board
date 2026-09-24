@@ -198,6 +198,32 @@
   }
   .topbar-right { display: flex; flex-direction: column; align-items: stretch; gap: 8px; flex-wrap: wrap; }
 
+  /* ---------- section divider (a second division's header further down the
+     same home page, e.g. HVAC below Plumbing) - same brand-mark/title/logo
+     look as the topbar above, but NOT sticky and with no signed-in-as /
+     date-time (those already show once, in the real topbar). ---------- */
+  .section-divider {
+    background: var(--color-canvas);
+    margin-top: 8px;
+    padding-block: 16px;
+    border-top: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px 16px;
+  }
+  .section-divider-left { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .hvac-placeholder {
+    color: var(--color-ink-muted);
+    font-size: var(--text-sm);
+    padding: 20px 16px;
+    border: 1px dashed var(--color-border);
+    border-radius: var(--radius-md);
+    text-align: center;
+  }
+
   .btn {
     font-family: var(--font-body);
     font-size: var(--text-sm);
@@ -1203,6 +1229,20 @@
       </div>
     </section>
   </main>
+
+  <div class="section-divider">
+    <div class="section-divider-left">
+      <span class="brand-mark">Plumcore HVAC Field Ops</span>
+      <div class="title-row">
+        <h2 class="page-title">Assignment Board</h2>
+      </div>
+    </div>
+    <img src="logo.png" alt="Plumcore logo" class="brand-logo" />
+  </div>
+
+  <section class="hvac-content" aria-label="HVAC field ops" style="display:flex; flex-direction:column; gap:18px;">
+    <p class="hvac-placeholder">HVAC crew, schedules, and projects will be built out here.</p>
+  </section>
 
 </div>
 
