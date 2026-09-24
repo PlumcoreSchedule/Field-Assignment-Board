@@ -768,17 +768,22 @@
   .calendar-off-btn:disabled { cursor: not-allowed; opacity: 0.6; }
 
   /* Marked "holiday" (admin-applied company holiday, independent of the
-     automatic US holiday text below): a green X drawn corner-to-corner
-     over the day box. */
-  .calendar-day-cell.is-holiday::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    border-radius: inherit;
-    background:
-      linear-gradient(to bottom right, transparent calc(50% - 1.5px), #1F9D4C calc(50% - 1.5px), #1F9D4C calc(50% + 1.5px), transparent calc(50% + 1.5px)),
-      linear-gradient(to bottom left, transparent calc(50% - 1.5px), #1F9D4C calc(50% - 1.5px), #1F9D4C calc(50% + 1.5px), transparent calc(50% + 1.5px));
+     automatic US holiday text below): the whole day box is highlighted
+     green instead of drawing an X over it. */
+  .calendar-day-cell.is-holiday {
+    background: #CFF3DA;
+    border-color: #1F9D4C;
+  }
+  .calendar-day-cell.is-holiday:hover { border-color: #1F9D4C; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .calendar-day-cell.is-holiday {
+      background: #163B24;
+      border-color: #2FBE71;
+    }
+  }
+  :root[data-theme="dark"] .calendar-day-cell.is-holiday {
+    background: #163B24;
+    border-color: #2FBE71;
   }
   .calendar-holiday-btn {
     flex: none;
