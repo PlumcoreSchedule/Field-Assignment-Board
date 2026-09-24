@@ -873,14 +873,14 @@
   .projects-table {
     display: flex;
     flex-direction: column;
-    min-width: 760px;
+    min-width: 860px;
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
     overflow: hidden;
   }
   .project-table-head, .project-row {
     display: grid;
-    grid-template-columns: 2fr 1.1fr 1.3fr 1.3fr 1.3fr 84px;
+    grid-template-columns: 2fr 1.1fr 1.3fr 1.3fr 1.2fr 1.3fr 84px;
     gap: 8px;
     align-items: center;
     padding: 8px 10px;
@@ -1496,6 +1496,7 @@ var firebaseAuth = getAuth(firebaseApp);
         startDate: typeof it.startDate === 'string' ? it.startDate : '',
         contractor: typeof it.contractor === 'string' ? it.contractor : '',
         contact: typeof it.contact === 'string' ? it.contact : '',
+        contactPhone: typeof it.contactPhone === 'string' ? it.contactPhone : '',
         pm: typeof it.pm === 'string' ? it.pm : ''
       };
     });
@@ -2545,7 +2546,7 @@ var firebaseAuth = getAuth(firebaseApp);
 
     var head = document.createElement('div');
     head.className = 'project-table-head';
-    ['Job', 'Start Date', 'Contractor', 'Contact', 'PM', ''].forEach(function (labelText) {
+    ['Job', 'Start Date', 'Contractor', 'Contact', 'Contact #', 'PM', ''].forEach(function (labelText) {
       var cell = document.createElement('span');
       cell.textContent = labelText;
       head.appendChild(cell);
@@ -2579,6 +2580,7 @@ var firebaseAuth = getAuth(firebaseApp);
             startDate: current[idx].startDate,
             contractor: current[idx].contractor,
             contact: current[idx].contact,
+            contactPhone: current[idx].contactPhone,
             pm: current[idx].pm
           };
           updated[key] = input.value;
@@ -2592,6 +2594,7 @@ var firebaseAuth = getAuth(firebaseApp);
       row.appendChild(makeProjectField('startDate', 'date'));
       row.appendChild(makeProjectField('contractor', 'text'));
       row.appendChild(makeProjectField('contact', 'text'));
+      row.appendChild(makeProjectField('contactPhone', 'text'));
       row.appendChild(makeProjectField('pm', 'text'));
 
       var removeBtn = document.createElement('button');
@@ -2733,7 +2736,7 @@ var firebaseAuth = getAuth(firebaseApp);
       // Newest project goes at the top of the list, not the bottom.
       current.unshift({
         id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
-        job: '', startDate: '', contractor: '', contact: '', pm: ''
+        job: '', startDate: '', contractor: '', contact: '', contactPhone: '', pm: ''
       });
       saveProjectsList(projectsOpenSup, current);
     });
