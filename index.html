@@ -39,6 +39,14 @@
     --color-sup6-ink: #FFFFFF;
     --color-sup7: #C1600A;
     --color-sup7-ink: #FFFFFF;
+    --color-hvac1: #1F6F6F;
+    --color-hvac1-ink: #FFFFFF;
+    --color-hvac2: #5B4B8A;
+    --color-hvac2-ink: #FFFFFF;
+    --color-hvac3: #3E7C99;
+    --color-hvac3-ink: #FFFFFF;
+    --color-hvac4: #8C4B6B;
+    --color-hvac4-ink: #FFFFFF;
     --color-empty-bg: #F3ECDF;
     --color-empty-border: #D8CBAF;
     --color-focus: #1F6F6F;
@@ -88,6 +96,14 @@
       --color-sup6-ink: #0A1B2E;
       --color-sup7: #E8985A;
       --color-sup7-ink: #241004;
+      --color-hvac1: #5BAFAF;
+      --color-hvac1-ink: #072323;
+      --color-hvac2: #9C8AD1;
+      --color-hvac2-ink: #1E1030;
+      --color-hvac3: #7FB8D6;
+      --color-hvac3-ink: #0B2430;
+      --color-hvac4: #D090AC;
+      --color-hvac4-ink: #2E0F1C;
       --color-empty-bg: #2C251C;
       --color-empty-border: #443A2B;
       --color-focus: #7ED0CA;
@@ -123,6 +139,14 @@
     --color-sup6-ink: #0A1B2E;
     --color-sup7: #E8985A;
     --color-sup7-ink: #241004;
+    --color-hvac1: #5BAFAF;
+    --color-hvac1-ink: #072323;
+    --color-hvac2: #9C8AD1;
+    --color-hvac2-ink: #1E1030;
+    --color-hvac3: #7FB8D6;
+    --color-hvac3-ink: #0B2430;
+    --color-hvac4: #D090AC;
+    --color-hvac4-ink: #2E0F1C;
     --color-empty-bg: #2C251C;
     --color-empty-border: #443A2B;
     --color-focus: #7ED0CA;
@@ -341,6 +365,10 @@
   .swatch-sup5 { background: var(--color-sup5); }
   .swatch-sup6 { background: var(--color-sup6); }
   .swatch-sup7 { background: var(--color-sup7); }
+  .swatch-hvac1 { background: var(--color-hvac1); }
+  .swatch-hvac2 { background: var(--color-hvac2); }
+  .swatch-hvac3 { background: var(--color-hvac3); }
+  .swatch-hvac4 { background: var(--color-hvac4); }
 
   .crew-field { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1; }
   .field-label {
@@ -435,6 +463,12 @@
   /* ---------- installer: matches the width of the slab manager + plumbing foreman row above it ---------- */
   .installer-row { flex: 0 0 auto; width: 316px; max-width: 100%; margin-left: 14px; padding-left: 16px; }
   .installer-row .crew-card { width: 100%; }
+
+  /* ---------- HVAC job foremen: same 3-wide row pattern as the Plumbing
+     Supervisor / Supervisor / Utilities row above (lead-row), wraps to a
+     second row of its own accord as more foremen are added ---------- */
+  .hvac-foreman-row { display: flex; flex-wrap: wrap; gap: 14px; }
+  .hvac-foreman-row .crew-card { flex: 1 1 240px; }
 
   /* ---------- job foremen ---------- */
   .foreman-column {
@@ -1354,7 +1388,43 @@
   </div>
 
   <section class="hvac-content" aria-label="HVAC field ops" style="display:flex; flex-direction:column; gap:18px;">
-    <p class="hvac-placeholder">HVAC crew, schedules, and projects will be built out here.</p>
+    <div class="hvac-foreman-row">
+      <div class="crew-card">
+        <span class="swatch swatch-hvac1" aria-hidden="true"></span>
+        <div class="crew-field">
+          <label class="field-label" for="hvac1Input">Job Foreman</label>
+          <input id="hvac1Input" class="crew-input" type="text" maxlength="40" autocomplete="off" />
+        </div>
+        <button type="button" id="scheduleToggle-hvac1" class="schedule-toggle-btn">Schedule</button>
+      </div>
+
+      <div class="crew-card">
+        <span class="swatch swatch-hvac2" aria-hidden="true"></span>
+        <div class="crew-field">
+          <label class="field-label" for="hvac2Input">Job Foreman</label>
+          <input id="hvac2Input" class="crew-input" type="text" maxlength="40" autocomplete="off" />
+        </div>
+        <button type="button" id="scheduleToggle-hvac2" class="schedule-toggle-btn">Schedule</button>
+      </div>
+
+      <div class="crew-card">
+        <span class="swatch swatch-hvac3" aria-hidden="true"></span>
+        <div class="crew-field">
+          <label class="field-label" for="hvac3Input">Job Foreman</label>
+          <input id="hvac3Input" class="crew-input" type="text" maxlength="40" autocomplete="off" />
+        </div>
+        <button type="button" id="scheduleToggle-hvac3" class="schedule-toggle-btn">Schedule</button>
+      </div>
+
+      <div class="crew-card">
+        <span class="swatch swatch-hvac4" aria-hidden="true"></span>
+        <div class="crew-field">
+          <label class="field-label" for="hvac4Input">Job Foreman</label>
+          <input id="hvac4Input" class="crew-input" type="text" maxlength="40" autocomplete="off" />
+        </div>
+        <button type="button" id="scheduleToggle-hvac4" class="schedule-toggle-btn">Schedule</button>
+      </div>
+    </div>
   </section>
 
 </div>
@@ -1434,7 +1504,7 @@ var firebaseAuth = getAuth(firebaseApp);
   'use strict';
 
   var SUP_KEYS = ['sup2', 'sup3'];
-  var SUP_FALLBACK = { sup1Name: 'General Superintendent', sup2Name: 'Supervisor 1', sup3Name: 'Supervisor 2', sup4Name: 'Layout Manager', sup5Name: 'Plumbing Foreman', sup6Name: 'Installer', sup7Name: 'Charlie Cheetum' };
+  var SUP_FALLBACK = { sup1Name: 'General Superintendent', sup2Name: 'Supervisor 1', sup3Name: 'Supervisor 2', sup4Name: 'Layout Manager', sup5Name: 'Plumbing Foreman', sup6Name: 'Installer', sup7Name: 'Charlie Cheetum', hvac1Name: 'Brian Schwarz', hvac2Name: 'Matthew Lewis', hvac3Name: 'Nic Perry', hvac4Name: 'Baylee Crowe' };
 
   var state = {
     sup1Name: 'General Superintendent',
@@ -1444,11 +1514,15 @@ var firebaseAuth = getAuth(firebaseApp);
     sup5Name: 'Plumbing Foreman',
     sup6Name: 'Installer',
     sup7Name: 'Charlie Cheetum',
+    hvac1Name: 'Brian Schwarz',
+    hvac2Name: 'Matthew Lewis',
+    hvac3Name: 'Nic Perry',
+    hvac4Name: 'Baylee Crowe',
     foremen: { sup2: [], sup3: [] }
   };
   // Last server-confirmed supervisor names, used to roll back a name
   // edit locally if the write turns out not to be permitted.
-  var confirmedNames = { sup1Name: 'General Superintendent', sup2Name: 'Supervisor 1', sup3Name: 'Supervisor 2', sup4Name: 'Layout Manager', sup5Name: 'Plumbing Foreman', sup6Name: 'Installer', sup7Name: 'Charlie Cheetum' };
+  var confirmedNames = { sup1Name: 'General Superintendent', sup2Name: 'Supervisor 1', sup3Name: 'Supervisor 2', sup4Name: 'Layout Manager', sup5Name: 'Plumbing Foreman', sup6Name: 'Installer', sup7Name: 'Charlie Cheetum', hvac1Name: 'Brian Schwarz', hvac2Name: 'Matthew Lewis', hvac3Name: 'Nic Perry', hvac4Name: 'Baylee Crowe' };
 
   var docRef = null;
   var loaded = false;
@@ -1745,6 +1819,10 @@ var firebaseAuth = getAuth(firebaseApp);
     if (which === 'sup4Name') return els.sup4Input;
     if (which === 'sup5Name') return els.sup5Input;
     if (which === 'sup7Name') return els.sup7Input;
+    if (which === 'hvac1Name') return els.hvac1Input;
+    if (which === 'hvac2Name') return els.hvac2Input;
+    if (which === 'hvac3Name') return els.hvac3Input;
+    if (which === 'hvac4Name') return els.hvac4Input;
     return els.sup6Input;
   }
 
@@ -1959,6 +2037,10 @@ var firebaseAuth = getAuth(firebaseApp);
           state.sup5Name = (typeof data.sup5Name === 'string' && data.sup5Name) ? data.sup5Name : SUP_FALLBACK.sup5Name;
           state.sup6Name = (typeof data.sup6Name === 'string' && data.sup6Name) ? data.sup6Name : SUP_FALLBACK.sup6Name;
           state.sup7Name = (typeof data.sup7Name === 'string' && data.sup7Name) ? data.sup7Name : 'Charlie Cheetum';
+          state.hvac1Name = (typeof data.hvac1Name === 'string' && data.hvac1Name) ? data.hvac1Name : SUP_FALLBACK.hvac1Name;
+          state.hvac2Name = (typeof data.hvac2Name === 'string' && data.hvac2Name) ? data.hvac2Name : SUP_FALLBACK.hvac2Name;
+          state.hvac3Name = (typeof data.hvac3Name === 'string' && data.hvac3Name) ? data.hvac3Name : SUP_FALLBACK.hvac3Name;
+          state.hvac4Name = (typeof data.hvac4Name === 'string' && data.hvac4Name) ? data.hvac4Name : SUP_FALLBACK.hvac4Name;
           var f = (data.foremen && typeof data.foremen === 'object') ? data.foremen : {};
           state.foremen = {
             sup2: Array.isArray(f.sup2) ? f.sup2.filter(function (t) { return typeof t === 'string' && t; }) : [],
@@ -1971,6 +2053,10 @@ var firebaseAuth = getAuth(firebaseApp);
           confirmedNames.sup5Name = state.sup5Name;
           confirmedNames.sup6Name = state.sup6Name;
           confirmedNames.sup7Name = state.sup7Name;
+          confirmedNames.hvac1Name = state.hvac1Name;
+          confirmedNames.hvac2Name = state.hvac2Name;
+          confirmedNames.hvac3Name = state.hvac3Name;
+          confirmedNames.hvac4Name = state.hvac4Name;
         } else {
           // The shared board doc came back missing. This used to auto-recreate
           // it with blank default names/foremen — which is exactly how real
@@ -2162,13 +2248,13 @@ var firebaseAuth = getAuth(firebaseApp);
       });
     });
     // ---- HVAC division ----
-    // No HVAC supervisors/foremen/schedules exist yet - the HVAC section on
-    // the board is currently just a placeholder header. Once HVAC crew
-    // members and their own schedules/* docs exist, push their {key, name,
-    // division: 'HVAC'} entries here the same way as the Plumbing block
-    // above; no other change to this function or the Combined Calendar is
-    // needed for them to start showing up automatically, each keeping its
-    // own individually-selected color exactly like the Plumbing entries do.
+    // First four HVAC Job Foremen (added 2026-09-25), same fixed-role
+    // pattern as the Plumbing sup4-7 block above (individually named,
+    // each with its own Schedule tab) rather than the dynamic sup2/sup3
+    // foreman-list mechanism, since there's no HVAC supervisor yet.
+    ['hvac1', 'hvac2', 'hvac3', 'hvac4'].forEach(function (hvacKey) {
+      list.push({ key: hvacKey, name: state[hvacKey + 'Name'] || hvacKey, division: 'HVAC' });
+    });
     return list;
   }
 
@@ -2301,6 +2387,10 @@ var firebaseAuth = getAuth(firebaseApp);
     if (document.activeElement !== els.sup5Input) els.sup5Input.value = state.sup5Name;
     if (document.activeElement !== els.sup6Input) els.sup6Input.value = state.sup6Name;
     if (document.activeElement !== els.sup7Input) els.sup7Input.value = state.sup7Name;
+    if (document.activeElement !== els.hvac1Input) els.hvac1Input.value = state.hvac1Name;
+    if (document.activeElement !== els.hvac2Input) els.hvac2Input.value = state.hvac2Name;
+    if (document.activeElement !== els.hvac3Input) els.hvac3Input.value = state.hvac3Name;
+    if (document.activeElement !== els.hvac4Input) els.hvac4Input.value = state.hvac4Name;
     // Leadership names are locked for everyone, admins included — changes
     // are made only when Jonathan asks Claude to update them (see
     // window.__fabSetLeadershipName below), never by typing into these boxes.
@@ -2312,6 +2402,10 @@ var firebaseAuth = getAuth(firebaseApp);
     els.sup5Input.disabled = disable;
     els.sup6Input.disabled = disable;
     els.sup7Input.disabled = disable;
+    els.hvac1Input.disabled = disable;
+    els.hvac2Input.disabled = disable;
+    els.hvac3Input.disabled = disable;
+    els.hvac4Input.disabled = disable;
   }
 
   // ---------------- Full-page schedule calendar ----------------
@@ -3199,6 +3293,9 @@ var firebaseAuth = getAuth(firebaseApp);
     ['sup4', 'sup5', 'sup6', 'sup7'].forEach(function (supKey) {
       els.scheduleToggle[supKey].disabled = dbUnavailable;
     });
+    ['hvac1', 'hvac2', 'hvac3', 'hvac4'].forEach(function (hvacKey) {
+      els.scheduleToggle[hvacKey].disabled = dbUnavailable;
+    });
     ['sup2', 'sup3', 'sup7'].forEach(function (supKey) {
       els.projectsToggle[supKey].disabled = dbUnavailable;
     });
@@ -3215,6 +3312,10 @@ var firebaseAuth = getAuth(firebaseApp);
     els.sup5Input.addEventListener('input', function (e) { onSupInput('sup5Name', e.target.value); });
     els.sup6Input.addEventListener('input', function (e) { onSupInput('sup6Name', e.target.value); });
     els.sup7Input.addEventListener('input', function (e) { onSupInput('sup7Name', e.target.value); });
+    els.hvac1Input.addEventListener('input', function (e) { onSupInput('hvac1Name', e.target.value); });
+    els.hvac2Input.addEventListener('input', function (e) { onSupInput('hvac2Name', e.target.value); });
+    els.hvac3Input.addEventListener('input', function (e) { onSupInput('hvac3Name', e.target.value); });
+    els.hvac4Input.addEventListener('input', function (e) { onSupInput('hvac4Name', e.target.value); });
     els.sup1Input.addEventListener('blur', function () { clearTimeout(nameDebounce.sup1Name); saveSupName('sup1Name'); });
     els.sup2Input.addEventListener('blur', function () { clearTimeout(nameDebounce.sup2Name); saveSupName('sup2Name'); });
     els.sup3Input.addEventListener('blur', function () { clearTimeout(nameDebounce.sup3Name); saveSupName('sup3Name'); });
@@ -3222,9 +3323,16 @@ var firebaseAuth = getAuth(firebaseApp);
     els.sup5Input.addEventListener('blur', function () { clearTimeout(nameDebounce.sup5Name); saveSupName('sup5Name'); });
     els.sup6Input.addEventListener('blur', function () { clearTimeout(nameDebounce.sup6Name); saveSupName('sup6Name'); });
     els.sup7Input.addEventListener('blur', function () { clearTimeout(nameDebounce.sup7Name); saveSupName('sup7Name'); });
+    els.hvac1Input.addEventListener('blur', function () { clearTimeout(nameDebounce.hvac1Name); saveSupName('hvac1Name'); });
+    els.hvac2Input.addEventListener('blur', function () { clearTimeout(nameDebounce.hvac2Name); saveSupName('hvac2Name'); });
+    els.hvac3Input.addEventListener('blur', function () { clearTimeout(nameDebounce.hvac3Name); saveSupName('hvac3Name'); });
+    els.hvac4Input.addEventListener('blur', function () { clearTimeout(nameDebounce.hvac4Name); saveSupName('hvac4Name'); });
 
     ['sup4', 'sup5', 'sup6', 'sup7'].forEach(function (supKey) {
       els.scheduleToggle[supKey].addEventListener('click', function () { openCalendarView(supKey); });
+    });
+    ['hvac1', 'hvac2', 'hvac3', 'hvac4'].forEach(function (hvacKey) {
+      els.scheduleToggle[hvacKey].addEventListener('click', function () { openCalendarView(hvacKey); });
     });
 
     els.calendarBackBtn.addEventListener('click', closeCalendarView);
@@ -3295,6 +3403,10 @@ var firebaseAuth = getAuth(firebaseApp);
     els.sup5Input = q('sup5Input');
     els.sup6Input = q('sup6Input');
     els.sup7Input = q('sup7Input');
+    els.hvac1Input = q('hvac1Input');
+    els.hvac2Input = q('hvac2Input');
+    els.hvac3Input = q('hvac3Input');
+    els.hvac4Input = q('hvac4Input');
     els.foremanList = { sup2: q('foremanList-sup2'), sup3: q('foremanList-sup3') };
     els.foremanInput = { sup2: q('foremanInput-sup2'), sup3: q('foremanInput-sup3') };
     els.foremanError = { sup2: q('foremanError-sup2'), sup3: q('foremanError-sup3') };
@@ -3303,7 +3415,7 @@ var firebaseAuth = getAuth(firebaseApp);
 
     els.datetimeDate = q('datetimeDate');
     els.datetimeClock = q('datetimeClock');
-    els.scheduleToggle = { sup4: q('scheduleToggle-sup4'), sup5: q('scheduleToggle-sup5'), sup6: q('scheduleToggle-sup6'), sup7: q('scheduleToggle-sup7') };
+    els.scheduleToggle = { sup4: q('scheduleToggle-sup4'), sup5: q('scheduleToggle-sup5'), sup6: q('scheduleToggle-sup6'), sup7: q('scheduleToggle-sup7'), hvac1: q('scheduleToggle-hvac1'), hvac2: q('scheduleToggle-hvac2'), hvac3: q('scheduleToggle-hvac3'), hvac4: q('scheduleToggle-hvac4') };
     els.calendarOverlay = q('calendarOverlay');
     els.calendarBackBtn = q('calendarBackBtn');
     els.calendarPersonName = q('calendarPersonName');
@@ -3342,7 +3454,7 @@ var firebaseAuth = getAuth(firebaseApp);
     // Jonathan asks Claude to change a name, and Claude runs this from the
     // browser console while signed in as an admin. Not linked from any
     // button or menu.
-    var LEADERSHIP_NAME_KEYS = ['sup1Name', 'sup2Name', 'sup3Name', 'sup4Name', 'sup5Name', 'sup6Name', 'sup7Name'];
+    var LEADERSHIP_NAME_KEYS = ['sup1Name', 'sup2Name', 'sup3Name', 'sup4Name', 'sup5Name', 'sup6Name', 'sup7Name', 'hvac1Name', 'hvac2Name', 'hvac3Name', 'hvac4Name'];
     window.__fabSetLeadershipName = function (which, value) {
       if (LEADERSHIP_NAME_KEYS.indexOf(which) === -1) {
         return Promise.reject(new Error('Unknown field "' + which + '". Valid: ' + LEADERSHIP_NAME_KEYS.join(', ')));
@@ -3446,6 +3558,10 @@ var firebaseAuth = getAuth(firebaseApp);
           sup5Name: typeof values.sup5Name === 'string' && values.sup5Name ? values.sup5Name : SUP_FALLBACK.sup5Name,
           sup6Name: typeof values.sup6Name === 'string' && values.sup6Name ? values.sup6Name : SUP_FALLBACK.sup6Name,
           sup7Name: typeof values.sup7Name === 'string' && values.sup7Name ? values.sup7Name : SUP_FALLBACK.sup7Name,
+          hvac1Name: typeof values.hvac1Name === 'string' && values.hvac1Name ? values.hvac1Name : SUP_FALLBACK.hvac1Name,
+          hvac2Name: typeof values.hvac2Name === 'string' && values.hvac2Name ? values.hvac2Name : SUP_FALLBACK.hvac2Name,
+          hvac3Name: typeof values.hvac3Name === 'string' && values.hvac3Name ? values.hvac3Name : SUP_FALLBACK.hvac3Name,
+          hvac4Name: typeof values.hvac4Name === 'string' && values.hvac4Name ? values.hvac4Name : SUP_FALLBACK.hvac4Name,
           foremen: (values.foremen && typeof values.foremen === 'object') ? {
             sup2: Array.isArray(values.foremen.sup2) ? values.foremen.sup2.filter(function (t) { return typeof t === 'string' && t; }) : [],
             sup3: Array.isArray(values.foremen.sup3) ? values.foremen.sup3.filter(function (t) { return typeof t === 'string' && t; }) : []
