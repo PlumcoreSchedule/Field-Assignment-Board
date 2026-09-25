@@ -246,6 +246,90 @@
     padding: 12px 16px 0;
   }
 
+  /* ---------- Gantt Chart (pulls from the same schedule data as the
+     Combined Calendar - Plumbing section first, then HVAC, 3 months
+     visible at once). One shared month-header row at the top, then each
+     division's rows underneath - one row per person, with colored bars
+     (colorForKey - the same palette used everywhere else) positioned by
+     percentage across the row's timeline. ---------- */
+  .gantt-body { padding: 8px 16px 24px; }
+  .gantt-section { margin-top: 22px; }
+  .gantt-section-title {
+    font-family: var(--font-display);
+    font-size: var(--text-lg);
+    font-weight: 600;
+    color: var(--color-ink);
+    padding: 6px 0;
+    border-bottom: 2px solid var(--color-border-strong);
+    margin-bottom: 4px;
+  }
+  .gantt-empty { color: var(--color-ink-muted); font-size: var(--text-sm); padding: 10px 0 16px; }
+  .gantt-row {
+    display: flex;
+    align-items: stretch;
+    border-bottom: 1px solid var(--color-border);
+    min-height: 36px;
+  }
+  .gantt-row-name {
+    flex: 0 0 160px;
+    width: 160px;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--color-ink);
+    padding: 6px 10px 6px 0;
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .gantt-timeline-header-row { border-bottom: 2px solid var(--color-border-strong); min-height: 30px; }
+  .gantt-timeline {
+    position: relative;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .gantt-month-header { position: relative; height: 30px; }
+  .gantt-month-seg {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    border-left: 1px solid var(--color-border);
+    font-size: var(--text-xs);
+    font-weight: 700;
+    color: var(--color-ink-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+  .gantt-month-seg:first-child { border-left: none; }
+  .gantt-row-timeline {
+    position: relative;
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 36px;
+  }
+  .gantt-bar {
+    position: absolute;
+    top: 5px;
+    bottom: 5px;
+    min-width: 3px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border-strong);
+    background: var(--color-surface-alt);
+    font-size: var(--text-xs);
+    color: var(--color-ink);
+    overflow: hidden;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    padding: 0 5px;
+    box-sizing: border-box;
+  }
+
   /* ---------- section divider (a second division's header further down the
      same home page, e.g. HVAC below Plumbing) - same brand-mark/title/logo
      look as the topbar above, but NOT sticky and with no signed-in-as /
@@ -1272,6 +1356,7 @@
       <button type="button" id="authSignedInAs" class="authgate-signedout" hidden></button>
       <div class="topbar-right-row">
         <button type="button" id="combinedCalendarBtn" class="combined-calendar-btn">Combined Calendar</button>
+        <button type="button" id="ganttChartBtn" class="combined-calendar-btn">Gantt Chart</button>
         <div class="datetime-bar datetime-bar-compact">
           <span class="datetime-date" id="datetimeDate"></span>
           <span class="datetime-clock" id="datetimeClock"></span>
@@ -1481,6 +1566,20 @@
   <div class="calendar-weekday-row" id="combinedCalendarWeekdayRow"></div>
   <div class="calendar-grid combined-calendar-grid" id="combinedCalendarGrid"></div>
   <div class="calendar-day-editor" id="combinedCalendarDayDetail" hidden></div>
+</div>
+
+<div id="ganttOverlay" class="calendar-overlay" hidden>
+  <div class="calendar-overlay-header">
+    <button type="button" id="ganttBackBtn" class="calendar-back-btn">‹ Back to board</button>
+    <span class="calendar-person-name">Gantt Chart</span>
+  </div>
+  <div class="calendar-month-nav">
+    <button type="button" id="ganttPrevBtn" class="calendar-nav-btn">‹ Prev 3 Months</button>
+    <span class="calendar-month-label" id="ganttMonthLabel"></span>
+    <button type="button" id="ganttNextBtn" class="calendar-nav-btn">Next 3 Months ›</button>
+    <button type="button" id="ganttTodayBtn" class="calendar-today-btn">Today</button>
+  </div>
+  <div class="gantt-body" id="ganttBody"></div>
 </div>
 
 <script type="module">
@@ -2768,6 +2867,191 @@ var firebaseAuth = getAuth(firebaseApp);
     panel.hidden = false;
   }
 
+  // ---------------- Gantt Chart (view-only, pulls from the same schedule
+  // data as the Combined Calendar above - Plumbing section first, then
+  // HVAC, three months visible at once, Prev/Next move a full 3 months).
+  // Each row is one person; contiguous days that share the same job name +
+  // color + off/holiday flags are merged into a single bar (so a job
+  // entered across a date range shows as one bar, not one sliver per day),
+  // colored with the exact same palette (colorForKey) used everywhere else
+  // in the app. Days with nothing entered leave a gap - no bar drawn. ----
+  var ganttOpen = false;
+  var ganttViewDate = firstOfMonth(new Date()); // first day of the visible 3-month window's first month
+
+  function openGanttView() {
+    ganttOpen = true;
+    ganttViewDate = firstOfMonth(new Date());
+    getAllSchedulePersonEntries().forEach(function (p) { ensureScheduleSub(p.key); });
+    els.ganttOverlay.hidden = false;
+    renderGanttOverlay();
+  }
+
+  function closeGanttView() {
+    ganttOpen = false;
+    els.ganttOverlay.hidden = true;
+  }
+
+  function shiftGanttMonths(delta) {
+    ganttViewDate = new Date(ganttViewDate.getFullYear(), ganttViewDate.getMonth() + delta, 1);
+    renderGanttOverlay();
+  }
+
+  function resetGanttToToday() {
+    ganttViewDate = firstOfMonth(new Date());
+    renderGanttOverlay();
+  }
+
+  function renderGanttOverlay() {
+    if (!ganttOpen) return;
+    var rangeStart = ganttViewDate;
+    var rangeEndExclusive = new Date(rangeStart.getFullYear(), rangeStart.getMonth() + 3, 1);
+    var lastVisibleDay = addDays(rangeEndExclusive, -1);
+    els.ganttMonthLabel.textContent = MONTH_NAMES_FULL[rangeStart.getMonth()] + ' ' + rangeStart.getFullYear() + ' – ' + MONTH_NAMES_FULL[lastVisibleDay.getMonth()] + ' ' + lastVisibleDay.getFullYear();
+    renderGanttChart(rangeStart, rangeEndExclusive);
+  }
+
+  // One segment per calendar month touched by the visible range, each
+  // sized proportionally to how many of its days fall inside that range.
+  function buildGanttMonthSegments(rangeStart, rangeEndExclusive, totalDays) {
+    var segments = [];
+    var cur = new Date(rangeStart);
+    var offset = 0;
+    while (cur < rangeEndExclusive) {
+      var monthStart = cur;
+      var nextMonth = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 1);
+      var segEnd = nextMonth < rangeEndExclusive ? nextMonth : rangeEndExclusive;
+      var dayCount = Math.round((segEnd - monthStart) / 86400000);
+      segments.push({
+        label: MONTH_NAMES_FULL[monthStart.getMonth()] + ' ' + monthStart.getFullYear(),
+        leftPct: (offset / totalDays) * 100,
+        widthPct: (dayCount / totalDays) * 100
+      });
+      offset += dayCount;
+      cur = nextMonth;
+    }
+    return segments;
+  }
+
+  function buildGanttMonthHeader(rangeStart, rangeEndExclusive, totalDays) {
+    var header = document.createElement('div');
+    header.className = 'gantt-row gantt-timeline-header-row';
+    var nameSpacer = document.createElement('div');
+    nameSpacer.className = 'gantt-row-name';
+    header.appendChild(nameSpacer);
+    var timeline = document.createElement('div');
+    timeline.className = 'gantt-timeline';
+    var monthHeader = document.createElement('div');
+    monthHeader.className = 'gantt-month-header';
+    buildGanttMonthSegments(rangeStart, rangeEndExclusive, totalDays).forEach(function (seg) {
+      var segEl = document.createElement('div');
+      segEl.className = 'gantt-month-seg';
+      segEl.style.left = seg.leftPct + '%';
+      segEl.style.width = seg.widthPct + '%';
+      segEl.textContent = seg.label;
+      monthHeader.appendChild(segEl);
+    });
+    timeline.appendChild(monthHeader);
+    header.appendChild(timeline);
+    return header;
+  }
+
+  // Merges a person's day-by-day schedule entries within [rangeStart,
+  // rangeEndExclusive) into contiguous bars. A bar continues only while
+  // the day-to-day content is identical (job name, color, off, holiday);
+  // a day with nothing entered breaks the run and leaves a gap.
+  function buildGanttBars(personKey, rangeStart, rangeEndExclusive, totalDays) {
+    var dayMap = scheduleDocsCache[personKey] || {};
+    var bars = [];
+    var cur = new Date(rangeStart);
+    var offset = 0;
+    var curBar = null;
+    while (cur < rangeEndExclusive) {
+      var dk = dateKey(cur);
+      var entry = dayMap[dk];
+      var hasContent = !!(entry && (entry.jobName || entry.off || entry.holiday));
+      var key = hasContent ? ((entry.jobName || '') + '|' + (entry.color || '') + '|' + (entry.off ? 1 : 0) + '|' + (entry.holiday ? 1 : 0)) : null;
+      if (hasContent && curBar && curBar.key === key) {
+        curBar.days++;
+      } else {
+        if (curBar) bars.push(curBar);
+        curBar = hasContent ? { key: key, entry: entry, startOffset: offset, days: 1 } : null;
+      }
+      offset++;
+      cur = addDays(cur, 1);
+    }
+    if (curBar) bars.push(curBar);
+    return bars.map(function (b) {
+      var c = colorForKey(b.entry.color);
+      var label = b.entry.jobName || '';
+      if (b.entry.holiday) label = label ? (label + ' (Holiday)') : 'Holiday';
+      if (b.entry.off) label = label ? (label + ' (Off)') : 'Off';
+      return {
+        leftPct: (b.startOffset / totalDays) * 100,
+        widthPct: (b.days / totalDays) * 100,
+        label: label,
+        bg: c ? c.bg : null,
+        border: c ? c.border : null
+      };
+    });
+  }
+
+  function buildGanttRow(person, rangeStart, rangeEndExclusive, totalDays) {
+    var row = document.createElement('div');
+    row.className = 'gantt-row';
+    var nameEl = document.createElement('div');
+    nameEl.className = 'gantt-row-name';
+    nameEl.textContent = person.name;
+    nameEl.title = person.name;
+    row.appendChild(nameEl);
+
+    var timeline = document.createElement('div');
+    timeline.className = 'gantt-row-timeline';
+    buildGanttBars(person.key, rangeStart, rangeEndExclusive, totalDays).forEach(function (bar) {
+      var barEl = document.createElement('div');
+      barEl.className = 'gantt-bar';
+      barEl.style.left = bar.leftPct + '%';
+      barEl.style.width = bar.widthPct + '%';
+      if (bar.bg) { barEl.style.background = bar.bg; barEl.style.borderColor = bar.border; }
+      if (bar.label) { barEl.textContent = bar.label; barEl.title = bar.label; }
+      timeline.appendChild(barEl);
+    });
+    row.appendChild(timeline);
+    return row;
+  }
+
+  function buildGanttSection(title, people, rangeStart, rangeEndExclusive, totalDays) {
+    var section = document.createElement('div');
+    section.className = 'gantt-section';
+    var heading = document.createElement('div');
+    heading.className = 'gantt-section-title';
+    heading.textContent = title;
+    section.appendChild(heading);
+    if (!people.length) {
+      var empty = document.createElement('div');
+      empty.className = 'gantt-empty';
+      empty.textContent = 'No ' + title + ' crew with a schedule tab yet.';
+      section.appendChild(empty);
+      return section;
+    }
+    people.forEach(function (p) {
+      section.appendChild(buildGanttRow(p, rangeStart, rangeEndExclusive, totalDays));
+    });
+    return section;
+  }
+
+  function renderGanttChart(rangeStart, rangeEndExclusive) {
+    var body = els.ganttBody;
+    body.innerHTML = '';
+    var totalDays = Math.round((rangeEndExclusive - rangeStart) / 86400000);
+    var all = getAllSchedulePersonEntries();
+    var plumbing = all.filter(function (p) { return p.division === 'Plumbing'; });
+    var hvac = all.filter(function (p) { return p.division === 'HVAC'; });
+
+    body.appendChild(buildGanttMonthHeader(rangeStart, rangeEndExclusive, totalDays));
+    body.appendChild(buildGanttSection('Plumbing', plumbing, rangeStart, rangeEndExclusive, totalDays));
+    body.appendChild(buildGanttSection('HVAC', hvac, rangeStart, rangeEndExclusive, totalDays));
+  }
+
   function renderDayEditor(personKey, disableControls) {
     var editor = els.calendarDayEditor;
     editor.innerHTML = '';
@@ -3302,6 +3586,7 @@ var firebaseAuth = getAuth(firebaseApp);
     if (calendarOpenPerson) renderCalendarOverlay();
     if (projectsOpenSup) renderProjectsOverlay();
     if (combinedCalendarOpen) renderCombinedCalendarOverlay();
+    if (ganttOpen) renderGanttOverlay();
   }
 
   function wireStaticControls() {
@@ -3348,6 +3633,12 @@ var firebaseAuth = getAuth(firebaseApp);
     els.combinedCalendarFilterPlumbingBtn.addEventListener('click', function () { setCombinedCalendarFilter('Plumbing'); });
     els.combinedCalendarFilterHvacBtn.addEventListener('click', function () { setCombinedCalendarFilter('HVAC'); });
     els.combinedCalendarFilterAllBtn.addEventListener('click', function () { setCombinedCalendarFilter('all'); });
+
+    els.ganttChartBtn.addEventListener('click', openGanttView);
+    els.ganttBackBtn.addEventListener('click', closeGanttView);
+    els.ganttPrevBtn.addEventListener('click', function () { shiftGanttMonths(-3); });
+    els.ganttNextBtn.addEventListener('click', function () { shiftGanttMonths(3); });
+    els.ganttTodayBtn.addEventListener('click', resetGanttToToday);
 
     ['sup2', 'sup3'].forEach(function (supKey) {
       var submitForeman = function (e) {
@@ -3447,6 +3738,15 @@ var firebaseAuth = getAuth(firebaseApp);
     els.combinedCalendarFilterPlumbingBtn = q('combinedCalendarFilterPlumbingBtn');
     els.combinedCalendarFilterHvacBtn = q('combinedCalendarFilterHvacBtn');
     els.combinedCalendarFilterAllBtn = q('combinedCalendarFilterAllBtn');
+
+    els.ganttChartBtn = q('ganttChartBtn');
+    els.ganttOverlay = q('ganttOverlay');
+    els.ganttBackBtn = q('ganttBackBtn');
+    els.ganttPrevBtn = q('ganttPrevBtn');
+    els.ganttNextBtn = q('ganttNextBtn');
+    els.ganttTodayBtn = q('ganttTodayBtn');
+    els.ganttMonthLabel = q('ganttMonthLabel');
+    els.ganttBody = q('ganttBody');
 
     // ---------------- Admin-only name updates (console-only, no UI control) ----------------
     // The leadership name fields above are permanently disabled (see
