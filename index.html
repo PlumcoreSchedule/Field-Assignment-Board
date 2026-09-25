@@ -3063,11 +3063,14 @@ var firebaseAuth = getAuth(firebaseApp);
     // including days that already have different job data from each
     // other - without touching any of that job data. This is separate
     // from "Copy this entry through" above, which overwrites every
-    // field (job data, off, holiday) on each day in the range.
+    // field (job data, off, holiday) on each day in the range. Reuses
+    // the single "Color" swatch above (currentColor) rather than its
+    // own duplicate set of dots - pick the color there, pick a date
+    // through here, then Apply Color.
     var colorRangeRow = document.createElement('div');
     colorRangeRow.className = 'calendar-repeat-row';
     var colorRangeLabel = document.createElement('span');
-    colorRangeLabel.textContent = 'Set color for days through:';
+    colorRangeLabel.textContent = 'Apply selected color through:';
     colorRangeRow.appendChild(colorRangeLabel);
     var colorRangeInput = document.createElement('input');
     colorRangeInput.type = 'date';
@@ -3075,23 +3078,6 @@ var firebaseAuth = getAuth(firebaseApp);
     colorRangeInput.value = dk;
     colorRangeInput.disabled = colorDisabled;
     colorRangeRow.appendChild(colorRangeInput);
-    var rangeColor = currentColor;
-    var rangeColorDots = {};
-    DAY_COLOR_KEYS.forEach(function (key) {
-      var rdot = document.createElement('button');
-      rdot.type = 'button';
-      rdot.className = 'calendar-color-dot';
-      rdot.title = key.charAt(0).toUpperCase() + key.slice(1);
-      rdot.style.background = colorForKey(key).border;
-      rdot.disabled = colorDisabled;
-      rdot.addEventListener('click', function () {
-        rangeColor = (rangeColor === key) ? '' : key;
-        DAY_COLOR_KEYS.forEach(function (k) { rangeColorDots[k].classList.toggle('is-selected', rangeColor === k); });
-      });
-      rangeColorDots[key] = rdot;
-      colorRangeRow.appendChild(rdot);
-    });
-    DAY_COLOR_KEYS.forEach(function (k) { rangeColorDots[k].classList.toggle('is-selected', rangeColor === k); });
     var applyColorBtn = document.createElement('button');
     applyColorBtn.type = 'button';
     applyColorBtn.className = 'calendar-back-btn';
@@ -3118,13 +3104,11 @@ var firebaseAuth = getAuth(firebaseApp);
           jobName: existing.jobName, po: existing.po, address: existing.address, stage: existing.stage,
           pm: existing.pm, contractor: existing.contractor, superintendent: existing.superintendent, superintendentPhone: existing.superintendentPhone,
           task2: existing.task2, task3: existing.task3,
-          color: rangeColor, off: existing.off === true, holiday: existing.holiday === true
+          color: currentColor, off: existing.off === true, holiday: existing.holiday === true
         });
         count++;
         cur = addDays(cur, 1);
       }
-      currentColor = rangeColor;
-      DAY_COLOR_KEYS.forEach(function (k) { colorDots[k].classList.toggle('is-selected', currentColor === k); });
       colorRangeNote.textContent = 'Set color on ' + count + ' day' + (count === 1 ? '' : 's') + '.';
       renderCalendarGrid(personKey, disableControls);
     });
