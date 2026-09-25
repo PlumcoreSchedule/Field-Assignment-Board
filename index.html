@@ -1596,6 +1596,10 @@
       <span class="datetime-clock"></span>
     </div>
   </div>
+  <div class="combined-calendar-filter-row" role="group" aria-label="Time span">
+    <button type="button" id="ganttSpan1Btn" class="calendar-task-tab-btn" data-span="1">1 Month</button>
+    <button type="button" id="ganttSpan3Btn" class="calendar-task-tab-btn" data-span="3">3 Months</button>
+  </div>
   <div class="calendar-month-nav">
     <button type="button" id="ganttPrevBtn" class="calendar-nav-btn">‹ Prev 3 Months</button>
     <span class="calendar-month-label" id="ganttMonthLabel"></span>
@@ -2892,18 +2896,21 @@ var firebaseAuth = getAuth(firebaseApp);
 
   // ---------------- Gantt Chart (view-only, pulls from the same schedule
   // data as the Combined Calendar above - Plumbing section first, then
-  // HVAC, three months visible at once, Prev/Next move a full 3 months).
+  // HVAC. A 1 Month / 3 Months toggle sets how many months are visible at
+  // once; Prev/Next always move the view by exactly that many months.
   // Each row is one person; contiguous days that share the same job name +
   // color + off/holiday flags are merged into a single bar (so a job
   // entered across a date range shows as one bar, not one sliver per day),
   // colored with the exact same palette (colorForKey) used everywhere else
   // in the app. Days with nothing entered leave a gap - no bar drawn. ----
   var ganttOpen = false;
-  var ganttViewDate = firstOfMonth(new Date()); // first day of the visible 3-month window's first month
+  var ganttViewDate = firstOfMonth(new Date()); // first day of the visible window's first month
+  var ganttSpan = 3; // 1 or 3 - how many months are visible at once
 
   function openGanttView() {
     ganttOpen = true;
     ganttViewDate = firstOfMonth(new Date());
+    ganttSpan = 3;
     getAllSchedulePersonEntries().forEach(function (p) { ensureScheduleSub(p.key); });
     els.ganttOverlay.hidden = false;
     renderGanttOverlay();
@@ -2924,12 +2931,36 @@ var firebaseAuth = getAuth(firebaseApp);
     renderGanttOverlay();
   }
 
+  function setGanttSpan(span) {
+    if (ganttSpan === span) return;
+    ganttSpan = span;
+    renderGanttOverlay();
+  }
+
+  function updateGanttSpanButtons() {
+    [
+      [els.ganttSpan1Btn, 1],
+      [els.ganttSpan3Btn, 3]
+    ].forEach(function (pair) {
+      if (!pair[0]) return;
+      pair[0].classList.toggle('is-active', ganttSpan === pair[1]);
+    });
+    var spanLabel = ganttSpan === 1 ? 'Month' : (ganttSpan + ' Months');
+    els.ganttPrevBtn.textContent = '‹ Prev ' + spanLabel;
+    els.ganttNextBtn.textContent = 'Next ' + spanLabel + ' ›';
+  }
+
   function renderGanttOverlay() {
     if (!ganttOpen) return;
     var rangeStart = ganttViewDate;
-    var rangeEndExclusive = new Date(rangeStart.getFullYear(), rangeStart.getMonth() + 3, 1);
+    var rangeEndExclusive = new Date(rangeStart.getFullYear(), rangeStart.getMonth() + ganttSpan, 1);
     var lastVisibleDay = addDays(rangeEndExclusive, -1);
-    els.ganttMonthLabel.textContent = MONTH_NAMES_FULL[rangeStart.getMonth()] + ' ' + rangeStart.getFullYear() + ' – ' + MONTH_NAMES_FULL[lastVisibleDay.getMonth()] + ' ' + lastVisibleDay.getFullYear();
+    if (ganttSpan === 1) {
+      els.ganttMonthLabel.textContent = MONTH_NAMES_FULL[rangeStart.getMonth()] + ' ' + rangeStart.getFullYear();
+    } else {
+      els.ganttMonthLabel.textContent = MONTH_NAMES_FULL[rangeStart.getMonth()] + ' ' + rangeStart.getFullYear() + ' – ' + MONTH_NAMES_FULL[lastVisibleDay.getMonth()] + ' ' + lastVisibleDay.getFullYear();
+    }
+    updateGanttSpanButtons();
     renderGanttChart(rangeStart, rangeEndExclusive);
   }
 
@@ -3663,9 +3694,11 @@ var firebaseAuth = getAuth(firebaseApp);
 
     els.ganttChartBtn.addEventListener('click', openGanttView);
     els.ganttBackBtn.addEventListener('click', closeGanttView);
-    els.ganttPrevBtn.addEventListener('click', function () { shiftGanttMonths(-3); });
-    els.ganttNextBtn.addEventListener('click', function () { shiftGanttMonths(3); });
+    els.ganttPrevBtn.addEventListener('click', function () { shiftGanttMonths(-ganttSpan); });
+    els.ganttNextBtn.addEventListener('click', function () { shiftGanttMonths(ganttSpan); });
     els.ganttTodayBtn.addEventListener('click', resetGanttToToday);
+    els.ganttSpan1Btn.addEventListener('click', function () { setGanttSpan(1); });
+    els.ganttSpan3Btn.addEventListener('click', function () { setGanttSpan(3); });
 
     ['sup2', 'sup3'].forEach(function (supKey) {
       var submitForeman = function (e) {
@@ -3772,6 +3805,8 @@ var firebaseAuth = getAuth(firebaseApp);
     els.ganttPrevBtn = q('ganttPrevBtn');
     els.ganttNextBtn = q('ganttNextBtn');
     els.ganttTodayBtn = q('ganttTodayBtn');
+    els.ganttSpan1Btn = q('ganttSpan1Btn');
+    els.ganttSpan3Btn = q('ganttSpan3Btn');
     els.ganttMonthLabel = q('ganttMonthLabel');
     els.ganttBody = q('ganttBody');
 
