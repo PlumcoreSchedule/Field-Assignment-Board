@@ -686,11 +686,14 @@
     z-index: 2;
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 12px;
     background: var(--color-surface);
     border-bottom: 1px solid var(--color-border);
     padding: 12px 16px;
   }
+  .overlay-header-logo { flex-shrink: 0; }
+  .overlay-header-datetime { margin-left: auto; flex-shrink: 0; }
   .calendar-back-btn {
     font-family: var(--font-body);
     font-size: var(--text-sm);
@@ -1522,8 +1525,13 @@
 
 <div id="calendarOverlay" class="calendar-overlay" hidden>
   <div class="calendar-overlay-header">
+    <img src="logo.png" alt="Plumcore logo" class="brand-logo overlay-header-logo" />
     <button type="button" id="calendarBackBtn" class="calendar-back-btn">‹ Back to board</button>
     <span class="calendar-person-name" id="calendarPersonName"></span>
+    <div class="datetime-bar datetime-bar-compact overlay-header-datetime">
+      <span class="datetime-date"></span>
+      <span class="datetime-clock"></span>
+    </div>
   </div>
   <div class="calendar-month-nav">
     <button type="button" id="calendarPrevBtn" class="calendar-nav-btn">‹ Prev</button>
@@ -1538,8 +1546,13 @@
 
 <div id="projectsOverlay" class="calendar-overlay" hidden>
   <div class="calendar-overlay-header">
+    <img src="logo.png" alt="Plumcore logo" class="brand-logo overlay-header-logo" />
     <button type="button" id="projectsBackBtn" class="calendar-back-btn">‹ Back to board</button>
     <span class="calendar-person-name" id="projectsPersonName"></span>
+    <div class="datetime-bar datetime-bar-compact overlay-header-datetime">
+      <span class="datetime-date"></span>
+      <span class="datetime-clock"></span>
+    </div>
   </div>
   <div class="projects-toolbar">
     <button type="button" id="projectsAddBtn" class="btn btn-sm btn-primary">Add project</button>
@@ -1549,8 +1562,13 @@
 
 <div id="combinedCalendarOverlay" class="calendar-overlay" hidden>
   <div class="calendar-overlay-header">
+    <img src="logo.png" alt="Plumcore logo" class="brand-logo overlay-header-logo" />
     <button type="button" id="combinedCalendarBackBtn" class="calendar-back-btn">‹ Back to board</button>
     <span class="calendar-person-name">Combined Calendar</span>
+    <div class="datetime-bar datetime-bar-compact overlay-header-datetime">
+      <span class="datetime-date"></span>
+      <span class="datetime-clock"></span>
+    </div>
   </div>
   <div class="combined-calendar-filter-row" role="group" aria-label="Filter by division">
     <button type="button" id="combinedCalendarFilterPlumbingBtn" class="calendar-task-tab-btn" data-filter="Plumbing">Plumbing</button>
@@ -1570,8 +1588,13 @@
 
 <div id="ganttOverlay" class="calendar-overlay" hidden>
   <div class="calendar-overlay-header">
+    <img src="logo.png" alt="Plumcore logo" class="brand-logo overlay-header-logo" />
     <button type="button" id="ganttBackBtn" class="calendar-back-btn">‹ Back to board</button>
     <span class="calendar-person-name">Gantt Chart</span>
+    <div class="datetime-bar datetime-bar-compact overlay-header-datetime">
+      <span class="datetime-date"></span>
+      <span class="datetime-clock"></span>
+    </div>
   </div>
   <div class="calendar-month-nav">
     <button type="button" id="ganttPrevBtn" class="calendar-nav-btn">‹ Prev 3 Months</button>
@@ -3563,11 +3586,15 @@ var firebaseAuth = getAuth(firebaseApp);
 
   function renderDateTimeBar() {
     var now = new Date();
-    els.datetimeDate.textContent = (now.getMonth() + 1) + '/' + now.getDate() + '/' + now.getFullYear();
+    var dateStr = (now.getMonth() + 1) + '/' + now.getDate() + '/' + now.getFullYear();
     var h = now.getHours();
     var ampm = h >= 12 ? 'PM' : 'AM';
     var h12 = h % 12; if (h12 === 0) h12 = 12;
-    els.datetimeClock.textContent = h12 + ':' + pad2(now.getMinutes()) + ':' + pad2(now.getSeconds()) + ' ' + ampm;
+    var clockStr = h12 + ':' + pad2(now.getMinutes()) + ':' + pad2(now.getSeconds()) + ' ' + ampm;
+    var dateEls = document.querySelectorAll('.datetime-date');
+    for (var i = 0; i < dateEls.length; i++) dateEls[i].textContent = dateStr;
+    var clockEls = document.querySelectorAll('.datetime-clock');
+    for (var j = 0; j < clockEls.length; j++) clockEls[j].textContent = clockStr;
   }
 
   function render() {
