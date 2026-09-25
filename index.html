@@ -3541,6 +3541,43 @@ var firebaseAuth = getAuth(firebaseApp);
       return cloneForemen(state.foremen);
     };
 
+    // Admin list (admins/config, a separate doc from board/week1) is not
+    // exposed in the UI at all — no sign-in screen or settings panel ever
+    // shows or edits who's an admin. Same "Claude runs this from the
+    // console on Jonathan's explicit request" pattern as the leadership
+    // names and Job Foremen above. Always read-modify-write the whole
+    // emails array (never overwrite it wholesale) so an admin add/remove
+    // can never silently drop someone else who's already on the list.
+    window.__fabAddAdmin = function (email) {
+      var v = String(email || '').trim().toLowerCase();
+      if (!PLUMCORE_EMAIL_RE.test(v)) {
+        return Promise.reject(new Error('Must be a @plumcore.com email.'));
+      }
+      var adminsRef = doc(firestoreDb, 'admins', 'config');
+      return getDoc(adminsRef).then(function (snap) {
+        var emails = (snap.exists() && Array.isArray(snap.data().emails)) ? snap.data().emails.slice() : [];
+        if (emails.some(function (e) { return typeof e === 'string' && e.toLowerCase() === v; })) {
+          throw new Error(v + ' is already an admin.');
+        }
+        emails.push(v);
+        return setDoc(adminsRef, { emails: emails }, { merge: true }).then(function () { return emails; });
+      });
+    };
+    window.__fabRemoveAdmin = function (email) {
+      var v = String(email || '').trim().toLowerCase();
+      var adminsRef = doc(firestoreDb, 'admins', 'config');
+      return getDoc(adminsRef).then(function (snap) {
+        var emails = (snap.exists() && Array.isArray(snap.data().emails)) ? snap.data().emails.slice() : [];
+        var filtered = emails.filter(function (e) { return typeof e === 'string' && e.toLowerCase() !== v; });
+        return setDoc(adminsRef, { emails: filtered }, { merge: true }).then(function () { return filtered; });
+      });
+    };
+    window.__fabGetAdmins = function () {
+      return getDoc(doc(firestoreDb, 'admins', 'config')).then(function (snap) {
+        return (snap.exists() && Array.isArray(snap.data().emails)) ? snap.data().emails.slice() : [];
+      });
+    };
+
     // Deliberate, explicit escape hatch for the one legitimate case where
     // board/week1 really doesn't exist yet (a brand-new deployment). Unlike
     // the old auto-recreate behavior this replaced, it does nothing on its
