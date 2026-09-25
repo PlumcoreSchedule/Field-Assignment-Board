@@ -220,7 +220,7 @@
     padding: 4px 8px;
     border-radius: var(--radius-sm);
   }
-  .topbar-right { display: flex; flex-direction: column; align-items: stretch; gap: 8px; flex-wrap: wrap; }
+  .topbar-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; flex-wrap: wrap; }
   .topbar-right-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
   .combined-calendar-btn {
     font-family: var(--font-body);
@@ -692,7 +692,6 @@
     border-bottom: 1px solid var(--color-border);
     padding: 12px 16px;
   }
-  .overlay-header-logo { flex-shrink: 0; }
   .overlay-header-datetime { margin-left: auto; flex-shrink: 0; }
   .calendar-back-btn {
     font-family: var(--font-body);
@@ -1525,7 +1524,7 @@
 
 <div id="calendarOverlay" class="calendar-overlay" hidden>
   <div class="calendar-overlay-header">
-    <img src="logo.png" alt="Plumcore logo" class="brand-logo overlay-header-logo" />
+    <img src="logo.png" alt="Plumcore logo" class="brand-logo topbar-center-logo" />
     <button type="button" id="calendarBackBtn" class="calendar-back-btn">‹ Back to board</button>
     <span class="calendar-person-name" id="calendarPersonName"></span>
     <div class="datetime-bar datetime-bar-compact overlay-header-datetime">
@@ -1546,7 +1545,7 @@
 
 <div id="projectsOverlay" class="calendar-overlay" hidden>
   <div class="calendar-overlay-header">
-    <img src="logo.png" alt="Plumcore logo" class="brand-logo overlay-header-logo" />
+    <img src="logo.png" alt="Plumcore logo" class="brand-logo topbar-center-logo" />
     <button type="button" id="projectsBackBtn" class="calendar-back-btn">‹ Back to board</button>
     <span class="calendar-person-name" id="projectsPersonName"></span>
     <div class="datetime-bar datetime-bar-compact overlay-header-datetime">
@@ -1562,7 +1561,7 @@
 
 <div id="combinedCalendarOverlay" class="calendar-overlay" hidden>
   <div class="calendar-overlay-header">
-    <img src="logo.png" alt="Plumcore logo" class="brand-logo overlay-header-logo" />
+    <img src="logo.png" alt="Plumcore logo" class="brand-logo topbar-center-logo" />
     <button type="button" id="combinedCalendarBackBtn" class="calendar-back-btn">‹ Back to board</button>
     <span class="calendar-person-name">Combined Calendar</span>
     <div class="datetime-bar datetime-bar-compact overlay-header-datetime">
@@ -1588,7 +1587,7 @@
 
 <div id="ganttOverlay" class="calendar-overlay" hidden>
   <div class="calendar-overlay-header">
-    <img src="logo.png" alt="Plumcore logo" class="brand-logo overlay-header-logo" />
+    <img src="logo.png" alt="Plumcore logo" class="brand-logo topbar-center-logo" />
     <button type="button" id="ganttBackBtn" class="calendar-back-btn">‹ Back to board</button>
     <span class="calendar-person-name">Gantt Chart</span>
     <div class="datetime-bar datetime-bar-compact overlay-header-datetime">
