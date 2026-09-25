@@ -197,6 +197,30 @@
     border-radius: var(--radius-sm);
   }
   .topbar-right { display: flex; flex-direction: column; align-items: stretch; gap: 8px; flex-wrap: wrap; }
+  .topbar-right-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+  .combined-calendar-btn {
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    padding: 8px 14px;
+    min-height: 38px;
+    border: 1px solid var(--color-border-strong);
+    background: var(--color-surface);
+    color: var(--color-ink);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .combined-calendar-btn:hover:not(:disabled) { background: var(--color-accent-soft); color: var(--color-accent); }
+  .combined-calendar-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .combined-calendar-filter-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding: 12px 16px 0;
+  }
 
   /* ---------- section divider (a second division's header further down the
      same home page, e.g. HVAC below Plumbing) - same brand-mark/title/logo
@@ -663,6 +687,91 @@
     border-left: 3px solid var(--color-border-strong);
     color: var(--color-ink-muted);
   }
+
+  /* ---------- Combined Calendar (view-only - click a day to see every
+     schedule tab's entries for it combined together; no editing happens
+     here, that still only happens on each person's own Schedule tab) ---------- */
+  .combined-calendar-grid .calendar-day-cell {
+    min-height: 108px;
+    align-items: stretch;
+  }
+  .combined-day-entries {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    width: 100%;
+    max-height: 92px;
+    overflow-y: auto;
+  }
+  .combined-day-entry {
+    font-size: 10px;
+    line-height: 1.3;
+    padding: 2px 4px;
+    border-radius: 3px;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    border-left: 3px solid var(--color-border-strong);
+    background: var(--color-surface-alt);
+    color: var(--color-ink);
+  }
+  .combined-day-entry-name { font-weight: 700; }
+  .combined-day-more {
+    font-size: 10px;
+    color: var(--color-ink-muted);
+    font-weight: 600;
+    padding: 2px 4px;
+  }
+
+  /* Day-detail panel below the grid: one card per person with a schedule
+     entry that day, each keeping its own individually-selected color
+     (never a shared "combined view" color) and labeled by division, so
+     Plumbing and future HVAC entries stay visually distinct from each
+     other while sitting side by side. */
+  .combined-detail-card {
+    border: 1px solid var(--color-border);
+    border-left-width: 4px;
+    border-radius: var(--radius-sm);
+    background: var(--color-surface);
+    padding: 10px 12px;
+    margin-bottom: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .combined-detail-card:last-child { margin-bottom: 0; }
+  .combined-detail-card-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .combined-detail-card-name { font-family: var(--font-display); font-size: var(--text-md); font-weight: 600; color: var(--color-ink); }
+  .combined-detail-card-division {
+    font-size: var(--text-xs);
+    color: var(--color-ink-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+  }
+  .combined-detail-tag {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 2px 7px;
+    border-radius: 999px;
+    color: #FFFFFF;
+  }
+  .combined-detail-tag-off { background: var(--color-danger); }
+  .combined-detail-tag-holiday { background: #1F9D4C; }
+  .combined-detail-task-label {
+    font-size: var(--text-xs);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-ink-muted);
+    margin-top: 4px;
+  }
+  .combined-detail-field-value { font-size: var(--text-sm); color: var(--color-ink); word-break: break-word; }
+  .combined-detail-empty { color: var(--color-ink-muted); font-size: var(--text-sm); padding: 8px 0; }
+
   .calendar-day-editor {
     margin: 4px 16px 24px;
     background: var(--color-surface-alt);
@@ -1121,9 +1230,12 @@
     <img src="logo.png" alt="Plumcore logo" class="brand-logo topbar-center-logo" />
     <div class="topbar-right">
       <button type="button" id="authSignedInAs" class="authgate-signedout" hidden></button>
-      <div class="datetime-bar datetime-bar-compact">
-        <span class="datetime-date" id="datetimeDate"></span>
-        <span class="datetime-clock" id="datetimeClock"></span>
+      <div class="topbar-right-row">
+        <button type="button" id="combinedCalendarBtn" class="combined-calendar-btn">Combined Calendar</button>
+        <div class="datetime-bar datetime-bar-compact">
+          <span class="datetime-date" id="datetimeDate"></span>
+          <span class="datetime-clock" id="datetimeClock"></span>
+        </div>
       </div>
     </div>
   </header>
@@ -1274,6 +1386,27 @@
   <div class="projects-list" id="projectsList"></div>
 </div>
 
+<div id="combinedCalendarOverlay" class="calendar-overlay" hidden>
+  <div class="calendar-overlay-header">
+    <button type="button" id="combinedCalendarBackBtn" class="calendar-back-btn">‹ Back to board</button>
+    <span class="calendar-person-name">Combined Calendar</span>
+  </div>
+  <div class="combined-calendar-filter-row" role="group" aria-label="Filter by division">
+    <button type="button" id="combinedCalendarFilterPlumbingBtn" class="calendar-task-tab-btn" data-filter="Plumbing">Plumbing</button>
+    <button type="button" id="combinedCalendarFilterHvacBtn" class="calendar-task-tab-btn" data-filter="HVAC">HVAC</button>
+    <button type="button" id="combinedCalendarFilterAllBtn" class="calendar-task-tab-btn" data-filter="all">Combined</button>
+  </div>
+  <div class="calendar-month-nav">
+    <button type="button" id="combinedCalendarPrevBtn" class="calendar-nav-btn">‹ Prev</button>
+    <span class="calendar-month-label" id="combinedCalendarMonthLabel"></span>
+    <button type="button" id="combinedCalendarNextBtn" class="calendar-nav-btn">Next ›</button>
+    <button type="button" id="combinedCalendarTodayBtn" class="calendar-today-btn">Today</button>
+  </div>
+  <div class="calendar-weekday-row" id="combinedCalendarWeekdayRow"></div>
+  <div class="calendar-grid combined-calendar-grid" id="combinedCalendarGrid"></div>
+  <div class="calendar-day-editor" id="combinedCalendarDayDetail" hidden></div>
+</div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, deleteField } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
@@ -1396,6 +1529,17 @@ var firebaseAuth = getAuth(firebaseApp);
   var calendarViewDate = firstOfMonth(new Date());
   var calendarSelectedDk = null;
   var calendarRepeatNote = '';
+
+  // Combined Calendar: a separate, read-only overlay with its own month
+  // cursor (never shares calendarViewDate with the per-person calendar
+  // above), so navigating one never disturbs the other.
+  var combinedCalendarOpen = false;
+  var combinedCalendarViewDate = firstOfMonth(new Date());
+  var combinedCalendarSelectedDk = null;
+  // Which division(s) the Combined Calendar currently shows: 'all' (both
+  // Plumbing and HVAC together), 'Plumbing', or 'HVAC'. Resets to 'all'
+  // every time the overlay is opened fresh.
+  var combinedCalendarFilter = 'all';
 
   // A day's color is no longer derived automatically from its job name —
   // admins pick one manually from this fixed palette (stored as entry.color,
@@ -2002,6 +2146,78 @@ var firebaseAuth = getAuth(firebaseApp);
     els.calendarOverlay.hidden = true;
   }
 
+  // Every person who currently has their own "Schedule" tab, across every
+  // division on the board - this is the single place the Combined Calendar
+  // reads from, so adding a new division's crew here is the only change
+  // needed to fold them into the combined view too.
+  function getAllSchedulePersonEntries() {
+    var list = [];
+    // ---- Plumbing division ----
+    ['sup4', 'sup5', 'sup6', 'sup7'].forEach(function (supKey) {
+      list.push({ key: supKey, name: state[supKey + 'Name'] || supKey, division: 'Plumbing' });
+    });
+    SUP_KEYS.forEach(function (supKey) { // ['sup2', 'sup3'] - each has a dynamic Job Foremen list
+      (state.foremen[supKey] || []).forEach(function (name) {
+        list.push({ key: 'foreman:' + supKey + ':' + name, name: name, division: 'Plumbing' });
+      });
+    });
+    // ---- HVAC division ----
+    // No HVAC supervisors/foremen/schedules exist yet - the HVAC section on
+    // the board is currently just a placeholder header. Once HVAC crew
+    // members and their own schedules/* docs exist, push their {key, name,
+    // division: 'HVAC'} entries here the same way as the Plumbing block
+    // above; no other change to this function or the Combined Calendar is
+    // needed for them to start showing up automatically, each keeping its
+    // own individually-selected color exactly like the Plumbing entries do.
+    return list;
+  }
+
+  // Same list, narrowed to the currently-selected division filter ('all'
+  // shows every division combined, otherwise only that division's people).
+  function getFilteredSchedulePersonEntries() {
+    var all = getAllSchedulePersonEntries();
+    if (combinedCalendarFilter === 'all') return all;
+    return all.filter(function (p) { return p.division === combinedCalendarFilter; });
+  }
+
+  function openCombinedCalendarView() {
+    combinedCalendarOpen = true;
+    combinedCalendarViewDate = firstOfMonth(new Date());
+    combinedCalendarSelectedDk = null;
+    combinedCalendarFilter = 'all';
+    getAllSchedulePersonEntries().forEach(function (p) { ensureScheduleSub(p.key); });
+    els.combinedCalendarOverlay.hidden = false;
+    renderCombinedCalendarOverlay();
+  }
+
+  function closeCombinedCalendarView() {
+    combinedCalendarOpen = false;
+    els.combinedCalendarOverlay.hidden = true;
+  }
+
+  function shiftCombinedCalendarMonth(delta) {
+    combinedCalendarViewDate = new Date(combinedCalendarViewDate.getFullYear(), combinedCalendarViewDate.getMonth() + delta, 1);
+    combinedCalendarSelectedDk = null;
+    renderCombinedCalendarOverlay();
+  }
+
+  function resetCombinedCalendarToToday() {
+    combinedCalendarViewDate = firstOfMonth(new Date());
+    combinedCalendarSelectedDk = null;
+    renderCombinedCalendarOverlay();
+  }
+
+  function selectCombinedCalendarDay(dk) {
+    combinedCalendarSelectedDk = (combinedCalendarSelectedDk === dk) ? null : dk;
+    renderCombinedCalendarOverlay();
+  }
+
+  function setCombinedCalendarFilter(filter) {
+    if (combinedCalendarFilter === filter) return;
+    combinedCalendarFilter = filter;
+    renderCombinedCalendarOverlay();
+  }
+
   var projectsOpenSup = null;
   function openProjectsView(supKey) {
     projectsOpenSup = supKey;
@@ -2191,6 +2407,265 @@ var firebaseAuth = getAuth(firebaseApp);
         grid.appendChild(cell);
       })();
     }
+  }
+
+  // ---------------- Combined Calendar (read-only, all schedule tabs) ----------------
+  function buildCombinedWeekdayRow() {
+    if (els.combinedCalendarWeekdayRow.childNodes.length) return;
+    WEEKDAY_HEADERS.forEach(function (label) {
+      var el = document.createElement('span');
+      el.className = 'calendar-weekday-label';
+      el.textContent = label;
+      els.combinedCalendarWeekdayRow.appendChild(el);
+    });
+  }
+
+  function renderCombinedCalendarOverlay() {
+    if (!combinedCalendarOpen) return;
+    els.combinedCalendarMonthLabel.textContent = MONTH_NAMES_FULL[combinedCalendarViewDate.getMonth()] + ' ' + combinedCalendarViewDate.getFullYear();
+    buildCombinedWeekdayRow();
+    updateCombinedCalendarFilterButtons();
+    renderCombinedCalendarGrid();
+  }
+
+  function updateCombinedCalendarFilterButtons() {
+    [
+      [els.combinedCalendarFilterPlumbingBtn, 'Plumbing'],
+      [els.combinedCalendarFilterHvacBtn, 'HVAC'],
+      [els.combinedCalendarFilterAllBtn, 'all']
+    ].forEach(function (pair) {
+      if (!pair[0]) return;
+      pair[0].classList.toggle('is-active', combinedCalendarFilter === pair[1]);
+    });
+  }
+
+  function renderCombinedCalendarGrid() {
+    var grid = els.combinedCalendarGrid;
+    grid.innerHTML = '';
+    var people = getFilteredSchedulePersonEntries();
+    var year = combinedCalendarViewDate.getFullYear();
+    var month = combinedCalendarViewDate.getMonth();
+    var firstDay = new Date(year, month, 1);
+    var gridStart = addDays(firstDay, -firstDay.getDay());
+    var todayKey = dateKey(new Date());
+    var MAX_VISIBLE_ENTRIES = 4;
+
+    for (var i = 0; i < 42; i++) {
+      (function () {
+        var date = addDays(gridStart, i);
+        var dk = dateKey(date);
+
+        var cell = document.createElement('button');
+        cell.type = 'button';
+        cell.className = 'calendar-day-cell';
+        if (date.getMonth() !== month) cell.classList.add('is-other-month');
+        if (dk === todayKey) cell.classList.add('is-today');
+        if (dk === combinedCalendarSelectedDk) cell.classList.add('is-selected');
+
+        var num = document.createElement('span');
+        num.className = 'calendar-day-number';
+        num.textContent = String(date.getDate());
+        cell.appendChild(num);
+
+        var hol = holidayForDate(date);
+        if (hol) {
+          var holWrap = document.createElement('span');
+          holWrap.className = 'calendar-day-holiday' + (hol.kind ? ' calendar-holiday-' + hol.kind : '');
+          if (hol.kind) {
+            var holIcon = document.createElement('span');
+            holIcon.className = 'calendar-holiday-icon';
+            holIcon.textContent = HOLIDAY_ICONS[hol.kind];
+            holIcon.setAttribute('aria-hidden', 'true');
+            holWrap.appendChild(holIcon);
+          }
+          var holText = document.createElement('span');
+          holText.className = 'calendar-holiday-text';
+          holText.textContent = hol.name;
+          holWrap.appendChild(holText);
+          cell.appendChild(holWrap);
+        }
+
+        var entriesWrap = document.createElement('div');
+        entriesWrap.className = 'combined-day-entries';
+        var shown = 0;
+        var totalWithContent = 0;
+
+        people.forEach(function (p) {
+          var dayMap = scheduleDocsCache[p.key] || {};
+          var entry = dayMap[dk];
+          if (!entry) return;
+          var hasContent = !!(entry.jobName || entry.off || entry.holiday);
+          if (!hasContent) return;
+          totalWithContent++;
+          if (shown >= MAX_VISIBLE_ENTRIES) return; // rest folded into "+N more"
+          shown++;
+
+          var row = document.createElement('span');
+          row.className = 'combined-day-entry';
+          var c = colorForKey(entry.color);
+          if (c) {
+            row.style.background = c.bg;
+            row.style.borderLeftColor = c.border;
+          }
+          var nameSpan = document.createElement('span');
+          nameSpan.className = 'combined-day-entry-name';
+          nameSpan.textContent = p.name;
+          row.appendChild(nameSpan);
+
+          var detail = entry.jobName || '';
+          if (entry.holiday) detail = detail ? (detail + ' (Holiday)') : 'Holiday';
+          if (entry.off) detail = detail ? (detail + ' (Off)') : 'Off';
+          if (detail) row.appendChild(document.createTextNode(' — ' + detail));
+
+          entriesWrap.appendChild(row);
+        });
+
+        if (totalWithContent > shown) {
+          var more = document.createElement('span');
+          more.className = 'combined-day-more';
+          more.textContent = '+' + (totalWithContent - shown) + ' more';
+          entriesWrap.appendChild(more);
+        }
+
+        cell.appendChild(entriesWrap);
+        cell.addEventListener('click', function () { selectCombinedCalendarDay(dk); });
+        grid.appendChild(cell);
+      })();
+    }
+
+    renderCombinedDayDetail();
+  }
+
+  // All 8 Task fields, in the same order/labels used by the per-person day
+  // editor - reused here read-only so the combined detail panel shows
+  // "all information entered" for a day, not just the job name.
+  var COMBINED_TASK_FIELD_DEFS = [
+    ['jobName', 'Job Name'], ['po', 'PO #'], ['address', 'Address'], ['stage', 'Stage of Work'],
+    ['pm', 'PM'], ['contractor', 'Contractor'], ['superintendent', 'Superintendent'], ['superintendentPhone', 'Superintendent Phone']
+  ];
+
+  function taskHasAnyField(task) {
+    if (!task) return false;
+    return !!(task.jobName || task.po || task.address || task.stage || task.pm || task.contractor || task.superintendent || task.superintendentPhone);
+  }
+
+  // Renders one task's non-empty fields as a read-only label/value grid.
+  // Returns true if anything was appended.
+  function appendReadOnlyFieldGrid(container, task) {
+    if (!taskHasAnyField(task)) return false;
+    var grid = document.createElement('div');
+    grid.className = 'calendar-field-grid combined-detail-field-grid';
+    COMBINED_TASK_FIELD_DEFS.forEach(function (def) {
+      var val = task[def[0]];
+      if (!val) return;
+      var field = document.createElement('div');
+      field.className = 'calendar-field';
+      var label = document.createElement('span');
+      label.className = 'calendar-field-label';
+      label.textContent = def[1];
+      var value = document.createElement('span');
+      value.className = 'combined-detail-field-value';
+      value.textContent = val;
+      field.appendChild(label);
+      field.appendChild(value);
+      grid.appendChild(field);
+    });
+    container.appendChild(grid);
+    return true;
+  }
+
+  // Read-only "everything entered this day" panel, shown below the grid
+  // once a day is selected - combines every person's entry for that day,
+  // each keeping its own individually-selected color (never a shared
+  // combined-view color), labeled with which division it belongs to.
+  function renderCombinedDayDetail() {
+    var panel = els.combinedCalendarDayDetail;
+    panel.innerHTML = '';
+    if (!combinedCalendarSelectedDk) { panel.hidden = true; return; }
+
+    var dk = combinedCalendarSelectedDk;
+    var parts = dk.split('-');
+    var d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+
+    var head = document.createElement('div');
+    head.className = 'calendar-day-editor-head';
+    var title = document.createElement('span');
+    title.className = 'calendar-day-editor-title';
+    title.textContent = MONTH_NAMES_FULL[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+    head.appendChild(title);
+    panel.appendChild(head);
+
+    var people = getFilteredSchedulePersonEntries();
+    var any = false;
+
+    people.forEach(function (p) {
+      var dayMap = scheduleDocsCache[p.key] || {};
+      var entry = dayMap[dk];
+      if (!entry) return;
+      var hasContent = !!(entry.jobName || entry.off || entry.holiday || taskHasAnyField(entry.task2) || taskHasAnyField(entry.task3));
+      if (!hasContent) return;
+      any = true;
+
+      var card = document.createElement('div');
+      card.className = 'combined-detail-card';
+      var c = colorForKey(entry.color);
+      if (c) {
+        card.style.borderLeftColor = c.border;
+        card.style.background = c.bg;
+      }
+
+      var cardHead = document.createElement('div');
+      cardHead.className = 'combined-detail-card-head';
+      var nameEl = document.createElement('span');
+      nameEl.className = 'combined-detail-card-name';
+      nameEl.textContent = p.name;
+      cardHead.appendChild(nameEl);
+      var divEl = document.createElement('span');
+      divEl.className = 'combined-detail-card-division';
+      divEl.textContent = p.division;
+      cardHead.appendChild(divEl);
+      if (entry.holiday) {
+        var holTag = document.createElement('span');
+        holTag.className = 'combined-detail-tag combined-detail-tag-holiday';
+        holTag.textContent = 'Holiday';
+        cardHead.appendChild(holTag);
+      }
+      if (entry.off) {
+        var offTag = document.createElement('span');
+        offTag.className = 'combined-detail-tag combined-detail-tag-off';
+        offTag.textContent = 'Off';
+        cardHead.appendChild(offTag);
+      }
+      card.appendChild(cardHead);
+
+      appendReadOnlyFieldGrid(card, entry);
+
+      if (taskHasAnyField(entry.task2)) {
+        var t2Label = document.createElement('div');
+        t2Label.className = 'combined-detail-task-label';
+        t2Label.textContent = 'Task 2';
+        card.appendChild(t2Label);
+        appendReadOnlyFieldGrid(card, entry.task2);
+      }
+      if (taskHasAnyField(entry.task3)) {
+        var t3Label = document.createElement('div');
+        t3Label.className = 'combined-detail-task-label';
+        t3Label.textContent = 'Task 3';
+        card.appendChild(t3Label);
+        appendReadOnlyFieldGrid(card, entry.task3);
+      }
+
+      panel.appendChild(card);
+    });
+
+    if (!any) {
+      var empty = document.createElement('p');
+      empty.className = 'combined-detail-empty';
+      empty.textContent = 'No schedule entries for this day.';
+      panel.appendChild(empty);
+    }
+
+    panel.hidden = false;
   }
 
   function renderDayEditor(personKey, disableControls) {
@@ -2729,6 +3204,7 @@ var firebaseAuth = getAuth(firebaseApp);
     });
     if (calendarOpenPerson) renderCalendarOverlay();
     if (projectsOpenSup) renderProjectsOverlay();
+    if (combinedCalendarOpen) renderCombinedCalendarOverlay();
   }
 
   function wireStaticControls() {
@@ -2755,6 +3231,15 @@ var firebaseAuth = getAuth(firebaseApp);
     els.calendarPrevBtn.addEventListener('click', function () { shiftCalendarMonth(-1); });
     els.calendarNextBtn.addEventListener('click', function () { shiftCalendarMonth(1); });
     els.calendarTodayBtn.addEventListener('click', resetCalendarToToday);
+
+    els.combinedCalendarBtn.addEventListener('click', openCombinedCalendarView);
+    els.combinedCalendarBackBtn.addEventListener('click', closeCombinedCalendarView);
+    els.combinedCalendarPrevBtn.addEventListener('click', function () { shiftCombinedCalendarMonth(-1); });
+    els.combinedCalendarNextBtn.addEventListener('click', function () { shiftCombinedCalendarMonth(1); });
+    els.combinedCalendarTodayBtn.addEventListener('click', resetCombinedCalendarToToday);
+    els.combinedCalendarFilterPlumbingBtn.addEventListener('click', function () { setCombinedCalendarFilter('Plumbing'); });
+    els.combinedCalendarFilterHvacBtn.addEventListener('click', function () { setCombinedCalendarFilter('HVAC'); });
+    els.combinedCalendarFilterAllBtn.addEventListener('click', function () { setCombinedCalendarFilter('all'); });
 
     ['sup2', 'sup3'].forEach(function (supKey) {
       var submitForeman = function (e) {
@@ -2836,6 +3321,20 @@ var firebaseAuth = getAuth(firebaseApp);
     els.projectsPersonName = q('projectsPersonName');
     els.projectsList = q('projectsList');
     els.projectsAddBtn = q('projectsAddBtn');
+
+    els.combinedCalendarBtn = q('combinedCalendarBtn');
+    els.combinedCalendarOverlay = q('combinedCalendarOverlay');
+    els.combinedCalendarBackBtn = q('combinedCalendarBackBtn');
+    els.combinedCalendarPrevBtn = q('combinedCalendarPrevBtn');
+    els.combinedCalendarNextBtn = q('combinedCalendarNextBtn');
+    els.combinedCalendarTodayBtn = q('combinedCalendarTodayBtn');
+    els.combinedCalendarMonthLabel = q('combinedCalendarMonthLabel');
+    els.combinedCalendarWeekdayRow = q('combinedCalendarWeekdayRow');
+    els.combinedCalendarGrid = q('combinedCalendarGrid');
+    els.combinedCalendarDayDetail = q('combinedCalendarDayDetail');
+    els.combinedCalendarFilterPlumbingBtn = q('combinedCalendarFilterPlumbingBtn');
+    els.combinedCalendarFilterHvacBtn = q('combinedCalendarFilterHvacBtn');
+    els.combinedCalendarFilterAllBtn = q('combinedCalendarFilterAllBtn');
 
     // ---------------- Admin-only name updates (console-only, no UI control) ----------------
     // The leadership name fields above are permanently disabled (see
