@@ -3048,11 +3048,16 @@ var firebaseAuth = getAuth(firebaseApp);
       var count = 0;
       var cur = date;
       while (cur <= endDate) {
-        saveScheduleEntry(personKey, dateKey(cur), values);
-        count++;
+        // Skip Saturdays (6) and Sundays (0) - weekends are never
+        // auto-applied by a multi-day action; added manually only when needed.
+        var dow = cur.getDay();
+        if (dow !== 0 && dow !== 6) {
+          saveScheduleEntry(personKey, dateKey(cur), values);
+          count++;
+        }
         cur = addDays(cur, 1);
       }
-      calendarRepeatNote = 'Applied to ' + count + ' day' + (count === 1 ? '' : 's') + '.';
+      calendarRepeatNote = 'Applied to ' + count + ' day' + (count === 1 ? '' : 's') + ' (weekends skipped).';
       note.textContent = calendarRepeatNote;
       renderCalendarGrid(personKey, disableControls);
     });
@@ -3098,18 +3103,23 @@ var firebaseAuth = getAuth(firebaseApp);
       var count = 0;
       var cur = date;
       while (cur <= colorEndDate) {
-        var curDk = dateKey(cur);
-        var existing = (scheduleDocsCache[personKey] || {})[curDk] || {};
-        saveScheduleEntry(personKey, curDk, {
-          jobName: existing.jobName, po: existing.po, address: existing.address, stage: existing.stage,
-          pm: existing.pm, contractor: existing.contractor, superintendent: existing.superintendent, superintendentPhone: existing.superintendentPhone,
-          task2: existing.task2, task3: existing.task3,
-          color: currentColor, off: existing.off === true, holiday: existing.holiday === true
-        });
-        count++;
+        // Skip Saturdays (6) and Sundays (0) - weekends are never
+        // auto-applied by a multi-day action; added manually only when needed.
+        var dow = cur.getDay();
+        if (dow !== 0 && dow !== 6) {
+          var curDk = dateKey(cur);
+          var existing = (scheduleDocsCache[personKey] || {})[curDk] || {};
+          saveScheduleEntry(personKey, curDk, {
+            jobName: existing.jobName, po: existing.po, address: existing.address, stage: existing.stage,
+            pm: existing.pm, contractor: existing.contractor, superintendent: existing.superintendent, superintendentPhone: existing.superintendentPhone,
+            task2: existing.task2, task3: existing.task3,
+            color: currentColor, off: existing.off === true, holiday: existing.holiday === true
+          });
+          count++;
+        }
         cur = addDays(cur, 1);
       }
-      colorRangeNote.textContent = 'Set color on ' + count + ' day' + (count === 1 ? '' : 's') + '.';
+      colorRangeNote.textContent = 'Set color on ' + count + ' day' + (count === 1 ? '' : 's') + ' (weekends skipped).';
       renderCalendarGrid(personKey, disableControls);
     });
   }
