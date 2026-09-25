@@ -464,11 +464,17 @@
   .installer-row { flex: 0 0 auto; width: 316px; max-width: 100%; margin-left: 14px; padding-left: 16px; }
   .installer-row .crew-card { width: 100%; }
 
-  /* ---------- HVAC job foremen: same 3-wide row pattern as the Plumbing
-     Supervisor / Supervisor / Utilities row above (lead-row), wraps to a
-     second row of its own accord as more foremen are added ---------- */
-  .hvac-foreman-row { display: flex; flex-wrap: wrap; gap: 14px; }
-  .hvac-foreman-row .crew-card { flex: 1 1 320px; }
+  /* ---------- HVAC job foremen: two rows of two, centered under the board.
+     Each column is sized to exactly 1/3 of the row's width (minus the two
+     14px gaps a 3-column row would have) so a card matches the width of a
+     Supervisor/Supervisor/Utilities column above (Jimmy's box) at any
+     window width, even though only 2 of those 3 "slots" are used here. ---------- */
+  .hvac-foreman-row {
+    display: grid;
+    grid-template-columns: repeat(2, calc((100% - 28px) / 3));
+    justify-content: center;
+    gap: 14px;
+  }
 
   /* ---------- job foremen ---------- */
   .foreman-column {
