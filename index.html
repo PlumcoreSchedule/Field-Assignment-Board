@@ -795,6 +795,13 @@
     font-size: var(--text-sm);
     font-weight: 600;
     color: var(--color-ink);
+    /* Pinned to the top (flex column default) and centered horizontally,
+       via align-self + a full-width text-align rather than anything tied
+       to the cell's own height - so this holds no matter how tall the
+       box grows from extra job chips or wrapped/long entries below it. */
+    align-self: center;
+    width: 100%;
+    text-align: center;
   }
   .calendar-day-job {
     font-size: var(--text-xs);
