@@ -259,8 +259,16 @@
        its line), and one after the back button in the Gantt overlay
        specifically (so its logo, reordered to come before the title
        there, doesn't share a line with the back button). */
-    .topbar-right,
-    .topbar-right-row {
+    .topbar .topbar-right,
+    .topbar .topbar-right-row {
+      /* Higher-specificity ".topbar X" form is required here (not just
+         ".topbar-right"/".topbar-right-row" alone) because the unconditional
+         (non-media) ".topbar-right { display:flex; ... }" / ".topbar-right-row
+         { display:flex; ... }" rules further down the file are equal-
+         specificity plain-class selectors that come LATER in source order -
+         at equal specificity the later rule always wins the cascade
+         regardless of which one sits inside a matching @media block, so a
+         bare ".topbar-right" selector here would silently lose to them. */
       display: contents;
     }
     .topbar {
@@ -278,7 +286,13 @@
     .topbar .topbar-center-logo {
       order: 2;
     }
-    .mobile-line-break {
+    /* Element+class selector (matches the `img.topbar-center-logo` trick
+       above) - needed so this outranks the unconditional ".mobile-line-break
+       { display: none; }" default further down the file: that default is a
+       bare class selector at the same specificity, and would otherwise win
+       the cascade tie by coming later in source order despite this media
+       query matching. */
+    span.mobile-line-break {
       display: block;
       flex-basis: 100%;
       height: 0;
