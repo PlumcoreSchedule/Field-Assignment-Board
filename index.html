@@ -409,6 +409,15 @@
       align-content: flex-start;
       gap: 8px;
     }
+    /* Bug fix: an ID selector (`#ganttOverlay`) outranks the app's own
+       `.calendar-overlay[hidden] { display: none; }` rule (class+
+       attribute - lower specificity than an ID regardless of source
+       order), so the unconditional `display: flex` above would keep the
+       overlay visibly on screen even after JS sets its `hidden`
+       attribute to close it. This ID+attribute rule restores the hide. */
+    #ganttOverlay[hidden] {
+      display: none;
+    }
     #ganttOverlay .calendar-overlay-header {
       order: 1;
       flex-basis: 100%;
