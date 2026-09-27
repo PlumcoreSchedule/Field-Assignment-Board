@@ -221,44 +221,45 @@
     }
   }
   @media (max-width: 720px) {
-    /* Mobile header reflow (2026-09-27 follow-up) - Jonathan asked for a
-       specific arrangement per screen rather than just "don't overlap":
-       home topbar - Combined Calendar / Gantt Chart / sign-out all on one
-       left-to-right row with sign-out pushed to the far right, the
-       date/time box pulled into its own top-right corner badge, and the
-       centered logo kept on its own centered line. The four overlay
-       headers (schedule/projects/combined-calendar/Gantt) each get: the
-       back button alone on its own top-left line, date/time in the same
-       top-right corner, the logo centered below the back button, and the
-       screen's title (person name / "Combined Calendar" / etc) on its own
-       line under the back button - except Gantt Chart, where the title
-       goes under the centered logo instead, per Jonathan's request.
+    /* Mobile header reflow (2026-09-27, revised same week per Jonathan's
+       follow-up requests) - current per-screen layout:
+       - Home topbar: title full-width on its own line, logo centered on
+         the line below it, then Combined Calendar / Gantt Chart / the
+         "<name> - Sign out" pill sharing one row (wrapping to its own
+         line if the full pill - with its avatar circle and name kept,
+         same as every other width - doesn't fit next to both buttons),
+         pushed to the far right via `margin-left: auto`, and the
+         date/time box pinned to the header's top-right corner.
+       - All four overlay headers (schedule/projects/combined-calendar/
+         Gantt): one row with the back button on the far left, the logo
+         at the true horizontal center, and the date/time box on the far
+         right (a 3-column CSS Grid - see below). The screen's title sits
+         on its own full-width line under that row - left-aligned by
+         default (schedule/projects), centered for Combined Calendar and
+         Gantt Chart.
+       - Gantt Chart overlay additionally reorders its own body content
+         so the big month-range text comes first, then the 1 Month/
+         3 Months toggle under it, then Prev/Next/Today sharing one row
+         under that - see the Gantt-specific block below.
 
-       Technique: `display: contents` on the two wrapper divs inside
-       `.topbar-right` (itself and `.topbar-right-row`) removes THEM from
-       the box tree while promoting their real children (the sign-out
-       pill, both nav buttons, the date/time box) to be direct flex items
-       of `.topbar` - only then can one flat set of `order` values arrange
-       everything (plus `.topbar-left` and the logo) into the rows above,
-       since CSS can't reorder items across different real parents. The
-       date/time box is pulled into its corner via `position: absolute`
-       (the same technique the logo itself used to use) - an out-of-flow
-       item never participates in sibling flex layout, so it can't
-       collide with anything, and its own `order` doesn't matter. Giving
-       an item `flex-basis: 100%` is what makes it (and only it) wrap onto
-       an empty line of its own in a wrapping flex row: nothing else can
-       fit alongside a 100%-wide item, so it isolates whatever comes
-       immediately before AND after it in source/order sequence. The
-       overlay headers' title `<span>` can use that trick directly (text
-       doesn't distort at any width); a logo/back-button pairing can't use
-       it on itself without distortion (an `<img>`) or looking like an
-       oversized stretched pill (a `<button>`), so `.mobile-line-break` -
-       a tiny invisible spacer added right after the element that needs a
-       line to itself - does the isolating instead: one after the logo in
-       the home topbar (so the buttons/sign-out row below it doesn't share
-       its line), and one after the back button in the Gantt overlay
-       specifically (so its logo, reordered to come before the title
-       there, doesn't share a line with the back button). */
+       Technique: `display: contents` on a wrapper div removes IT from
+       the box tree while promoting its real children to be direct flex
+       items of its own parent - only then can one flat set of `order`
+       values arrange everything into the rows above, since CSS can't
+       reorder items across different real DOM parents. Used twice here:
+       `.topbar-right`/`.topbar-right-row` (flattened into `.topbar`) and
+       `#ganttOverlay .calendar-month-nav` (flattened into `#ganttOverlay`
+       itself, so its Prev/label/Next/Today children can each be
+       reordered independently - see below). `position: absolute` (the
+       home topbar's date/time box only now) pulls an item out of flow
+       entirely so nothing can ever collide with it. `flex-basis: 100%`
+       forces an item onto an empty line of its own in a wrapping flex
+       row (nothing else can share a line with a 100%-wide item), which
+       is how the title/logo/label/toggle-row lines are isolated from
+       their neighbors; it can't be used on an `<img>` or `<button>`
+       directly without distorting it, so `.mobile-line-break` (a tiny
+       invisible spacer span, home topbar only now) does the isolating
+       instead, right after the logo there. */
     .topbar .topbar-right,
     .topbar .topbar-right-row {
       /* Higher-specificity ".topbar X" form is required here (not just
@@ -307,66 +308,145 @@
       margin-left: auto;
     }
 
-    /* Shared "top-right corner" treatment for the date/time box, on the
-       home topbar and all four overlay headers alike - both containers
-       are `position: sticky`, which (like `relative`/`absolute`) is a
-       valid containing block for an absolutely-positioned descendant. */
-    .topbar .datetime-bar,
-    .calendar-overlay-header .datetime-bar {
+    /* Home topbar's date/time box only - pinned to the header's top-right
+       corner via `position: absolute` (the overlay headers' date/time box
+       is a normal grid cell instead - see the grid rule below). */
+    .topbar .datetime-bar {
       position: absolute;
       top: 10px;
       right: 16px;
       margin: 0;
     }
 
-    /* Home topbar's Combined Calendar / Gantt Chart / sign-out row is a
-       tight fit on a genuinely narrow phone - shrink the two nav buttons
-       a little and reduce the sign-out pill to just its "Sign out" label
-       (dropping the avatar circle and name, which the pill's own tooltip
-       still carries via its `title` attribute) so all three reliably fit
-       on one line without wrapping or overlapping. */
+    /* Home topbar's Combined Calendar / Gantt Chart nav buttons are
+       shrunk a little so they leave more room for the sign-out pill,
+       which (per Jonathan's request) keeps its normal avatar-circle-
+       plus-name appearance on mobile too, same as every other width -
+       it's no longer replaced with a cut-down mobile-only version. If
+       the full pill still doesn't fit next to both nav buttons on a
+       genuinely narrow phone, `.topbar`'s own `flex-wrap: wrap` just
+       lets it drop to its own line below them (still pushed to the far
+       right there via its `margin-left: auto`) rather than overlapping
+       or truncating anything. */
     .topbar .combined-calendar-btn {
       padding: 6px 10px;
       font-size: var(--text-xs);
     }
-    #authSignedInAs.authgate-signedout {
-      padding: 4px 10px;
-      gap: 0;
-    }
-    #authSignedInAs .authgate-avatar,
-    #authSignedInAs .authgate-signedin-name {
-      display: none;
-    }
-    #authSignedInAs .authgate-signout-label {
-      border-left: none;
-      padding-left: 0;
-    }
 
-    /* Overlay headers: back button top-left alone, title under it
-       (full-width so nothing can share its line), logo centered below
-       that. Every one of the four overlays shares this by default. */
-    .calendar-overlay-header .calendar-back-btn { order: 1; }
+    /* Overlay headers (schedule/projects/combined-calendar/Gantt): a
+       3-column grid - back button, logo, date/time box - with each
+       explicitly placed regardless of DOM order, so the logo always
+       lands at the true horizontal center of the row no matter how wide
+       the back button or date/time box happen to be (a plain flex row
+       with auto-margins can't guarantee that as cleanly with three
+       unevenly-sized items). The title sits on its own full-width line
+       below that row - left-aligned by default (schedule/projects,
+       "under the back button"), centered for Combined Calendar and
+       Gantt Chart specifically. Doubled class
+       (".calendar-overlay-header.calendar-overlay-header") on the grid
+       rule is required for the same cascade-specificity reason as
+       elsewhere in this block: the unconditional ".calendar-overlay-
+       header { display: flex; ... }" rule further down the file is a
+       same-specificity bare-class selector positioned later in the
+       file, so a plain (undoubled) class selector here would lose that
+       cascade tie despite this media query matching. */
+    .calendar-overlay-header.calendar-overlay-header {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      column-gap: 12px;
+      row-gap: 6px;
+    }
+    .calendar-overlay-header .calendar-back-btn {
+      grid-column: 1;
+      grid-row: 1;
+      justify-self: start;
+    }
+    .calendar-overlay-header .topbar-center-logo {
+      grid-column: 2;
+      grid-row: 1;
+      justify-self: center;
+    }
+    .calendar-overlay-header .datetime-bar {
+      grid-column: 3;
+      grid-row: 1;
+      justify-self: end;
+      margin: 0;
+    }
     .calendar-overlay-header .calendar-person-name {
-      order: 2;
-      flex-basis: 100%;
+      grid-column: 1 / -1;
+      grid-row: 2;
       text-align: left;
     }
-    .calendar-overlay-header .topbar-center-logo { order: 3; }
-
-    /* Gantt Chart overlay only: swap so "Gantt Chart" sits under the
-       centered logo instead of under the back button, and center it to
-       match (ID-scoped selectors so they outrank the general rules above
-       for this one overlay without touching the other three). The extra
-       `.mobile-line-break` in this overlay's markup (right after its back
-       button) is what actually isolates the logo onto its own line here -
-       without it the logo would just sit on the same line as the back
-       button, since (unlike the general case) nothing with `flex-basis:
-       100%` precedes it any more. */
-    #ganttOverlay .mobile-line-break { order: 2; }
-    #ganttOverlay .topbar-center-logo { order: 3; }
+    #combinedCalendarOverlay .calendar-person-name,
     #ganttOverlay .calendar-person-name {
-      order: 4;
       text-align: center;
+    }
+
+    /* Gantt Chart overlay only: reorder its own body content so the big
+       month-range text comes first, then the 1 Month/3 Months toggle
+       under it, then Prev/Next/Today sharing one row under that, per
+       Jonathan's request. `#ganttOverlay` becomes a wrapping flex row
+       (same technique as the home topbar above) so its direct children
+       can all be individually reordered; `.calendar-month-nav` is
+       flattened via `display: contents` (same flattening technique used
+       for the home topbar's wrapper divs) so its Prev/label/Next/Today
+       children are promoted to be direct flex items of `#ganttOverlay`
+       itself, letting the label go on its own line while Prev/Next/
+       Today still share a line together afterward. Flattening drops
+       month-nav's own padding, so the label and the two outer buttons
+       of the Prev/Next/Today trio get a little of it back directly. */
+    #ganttOverlay {
+      display: flex;
+      flex-wrap: wrap;
+      /* `#ganttOverlay` is `position: fixed; inset: 0;` (a full-viewport-
+         height container) via `.calendar-overlay`, and its content is
+         much shorter than the viewport - without this, the default
+         `align-content` stretches every wrapped line to fill that
+         leftover vertical space, inflating the header/label/toggle-row/
+         Prev-Next-Today row all into tall stretched boxes. `flex-start`
+         packs every line to its own natural content height instead. */
+      align-content: flex-start;
+      gap: 8px;
+    }
+    #ganttOverlay .calendar-overlay-header {
+      order: 1;
+      flex-basis: 100%;
+    }
+    #ganttOverlay .calendar-month-nav {
+      display: contents;
+    }
+    #ganttOverlay .calendar-month-label {
+      order: 2;
+      flex-basis: 100%;
+      padding: 0 16px;
+    }
+    #ganttOverlay .combined-calendar-filter-row {
+      order: 3;
+      flex-basis: 100%;
+    }
+    /* Shrunk a little (same treatment as the home topbar's Combined
+       Calendar/Gantt Chart buttons) so Prev/Next/Today reliably share
+       one line even when a non-overlay scrollbar eats a few px of
+       width - the unshrunk size fit with no margin to spare. */
+    #ganttPrevBtn, #ganttNextBtn, #ganttTodayBtn {
+      padding: 6px 10px;
+      font-size: var(--text-xs);
+    }
+    #ganttPrevBtn {
+      order: 4;
+      margin-left: 16px;
+    }
+    #ganttNextBtn {
+      order: 5;
+    }
+    #ganttTodayBtn {
+      order: 6;
+      margin-right: 16px;
+    }
+    #ganttBody {
+      order: 7;
+      flex-basis: 100%;
     }
   }
   .topbar-left { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
@@ -1805,7 +1885,6 @@
   <div class="calendar-overlay-header">
     <img src="logo.png" alt="Plumcore logo" class="brand-logo topbar-center-logo" />
     <button type="button" id="ganttBackBtn" class="calendar-back-btn">‹ Back to board</button>
-    <span class="mobile-line-break" aria-hidden="true"></span>
     <span class="calendar-person-name">Gantt Chart</span>
     <div class="datetime-bar datetime-bar-compact overlay-header-datetime">
       <span class="datetime-date"></span>
