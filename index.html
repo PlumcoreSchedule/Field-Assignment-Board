@@ -194,7 +194,14 @@
     z-index: 1;
   }
   @media (max-width: 720px) {
-    .topbar-center-logo { display: none; }
+    /* `img.topbar-center-logo` (element+class) deliberately outranks the
+       plain-class `.brand-logo { display: block; }` rule below it in the
+       cascade - same specificity as a bare `.topbar-center-logo` selector
+       would have lost to it (both are equal-specificity, and source order
+       alone would let the later .brand-logo rule win regardless of this
+       media query matching), which is why this "hide the centered logo on
+       narrow screens" rule never actually took effect on mobile before. */
+    img.topbar-center-logo { display: none; }
   }
   .topbar-left { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
   .brand-mark {
@@ -764,6 +771,14 @@
     border-radius: var(--radius-sm);
     background: var(--color-surface);
     min-height: 76px;
+    /* Lets this grid item's column actually shrink to its 1fr share on a
+       narrow (mobile) screen instead of ballooning out to the min-content
+       width of the longest unwrapped job name inside it - a grid item's
+       default min-width is auto (= its content's min-content size), which
+       for nowrap text is the full line width. Without this, a handful of
+       long job names made their columns 4-5x wider than empty-day columns
+       and threw the whole week out of alignment with its weekday header. */
+    min-width: 0;
     padding: 6px;
     display: flex;
     flex-direction: column;
@@ -813,6 +828,13 @@
     padding: 3px 5px;
     border-radius: 4px;
     max-width: 100%;
+    /* Flex items default to min-width:auto (their own min-content size),
+       which overrides max-width/overflow/ellipsis above whenever the
+       container is squeezed narrower than the unwrapped text - this is
+       what let a long job name force its whole day-cell (and grid column)
+       wide on mobile instead of actually truncating. min-width:0 lets the
+       ellipsis rule above finally take effect. */
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -837,6 +859,12 @@
     flex-direction: column;
     gap: 3px;
     width: 100%;
+    /* Same flex/grid min-width:auto truncation issue as .calendar-day-job
+       above, one level up the tree - without this, this wrapper's own
+       min-content (driven by its longest .combined-day-entry child) could
+       still force the day-cell (and its grid column) wide on mobile even
+       with the child's own min-width:0 fix below in place. */
+    min-width: 0;
     max-height: 92px;
     overflow-y: auto;
   }
@@ -846,6 +874,10 @@
     padding: 2px 4px;
     border-radius: 3px;
     max-width: 100%;
+    /* See .calendar-day-job's comment above - same fix, same reason: lets
+       the ellipsis truncation actually apply on a narrow (mobile) grid
+       column instead of being overridden by the flex-item default. */
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
