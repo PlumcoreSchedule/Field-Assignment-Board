@@ -199,9 +199,26 @@
        cascade - same specificity as a bare `.topbar-center-logo` selector
        would have lost to it (both are equal-specificity, and source order
        alone would let the later .brand-logo rule win regardless of this
-       media query matching), which is why this "hide the centered logo on
-       narrow screens" rule never actually took effect on mobile before. */
-    img.topbar-center-logo { display: none; }
+       media query matching). This used to just hide the logo below 720px
+       (since it was absolutely centered over the header and blocked clicks
+       on the sign-out/nav/back buttons underneath it) - Jonathan asked for
+       the logo to stay visible everywhere instead, smaller if that's what
+       it takes. So instead of hiding it, this drops the absolute centering
+       and lets it sit back in normal flow (shrunk down), same as every
+       other header child - in-flow elements in a wrapping flex row can
+       never overlap their siblings the way absolute positioning did,
+       regardless of which line it ends up sharing or wrapping to alone. */
+    img.topbar-center-logo {
+      display: block;
+      position: static;
+      left: auto;
+      top: auto;
+      transform: none;
+      height: 32px;
+      width: auto;
+      margin: 0 auto;
+      z-index: auto;
+    }
   }
   .topbar-left { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
   .brand-mark {
