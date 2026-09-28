@@ -1628,10 +1628,11 @@
   /* ---------- sign-in name flash ----------
      Fires once per page load, right when a signed-in user's board finishes
      loading: their name in the biggest type that will fit the viewport,
-     highlighted, centered, held for 10s, then faded out. Purely decorative
-     (pointer-events: none) so it never blocks the board underneath, and it
-     sits above every other overlay (including the sign-in gate) so it is
-     always the top layer while visible. */
+     in a semi-transparent accent-colored highlight (the text itself is
+     translucent - no solid box behind it), centered, held for 3s, then
+     faded out. Purely decorative (pointer-events: none) so it never blocks
+     the board underneath, and it sits above every other overlay (including
+     the sign-in gate) so it is always the top layer while visible. */
   .name-flash-overlay {
     position: fixed;
     inset: 0;
@@ -1659,11 +1660,11 @@
     font-weight: 700;
     line-height: 1.2;
     text-align: center;
-    color: var(--color-accent-ink);
-    background: var(--color-accent);
-    padding: 0.22em 0.4em;
-    border-radius: 0.14em;
-    box-shadow: 0 0 0 6px var(--color-accent-soft), 0 20px 70px rgba(0, 0, 0, 0.38);
+    /* The "highlight" is the text itself rendered in the accent color at
+       partial opacity - there is deliberately no background box, padding,
+       or shadow here. */
+    color: var(--color-accent);
+    opacity: 0.55;
     /* Deliberately NOT word-break: break-word - that lets the browser wrap
        a single long name mid-letter (e.g. "Jo" / "nat" / "han" stacked),
        which looks broken. Left at the default (break only at spaces), the
@@ -1674,7 +1675,7 @@
   }
   @keyframes nameFlashPop {
     0% { transform: scale(0.7); opacity: 0; }
-    100% { transform: scale(1); opacity: 1; }
+    100% { transform: scale(1); opacity: 0.55; }
   }
   @media (prefers-reduced-motion: reduce) {
     .name-flash-text { animation: none; }
@@ -2181,9 +2182,10 @@ var firebaseAuth = getAuth(firebaseApp);
     }
   }
 
-  // Shows `displayName` as large as the screen allows, highlighted, for
-  // ~10 seconds, then fades it out. Fires once per page load, right when a
-  // signed-in user's board becomes visible (see onAuthStateChanged).
+  // Shows `displayName` as large as the screen allows, in a semi-transparent
+  // accent-colored highlight, for ~3 seconds, then fades it out. Fires once
+  // per page load, right when a signed-in user's board becomes visible
+  // (see onAuthStateChanged).
   function showNameFlash(displayName) {
     if (nameFlashShown || !displayName) return;
     if (!els.nameFlashOverlay || !els.nameFlashText) return;
@@ -2199,7 +2201,7 @@ var firebaseAuth = getAuth(firebaseApp);
     clearTimeout(nameFlashTimer);
     nameFlashTimer = setTimeout(function () {
       els.nameFlashOverlay.classList.add('name-flash-fading');
-    }, 10000);
+    }, 3000);
   }
 
   function enqueueWrite(fn) {
