@@ -1624,63 +1624,6 @@
   }
   .authgate-mode-toggle:hover { text-decoration: underline; }
   .authgate-field[hidden] { display: none; }
-
-  /* ---------- sign-in name flash ----------
-     Fires once per page load, right when a signed-in user's board finishes
-     loading: their name in the biggest type that will fit the viewport,
-     in a semi-transparent accent-colored highlight (the text itself is
-     translucent - no solid box behind it), centered, held for 3s, then
-     faded out. Purely decorative (pointer-events: none) so it never blocks
-     the board underneath, and it sits above every other overlay (including
-     the sign-in gate) so it is always the top layer while visible. */
-  .name-flash-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 500;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 16px;
-    pointer-events: none;
-    opacity: 1;
-    transition: opacity 1.4s ease;
-  }
-  .name-flash-overlay[hidden] { display: none; }
-  .name-flash-overlay.name-flash-fading { opacity: 0; }
-  .name-flash-text {
-    display: inline-block;
-    max-width: 96vw;
-    max-height: 90vh;
-    /* var(--font-body) (Public Sans), not the display serif: Fraunces only
-       ships weights 500/600 here, so a bold display size synthesizes fake
-       bold from those, and its ascenders/swashes can then render outside
-       even a generous line-height box. Public Sans has a real 700 weight
-       and tamer, predictable ascent metrics at huge sizes. */
-    font-family: var(--font-body);
-    font-weight: 700;
-    line-height: 1.2;
-    text-align: center;
-    /* The "highlight" is the text itself rendered in the accent color at
-       partial opacity - there is deliberately no background box, padding,
-       or shadow here. */
-    color: var(--color-accent);
-    opacity: 0.55;
-    /* Deliberately NOT word-break: break-word - that lets the browser wrap
-       a single long name mid-letter (e.g. "Jo" / "nat" / "han" stacked),
-       which looks broken. Left at the default (break only at spaces), the
-       fit loop below is forced to shrink the font until a whole word
-       actually fits on one line instead. */
-    white-space: normal;
-    animation: nameFlashPop 0.45s cubic-bezier(0.22, 0.9, 0.32, 1.28);
-  }
-  @keyframes nameFlashPop {
-    0% { transform: scale(0.7); opacity: 0; }
-    100% { transform: scale(1); opacity: 0.55; }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .name-flash-text { animation: none; }
-    .name-flash-overlay { transition: none; }
-  }
 </style>
 </head>
 <body>
@@ -1704,10 +1647,6 @@
       <button type="button" id="authModeToggle" class="authgate-mode-toggle">Admin? Sign in with a password instead</button>
     </div>
   </form>
-</div>
-
-<div id="nameFlashOverlay" class="name-flash-overlay" hidden aria-hidden="true">
-  <span id="nameFlashText" class="name-flash-text"></span>
 </div>
 
 <div class="page">
@@ -2032,9 +1971,6 @@ var firebaseAuth = getAuth(firebaseApp);
   var els = {};
   var currentUser = null;
   var isAdminUser = false;
-  var nameFlashShown = false;
-  var nameFlashTimer = null;
-  var nameFlashResizeHandler = null;
   var PLUMCORE_EMAIL_RE = /^[^\s@]+@plumcore\.com$/i;
   var AUTH_EMAIL_STORAGE_KEY = 'fab_authEmailForSignIn';
   var authGateMode = 'employee'; // 'employee' (email link) | 'admin' (email + password)
@@ -2159,49 +2095,6 @@ var firebaseAuth = getAuth(firebaseApp);
     els.authSignedInAs.appendChild(avatar);
     els.authSignedInAs.appendChild(nameSpan);
     els.authSignedInAs.appendChild(signOutSpan);
-  }
-
-  // Shrinks .name-flash-text's font size until it actually fits the
-  // viewport (rather than a fixed vw guess), so a short name gets shown as
-  // large as the screen allows and a long "First Last" still fits without
-  // overflowing off-screen. Only runs while the overlay is visible, and
-  // only takes a handful of cheap DOM measurements (no reflow storms).
-  function fitNameFlashText() {
-    var el = els.nameFlashText;
-    if (!el || !el.offsetParent) return;
-    var maxWidth = window.innerWidth * 0.92;
-    var maxHeight = window.innerHeight * 0.82;
-    var fontSize = Math.max(window.innerWidth, window.innerHeight) * 0.9;
-    var minFontSize = 28;
-    var guard = 0;
-    el.style.fontSize = fontSize + 'px';
-    while (guard < 60 && fontSize > minFontSize && (el.scrollWidth > maxWidth || el.scrollHeight > maxHeight)) {
-      fontSize = Math.max(minFontSize, fontSize - Math.max(2, fontSize * 0.06));
-      el.style.fontSize = fontSize + 'px';
-      guard++;
-    }
-  }
-
-  // Shows `displayName` as large as the screen allows, in a semi-transparent
-  // accent-colored highlight, for ~3 seconds, then fades it out. Fires once
-  // per page load, right when a signed-in user's board becomes visible
-  // (see onAuthStateChanged).
-  function showNameFlash(displayName) {
-    if (nameFlashShown || !displayName) return;
-    if (!els.nameFlashOverlay || !els.nameFlashText) return;
-    nameFlashShown = true;
-    els.nameFlashText.textContent = displayName;
-    els.nameFlashOverlay.classList.remove('name-flash-fading');
-    els.nameFlashOverlay.hidden = false;
-    fitNameFlashText();
-    if (!nameFlashResizeHandler) {
-      nameFlashResizeHandler = function () { fitNameFlashText(); };
-      window.addEventListener('resize', nameFlashResizeHandler);
-    }
-    clearTimeout(nameFlashTimer);
-    nameFlashTimer = setTimeout(function () {
-      els.nameFlashOverlay.classList.add('name-flash-fading');
-    }, 3000);
   }
 
   function enqueueWrite(fn) {
@@ -2548,7 +2441,6 @@ var firebaseAuth = getAuth(firebaseApp);
       els.authGateOverlay.hidden = true;
       els.authSignedInAs.hidden = false;
       renderSignedInAs(user.email);
-      showNameFlash(displayNameFromEmail(user.email));
       if (docRef) return; // already booted for this page load
       dataTimer = setTimeout(function () {
         if (loaded) return;
@@ -4157,14 +4049,6 @@ var firebaseAuth = getAuth(firebaseApp);
       signOut(firebaseAuth);
     });
     renderGateMode();
-
-    els.nameFlashOverlay = q('nameFlashOverlay');
-    els.nameFlashText = q('nameFlashText');
-    els.nameFlashOverlay.addEventListener('transitionend', function (e) {
-      if (e.propertyName === 'opacity' && els.nameFlashOverlay.classList.contains('name-flash-fading')) {
-        els.nameFlashOverlay.hidden = true;
-      }
-    });
 
     els.statusBanner = q('statusBanner');
     els.sup1Input = q('sup1Input');
