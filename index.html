@@ -3573,8 +3573,10 @@ var firebaseAuth = getAuth(firebaseApp);
     superintendentPhoneInput.addEventListener('blur', save);
     TASK_FIELD_KEYS.forEach(function (k) { task2[k].addEventListener('blur', save); task3[k].addEventListener('blur', save); });
 
-    // Color is admin-only — anyone signed in can fill out the rest of a
-    // day's schedule entry, but only an admin can pick/change its color.
+    // Every field in this day editor is admin-only (disableControls above
+    // already folds in !canEdit), so colorDisabled is equivalent to
+    // disableControls today. Kept as its own variable/name since the color
+    // controls were the original admin-only carve-out this rule grew from.
     var colorDisabled = disableControls || !canEdit;
     var colorRow = document.createElement('div');
     colorRow.className = 'calendar-color-row';
@@ -3769,7 +3771,11 @@ var firebaseAuth = getAuth(firebaseApp);
   function renderCalendarOverlay() {
     if (!calendarOpenPerson) return;
     var personKey = calendarOpenPerson;
-    var disableControls = dbUnavailable;
+    // Only an admin (isAdminUser / canEdit, set from the admins/config
+    // Firestore doc — never from which sign-in mode was used) can edit any
+    // field here. Everyone else who's signed in can open and view the
+    // schedule, but every control below is disabled for them.
+    var disableControls = dbUnavailable || !canEdit;
     els.calendarPersonName.textContent = displayNameForPersonKey(personKey);
     els.calendarMonthLabel.textContent = MONTH_NAMES_FULL[calendarViewDate.getMonth()] + ' ' + calendarViewDate.getFullYear();
     buildWeekdayRow();
@@ -3780,7 +3786,9 @@ var firebaseAuth = getAuth(firebaseApp);
   function renderProjectsOverlay() {
     if (!projectsOpenSup) return;
     var supKey = projectsOpenSup;
-    var disableControls = dbUnavailable;
+    // Same admin-only rule as the schedule day editor above: viewing the
+    // Projects table is fine for any signed-in user, editing it is not.
+    var disableControls = dbUnavailable || !canEdit;
     els.projectsPersonName.textContent = displayNameForPersonKey(supKey) + ' — Projects';
     els.projectsAddBtn.disabled = disableControls;
 
@@ -3871,7 +3879,9 @@ var firebaseAuth = getAuth(firebaseApp);
     // Job Foremen names are locked too — same rule as the leadership
     // names above: nobody edits names by clicking into a box. Admins keep
     // editing only the individual Schedule (see the Schedule buttons
-    // below, still gated on dbUnavailable only, not on this).
+    // below — opening that view is gated on dbUnavailable only, since
+    // read-only users can still look; the fields inside it are gated on
+    // canEdit too, in renderCalendarOverlay/renderProjectsOverlay above).
     var disableControls = true;
 
     SUP_KEYS.forEach(function (supKey) {
