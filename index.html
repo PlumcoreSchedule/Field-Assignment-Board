@@ -1746,16 +1746,16 @@
           <div class="crew-card">
             <span class="swatch swatch-sup2" aria-hidden="true"></span>
             <div class="crew-field">
-              <label class="field-label" for="sup2Input">Supervisor</label>
+              <label class="field-label" for="sup2Input">Foreman</label>
               <input id="sup2Input" class="crew-input" type="text" maxlength="40" autocomplete="off" />
             </div>
             <button type="button" id="projectsToggle-sup2" class="schedule-toggle-btn">Projects</button>
           </div>
           <div class="foreman-column" data-sup="sup2">
-            <span class="field-label">Job Foremen</span>
+            <span class="field-label">Trucks</span>
             <div id="foremanList-sup2" class="foreman-list"></div>
             <form id="addForemanForm-sup2" class="add-foreman-form">
-              <input type="text" id="foremanInput-sup2" maxlength="40" autocomplete="off" placeholder="Add a job foreman" />
+              <input type="text" id="foremanInput-sup2" maxlength="40" autocomplete="off" placeholder="Add a truck" />
               <button type="button" id="addForemanBtn-sup2" class="btn btn-sm btn-primary">Add</button>
               <p class="field-error" id="foremanError-sup2" hidden></p>
             </form>
@@ -1766,16 +1766,16 @@
           <div class="crew-card">
             <span class="swatch swatch-sup3" aria-hidden="true"></span>
             <div class="crew-field">
-              <label class="field-label" for="sup3Input">Supervisor</label>
+              <label class="field-label" for="sup3Input">Foreman</label>
               <input id="sup3Input" class="crew-input" type="text" maxlength="40" autocomplete="off" />
             </div>
             <button type="button" id="projectsToggle-sup3" class="schedule-toggle-btn">Projects</button>
           </div>
           <div class="foreman-column" data-sup="sup3">
-            <span class="field-label">Job Foremen</span>
+            <span class="field-label">Trucks</span>
             <div id="foremanList-sup3" class="foreman-list"></div>
             <form id="addForemanForm-sup3" class="add-foreman-form">
-              <input type="text" id="foremanInput-sup3" maxlength="40" autocomplete="off" placeholder="Add a job foreman" />
+              <input type="text" id="foremanInput-sup3" maxlength="40" autocomplete="off" placeholder="Add a truck" />
               <button type="button" id="addForemanBtn-sup3" class="btn btn-sm btn-primary">Add</button>
               <p class="field-error" id="foremanError-sup3" hidden></p>
             </form>
@@ -1799,8 +1799,7 @@
             <div class="crew-card">
               <span class="swatch swatch-sup5" aria-hidden="true"></span>
               <div class="crew-field">
-                <label class="field-label" for="sup5Input">Foreman</label>
-                <input id="sup5Input" class="crew-input" type="text" maxlength="40" autocomplete="off" />
+                <input id="sup5Input" class="crew-input" type="text" maxlength="40" autocomplete="off" aria-label="Name" />
               </div>
               <button type="button" id="scheduleToggle-sup5" class="schedule-toggle-btn">Schedule</button>
             </div>
@@ -1810,21 +1809,9 @@
             <div class="crew-card">
               <span class="swatch swatch-sup4" aria-hidden="true"></span>
               <div class="crew-field">
-                <label class="field-label" for="sup4Input">Layout</label>
-                <input id="sup4Input" class="crew-input" type="text" maxlength="40" autocomplete="off" />
+                <input id="sup4Input" class="crew-input" type="text" maxlength="40" autocomplete="off" aria-label="Name" />
               </div>
               <button type="button" id="scheduleToggle-sup4" class="schedule-toggle-btn">Schedule</button>
-            </div>
-          </div>
-
-          <div class="supervisor-branch">
-            <div class="crew-card">
-              <span class="swatch swatch-sup6" aria-hidden="true"></span>
-              <div class="crew-field">
-                <label class="field-label" for="sup6Input">Installer</label>
-                <input id="sup6Input" class="crew-input" type="text" maxlength="40" autocomplete="off" />
-              </div>
-              <button type="button" id="scheduleToggle-sup6" class="schedule-toggle-btn">Schedule</button>
             </div>
           </div>
         </div>
@@ -2607,7 +2594,7 @@ var firebaseAuth = getAuth(firebaseApp);
     if (!v) return false;
     var list = state.foremen[supKey] || [];
     if (list.indexOf(v) !== -1) {
-      errorEl.textContent = v + ' is already listed under this supervisor.';
+      errorEl.textContent = v + ' is already listed under this foreman.';
       errorEl.hidden = false;
       return false;
     }
@@ -2634,7 +2621,7 @@ var firebaseAuth = getAuth(firebaseApp);
   }
 
   function clearAllForemen() {
-    if (!window.confirm('Remove all Job Foremen from every supervisor? This cannot be undone.')) return;
+    if (!window.confirm('Remove all trucks from every foreman? This cannot be undone.')) return;
     lastWriteError = '';
     authReady.then(function () {
       enqueueWrite(function () {
@@ -2741,7 +2728,10 @@ var firebaseAuth = getAuth(firebaseApp);
   function getAllSchedulePersonEntries() {
     var list = [];
     // ---- Plumbing division ----
-    ['sup4', 'sup5', 'sup6', 'sup7'].forEach(function (supKey) {
+    // sup6 (formerly Sid Carter, "Installer") removed from this fixed-role
+    // list 2026-09-29 — he now appears via the sup2 dynamic Job Foremen
+    // ("Trucks") list below instead, see the standing-constraint note above.
+    ['sup4', 'sup5', 'sup7'].forEach(function (supKey) {
       list.push({ key: supKey, name: state[supKey + 'Name'] || supKey, division: 'Plumbing' });
     });
     SUP_KEYS.forEach(function (supKey) { // ['sup2', 'sup3'] - each has a dynamic Job Foremen list
@@ -2887,7 +2877,6 @@ var firebaseAuth = getAuth(firebaseApp);
     if (document.activeElement !== els.sup3Input) els.sup3Input.value = state.sup3Name;
     if (document.activeElement !== els.sup4Input) els.sup4Input.value = state.sup4Name;
     if (document.activeElement !== els.sup5Input) els.sup5Input.value = state.sup5Name;
-    if (document.activeElement !== els.sup6Input) els.sup6Input.value = state.sup6Name;
     if (document.activeElement !== els.sup7Input) els.sup7Input.value = state.sup7Name;
     if (document.activeElement !== els.hvac1Input) els.hvac1Input.value = state.hvac1Name;
     if (document.activeElement !== els.hvac2Input) els.hvac2Input.value = state.hvac2Name;
@@ -2902,7 +2891,6 @@ var firebaseAuth = getAuth(firebaseApp);
     els.sup3Input.disabled = disable;
     els.sup4Input.disabled = disable;
     els.sup5Input.disabled = disable;
-    els.sup6Input.disabled = disable;
     els.sup7Input.disabled = disable;
     els.hvac1Input.disabled = disable;
     els.hvac2Input.disabled = disable;
@@ -4100,7 +4088,7 @@ var firebaseAuth = getAuth(firebaseApp);
       if (!names.length) {
         var empty = document.createElement('p');
         empty.className = 'foreman-empty';
-        empty.textContent = loaded ? 'No Job Foremen yet.' : 'Loading…';
+        empty.textContent = loaded ? 'No trucks yet.' : 'Loading…';
         listEl.appendChild(empty);
       } else {
         names.forEach(function (name) {
@@ -4150,7 +4138,7 @@ var firebaseAuth = getAuth(firebaseApp);
     renderStatusBanner();
     syncCrewInputs();
     renderForemen();
-    ['sup4', 'sup5', 'sup6', 'sup7'].forEach(function (supKey) {
+    ['sup4', 'sup5', 'sup7'].forEach(function (supKey) {
       els.scheduleToggle[supKey].disabled = dbUnavailable;
     });
     ['hvac1', 'hvac2', 'hvac3', 'hvac4'].forEach(function (hvacKey) {
@@ -4171,7 +4159,6 @@ var firebaseAuth = getAuth(firebaseApp);
     els.sup3Input.addEventListener('input', function (e) { onSupInput('sup3Name', e.target.value); });
     els.sup4Input.addEventListener('input', function (e) { onSupInput('sup4Name', e.target.value); });
     els.sup5Input.addEventListener('input', function (e) { onSupInput('sup5Name', e.target.value); });
-    els.sup6Input.addEventListener('input', function (e) { onSupInput('sup6Name', e.target.value); });
     els.sup7Input.addEventListener('input', function (e) { onSupInput('sup7Name', e.target.value); });
     els.hvac1Input.addEventListener('input', function (e) { onSupInput('hvac1Name', e.target.value); });
     els.hvac2Input.addEventListener('input', function (e) { onSupInput('hvac2Name', e.target.value); });
@@ -4182,14 +4169,13 @@ var firebaseAuth = getAuth(firebaseApp);
     els.sup3Input.addEventListener('blur', function () { clearTimeout(nameDebounce.sup3Name); saveSupName('sup3Name'); });
     els.sup4Input.addEventListener('blur', function () { clearTimeout(nameDebounce.sup4Name); saveSupName('sup4Name'); });
     els.sup5Input.addEventListener('blur', function () { clearTimeout(nameDebounce.sup5Name); saveSupName('sup5Name'); });
-    els.sup6Input.addEventListener('blur', function () { clearTimeout(nameDebounce.sup6Name); saveSupName('sup6Name'); });
     els.sup7Input.addEventListener('blur', function () { clearTimeout(nameDebounce.sup7Name); saveSupName('sup7Name'); });
     els.hvac1Input.addEventListener('blur', function () { clearTimeout(nameDebounce.hvac1Name); saveSupName('hvac1Name'); });
     els.hvac2Input.addEventListener('blur', function () { clearTimeout(nameDebounce.hvac2Name); saveSupName('hvac2Name'); });
     els.hvac3Input.addEventListener('blur', function () { clearTimeout(nameDebounce.hvac3Name); saveSupName('hvac3Name'); });
     els.hvac4Input.addEventListener('blur', function () { clearTimeout(nameDebounce.hvac4Name); saveSupName('hvac4Name'); });
 
-    ['sup4', 'sup5', 'sup6', 'sup7'].forEach(function (supKey) {
+    ['sup4', 'sup5', 'sup7'].forEach(function (supKey) {
       els.scheduleToggle[supKey].addEventListener('click', function () { openCalendarView(supKey); });
     });
     ['hvac1', 'hvac2', 'hvac3', 'hvac4'].forEach(function (hvacKey) {
@@ -4270,7 +4256,6 @@ var firebaseAuth = getAuth(firebaseApp);
     els.sup3Input = q('sup3Input');
     els.sup4Input = q('sup4Input');
     els.sup5Input = q('sup5Input');
-    els.sup6Input = q('sup6Input');
     els.sup7Input = q('sup7Input');
     els.hvac1Input = q('hvac1Input');
     els.hvac2Input = q('hvac2Input');
@@ -4284,7 +4269,7 @@ var firebaseAuth = getAuth(firebaseApp);
 
     els.datetimeDate = q('datetimeDate');
     els.datetimeClock = q('datetimeClock');
-    els.scheduleToggle = { sup4: q('scheduleToggle-sup4'), sup5: q('scheduleToggle-sup5'), sup6: q('scheduleToggle-sup6'), sup7: q('scheduleToggle-sup7'), hvac1: q('scheduleToggle-hvac1'), hvac2: q('scheduleToggle-hvac2'), hvac3: q('scheduleToggle-hvac3'), hvac4: q('scheduleToggle-hvac4') };
+    els.scheduleToggle = { sup4: q('scheduleToggle-sup4'), sup5: q('scheduleToggle-sup5'), sup7: q('scheduleToggle-sup7'), hvac1: q('scheduleToggle-hvac1'), hvac2: q('scheduleToggle-hvac2'), hvac3: q('scheduleToggle-hvac3'), hvac4: q('scheduleToggle-hvac4') };
     els.calendarOverlay = q('calendarOverlay');
     els.calendarBackBtn = q('calendarBackBtn');
     els.calendarPersonName = q('calendarPersonName');
@@ -4334,7 +4319,10 @@ var firebaseAuth = getAuth(firebaseApp);
     // Jonathan asks Claude to change a name, and Claude runs this from the
     // browser console while signed in as an admin. Not linked from any
     // button or menu.
-    var LEADERSHIP_NAME_KEYS = ['sup1Name', 'sup2Name', 'sup3Name', 'sup4Name', 'sup5Name', 'sup6Name', 'sup7Name', 'hvac1Name', 'hvac2Name', 'hvac3Name', 'hvac4Name'];
+    // sup6Name removed 2026-09-29 (Sid Carter moved to the sup2 dynamic
+    // Job Foremen/"Trucks" list, renamed via addForeman/removeForeman
+    // instead of this leadership-name mechanism — see standing constraint).
+    var LEADERSHIP_NAME_KEYS = ['sup1Name', 'sup2Name', 'sup3Name', 'sup4Name', 'sup5Name', 'sup7Name', 'hvac1Name', 'hvac2Name', 'hvac3Name', 'hvac4Name'];
     window.__fabSetLeadershipName = function (which, value) {
       if (LEADERSHIP_NAME_KEYS.indexOf(which) === -1) {
         return Promise.reject(new Error('Unknown field "' + which + '". Valid: ' + LEADERSHIP_NAME_KEYS.join(', ')));
