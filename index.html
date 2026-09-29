@@ -1201,6 +1201,20 @@
   }
   .combined-detail-field-value { font-size: var(--text-sm); color: var(--color-ink); word-break: break-word; }
   .combined-detail-empty { color: var(--color-ink-muted); font-size: var(--text-sm); padding: 8px 0; }
+  /* Per-task bordered "block" wrapper - used only by the per-person Schedule
+     tab's read-only day view (renderDayEditor's !canEdit branch below) so a
+     day with Task 2/3 filled in reads as clearly separate boxed sections,
+     not one long list of fields. This class is never used by the Combined
+     Calendar's own day-detail panel (renderCombinedDayDetail), which keeps
+     its existing label-only separation unchanged - added 2026-09-29 per
+     Jonathan's follow-up ("you didn't seperate them into individual blocks
+     like the combined calendar"). */
+  .combined-detail-task-block {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    padding: 8px 10px;
+  }
+  .combined-detail-task-block .combined-detail-task-label:first-child { margin-top: 0; }
 
   .calendar-day-editor {
     margin: 4px 16px 24px;
@@ -3474,23 +3488,32 @@ var firebaseAuth = getAuth(firebaseApp);
       }
       if (roHead.childNodes.length) roCard.appendChild(roHead);
 
-      var roHadAny = appendReadOnlyFieldGrid(roCard, entry);
-      if (taskHasAnyField(task2Source)) {
-        var roT2Label = document.createElement('div');
-        roT2Label.className = 'combined-detail-task-label';
-        roT2Label.textContent = 'Task 2';
-        roCard.appendChild(roT2Label);
-        appendReadOnlyFieldGrid(roCard, task2Source);
-        roHadAny = true;
+      // Each task with data gets its own bordered .combined-detail-task-block
+      // (not just a text label) so a day with Task 2/3 filled in reads as
+      // clearly separate boxed sections - per Jonathan's 2026-09-29 follow-up
+      // ("you didn't seperate them into individual blocks like the combined
+      // calendar"). Task 1 only gets its own "Task 1" label when a second or
+      // third task is also present, so a normal single-task day still reads
+      // as one plain block with no redundant "Task 1" heading.
+      var roMultiTask = taskHasAnyField(task2Source) || taskHasAnyField(task3Source);
+      var roHadAny = false;
+      function appendReadOnlyTaskBlock(task, labelText) {
+        if (!taskHasAnyField(task)) return false;
+        var block = document.createElement('div');
+        block.className = 'combined-detail-task-block';
+        if (labelText) {
+          var lbl = document.createElement('div');
+          lbl.className = 'combined-detail-task-label';
+          lbl.textContent = labelText;
+          block.appendChild(lbl);
+        }
+        appendReadOnlyFieldGrid(block, task);
+        roCard.appendChild(block);
+        return true;
       }
-      if (taskHasAnyField(task3Source)) {
-        var roT3Label = document.createElement('div');
-        roT3Label.className = 'combined-detail-task-label';
-        roT3Label.textContent = 'Task 3';
-        roCard.appendChild(roT3Label);
-        appendReadOnlyFieldGrid(roCard, task3Source);
-        roHadAny = true;
-      }
+      if (appendReadOnlyTaskBlock(entry, roMultiTask ? 'Task 1' : null)) roHadAny = true;
+      if (appendReadOnlyTaskBlock(task2Source, 'Task 2')) roHadAny = true;
+      if (appendReadOnlyTaskBlock(task3Source, 'Task 3')) roHadAny = true;
       if (!roHadAny && !entry.off && !entry.holiday) {
         var roEmpty = document.createElement('p');
         roEmpty.className = 'combined-detail-empty';
