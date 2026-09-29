@@ -3439,6 +3439,68 @@ var firebaseAuth = getAuth(firebaseApp);
     head.appendChild(closeBtn);
     editor.appendChild(head);
 
+    // Non-admins never see the admin fill-in-the-box editor at all (Job
+    // Name/PO/Address/etc. inputs, Color/Off/Holiday controls, Clear this
+    // day, Copy this entry through, Apply Color) - per Jonathan's request
+    // 2026-09-29 ("i dont want them to see the fill box template admins
+    // see and use to enter information"), they instead get the exact same
+    // read-only card format the Combined Calendar's day-detail panel uses
+    // (reusing appendReadOnlyFieldGrid/taskHasAnyField and the
+    // .combined-detail-* CSS classes below), scoped to just this one
+    // person's entry for the selected day. This is a separate, earlier
+    // return - none of the editable-form code below (inputs, save(),
+    // color/off/holiday, clear/repeat/color-range) ever runs for them.
+    if (!canEdit) {
+      var roCard = document.createElement('div');
+      roCard.className = 'combined-detail-card';
+      var roColor = colorForKey(entry.color);
+      if (roColor) {
+        roCard.style.borderLeftColor = roColor.border;
+        roCard.style.background = roColor.bg;
+      }
+      var roHead = document.createElement('div');
+      roHead.className = 'combined-detail-card-head';
+      if (entry.holiday) {
+        var roHolTag = document.createElement('span');
+        roHolTag.className = 'combined-detail-tag combined-detail-tag-holiday';
+        roHolTag.textContent = 'Holiday';
+        roHead.appendChild(roHolTag);
+      }
+      if (entry.off) {
+        var roOffTag = document.createElement('span');
+        roOffTag.className = 'combined-detail-tag combined-detail-tag-off';
+        roOffTag.textContent = 'Off';
+        roHead.appendChild(roOffTag);
+      }
+      if (roHead.childNodes.length) roCard.appendChild(roHead);
+
+      var roHadAny = appendReadOnlyFieldGrid(roCard, entry);
+      if (taskHasAnyField(task2Source)) {
+        var roT2Label = document.createElement('div');
+        roT2Label.className = 'combined-detail-task-label';
+        roT2Label.textContent = 'Task 2';
+        roCard.appendChild(roT2Label);
+        appendReadOnlyFieldGrid(roCard, task2Source);
+        roHadAny = true;
+      }
+      if (taskHasAnyField(task3Source)) {
+        var roT3Label = document.createElement('div');
+        roT3Label.className = 'combined-detail-task-label';
+        roT3Label.textContent = 'Task 3';
+        roCard.appendChild(roT3Label);
+        appendReadOnlyFieldGrid(roCard, task3Source);
+        roHadAny = true;
+      }
+      if (!roHadAny && !entry.off && !entry.holiday) {
+        var roEmpty = document.createElement('p');
+        roEmpty.className = 'combined-detail-empty';
+        roEmpty.textContent = 'No schedule entry for this day.';
+        roCard.appendChild(roEmpty);
+      }
+      editor.appendChild(roCard);
+      return;
+    }
+
     // Task 2 / Task 3 toggle buttons - sit right at the top of the day
     // editor, above the Task 1 fields.
     var taskTabsRow = document.createElement('div');
