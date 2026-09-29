@@ -11,6 +11,13 @@
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Public+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@600&display=swap">
+<!-- EmailJS browser SDK, used only by the T&M field ticket's "Send Ticket"
+     button (2026-09-29) to email a submitted ticket to schedule@plumcore.com
+     with no backend server of our own. Loaded as a classic (non-module)
+     script so it sets the global `window.emailjs`; the app's own module
+     script checks for it and the TM_EMAILJS_* keys below before trying to
+     send, and degrades to "saved only" if either is missing. -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 <style>
   :root {
     --color-canvas: #FAF5EC;
@@ -261,7 +268,8 @@
        invisible spacer span, home topbar only now) does the isolating
        instead, right after the logo there. */
     .topbar .topbar-right,
-    .topbar .topbar-right-row {
+    .topbar .topbar-right-row,
+    .topbar .topbar-signout-row {
       /* Higher-specificity ".topbar X" form is required here (not just
          ".topbar-right"/".topbar-right-row" alone) because the unconditional
          (non-media) ".topbar-right { display:flex; ... }" / ".topbar-right-row
@@ -303,8 +311,9 @@
     .topbar .mobile-line-break { order: 3; }
     #combinedCalendarBtn { order: 4; }
     #ganttChartBtn { order: 5; }
+    #tmTicketBtn { order: 6; }
     #authSignedInAs {
-      order: 6;
+      order: 7;
       margin-left: auto;
     }
 
@@ -489,6 +498,11 @@
     border-radius: var(--radius-sm);
   }
   .topbar-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; flex-wrap: wrap; }
+  /* Holds the new T&M button immediately to the left of the sign-out pill,
+     on the pill's own line (added 2026-09-29). Kept as its own row rather
+     than folded into `.topbar-right-row` below so it isn't affected by
+     that row's own button set/ordering. */
+  .topbar-signout-row { display: flex; align-items: center; gap: 8px; }
   .topbar-right-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
   .combined-calendar-btn {
     font-family: var(--font-body);
@@ -1550,6 +1564,77 @@
   .project-remove-btn:disabled { opacity: 0.5; cursor: not-allowed; }
   .projects-empty { color: var(--color-ink-muted); font-size: var(--text-sm); padding: 12px 10px; }
 
+  /* ---------- T&M field ticket (added 2026-09-29) ---------- */
+  .tm-ticket-page { max-width: 900px; margin: 0 auto; width: 100%; padding: 16px 16px 32px; display: flex; flex-direction: column; gap: 14px; }
+  .tm-ticket-page[hidden] { display: none; }
+  .tm-ticket-section-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 700;
+    color: #fff;
+    background: var(--color-ink);
+    padding: 6px 10px;
+    border-radius: var(--radius-sm);
+    display: block;
+  }
+  .calendar-field textarea {
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    border: 1px solid var(--color-border-strong);
+    background: var(--color-surface);
+    color: var(--color-ink);
+    border-radius: var(--radius-sm);
+    padding: 8px;
+    min-height: 110px;
+    width: 100%;
+    resize: vertical;
+  }
+  .calendar-field textarea:focus { outline: 2px solid var(--color-focus); outline-offset: 1px; }
+  .tm-checkbox-group { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; }
+  .tm-checkbox-item { display: inline-flex; align-items: center; gap: 6px; font-size: var(--text-sm); color: var(--color-ink); cursor: pointer; }
+  .tm-checkbox-item input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--color-accent); cursor: pointer; }
+  .tm-other-row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 2px; }
+  .tm-other-row label { font-size: var(--text-sm); color: var(--color-ink-muted); flex-shrink: 0; }
+  .tm-other-row input {
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    border: 1px solid var(--color-border-strong);
+    background: var(--color-surface);
+    color: var(--color-ink);
+    border-radius: var(--radius-sm);
+    padding: 6px 8px;
+    min-height: 34px;
+    flex: 1 1 160px;
+    min-width: 0;
+  }
+  .tm-materials-table { display: flex; flex-direction: column; gap: 6px; }
+  .tm-materials-head, .tm-materials-row { display: grid; grid-template-columns: 90px 90px 1fr; gap: 8px; align-items: center; }
+  .tm-materials-head { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--color-ink-muted); font-weight: 700; }
+  .tm-materials-row input {
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    border: 1px solid var(--color-border-strong);
+    background: var(--color-surface);
+    color: var(--color-ink);
+    border-radius: var(--radius-sm);
+    padding: 6px 8px;
+    min-height: 32px;
+    width: 100%;
+    min-width: 0;
+  }
+  .tm-page-nav { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding-top: 8px; }
+  .tm-page-indicator { font-size: var(--text-xs); color: var(--color-ink-muted); text-align: center; }
+  .tm-send-row { display: flex; justify-content: flex-end; gap: 10px; padding-top: 12px; border-top: 1px solid var(--color-border); }
+  .tm-status-msg { font-size: var(--text-sm); padding: 8px 10px; border-radius: var(--radius-sm); background: var(--color-surface-alt); }
+  .tm-status-msg[hidden] { display: none; }
+  .tm-status-msg.is-success { background: var(--color-accent-soft); color: var(--color-accent); }
+  .tm-status-msg.is-error { color: var(--color-danger); background: var(--color-danger-soft); }
+  .tm-log-row { padding: 10px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface); }
+  .tm-log-row + .tm-log-row { margin-top: 8px; }
+  .tm-log-title { font-weight: 600; color: var(--color-ink); }
+  .tm-log-meta { font-size: var(--text-xs); color: var(--color-ink-muted); margin-top: 2px; }
+
   /* ---------- sign-in gate ---------- */
   .authgate-overlay {
     position: fixed;
@@ -1717,7 +1802,10 @@
     <img src="logo.png" alt="Plumcore logo" class="brand-logo topbar-center-logo" />
     <span class="mobile-line-break" aria-hidden="true"></span>
     <div class="topbar-right">
-      <button type="button" id="authSignedInAs" class="authgate-signedout" hidden></button>
+      <div class="topbar-signout-row">
+        <button type="button" id="tmTicketBtn" class="combined-calendar-btn">T&amp;M</button>
+        <button type="button" id="authSignedInAs" class="authgate-signedout" hidden></button>
+      </div>
       <div class="topbar-right-row">
         <button type="button" id="combinedCalendarBtn" class="combined-calendar-btn">Combined Calendar</button>
         <button type="button" id="ganttChartBtn" class="combined-calendar-btn">Gantt Chart</button>
@@ -1957,9 +2045,121 @@
   <div class="gantt-body" id="ganttBody"></div>
 </div>
 
+<div id="tmTicketOverlay" class="calendar-overlay" hidden>
+  <div class="calendar-overlay-header">
+    <img src="logo.png" alt="Plumcore logo" class="brand-logo topbar-center-logo" />
+    <button type="button" id="tmTicketBackBtn" class="calendar-back-btn">‹ Back to board</button>
+    <span class="calendar-person-name">T&amp;M Field Ticket</span>
+    <button type="button" id="tmTicketViewLogBtn" class="calendar-back-btn" hidden>View submitted tickets</button>
+    <div class="datetime-bar datetime-bar-compact overlay-header-datetime">
+      <span class="datetime-date"></span>
+      <span class="datetime-clock"></span>
+    </div>
+  </div>
+  <div id="tmTicketStatusMsg" class="tm-status-msg" hidden style="max-width:900px;margin:12px auto 0;"></div>
+
+  <div id="tmTicketPage1" class="tm-ticket-page">
+    <span class="tm-ticket-section-label">Job Information</span>
+    <div class="calendar-field-grid">
+      <div class="calendar-field span-2"><span class="calendar-field-label">Customer / Job Name</span><input type="text" id="tmJobName" maxlength="120" /></div>
+      <div class="calendar-field span-2"><span class="calendar-field-label">Address / Location</span><input type="text" id="tmAddress" maxlength="160" /></div>
+      <div class="calendar-field"><span class="calendar-field-label">Job / PO Number</span><input type="text" id="tmJobPo" maxlength="60" /></div>
+      <div class="calendar-field"><span class="calendar-field-label">Date</span><input type="date" id="tmDate" /></div>
+    </div>
+
+    <span class="tm-ticket-section-label">Crew &amp; Time on Job</span>
+    <div class="calendar-field-grid">
+      <div class="calendar-field span-2"><span class="calendar-field-label">Names of Techs on Job</span><input type="text" id="tmTechs" maxlength="200" /></div>
+      <div class="calendar-field"><span class="calendar-field-label"># of Men on Crew (sets the labor rate — double check)</span><input type="number" min="0" max="50" id="tmCrewSize" /></div>
+      <div class="calendar-field"><span class="calendar-field-label">Start Time</span><input type="time" id="tmStartTime" /></div>
+      <div class="calendar-field"><span class="calendar-field-label">End Time</span><input type="time" id="tmEndTime" /></div>
+    </div>
+
+    <span class="tm-ticket-section-label">Description of Work Performed</span>
+    <div class="calendar-field span-2"><textarea id="tmWorkDescription" maxlength="4000"></textarea></div>
+
+    <span class="tm-ticket-section-label">Supplier (attach ticket if purchased)</span>
+    <div class="tm-checkbox-group" id="tmSupplierGroup">
+      <label class="tm-checkbox-item"><input type="checkbox" value="American Pipe" /> American Pipe</label>
+      <label class="tm-checkbox-item"><input type="checkbox" value="GLS" /> GLS</label>
+      <label class="tm-checkbox-item"><input type="checkbox" value="Lowe's / Home Depot" /> Lowe's / Home Depot</label>
+      <label class="tm-checkbox-item"><input type="checkbox" value="Plumbers Wholesale" /> Plumbers Wholesale</label>
+      <label class="tm-checkbox-item"><input type="checkbox" value="Southern Pipe" /> Southern Pipe</label>
+      <label class="tm-checkbox-item"><input type="checkbox" value="V&amp;W" /> V&amp;W</label>
+      <label class="tm-checkbox-item"><input type="checkbox" value="None" /> None</label>
+    </div>
+    <div class="tm-other-row"><label>Other:</label><input type="text" id="tmSupplierOther" maxlength="80" /></div>
+
+    <span class="tm-ticket-section-label">Sub Contractors</span>
+    <div class="tm-checkbox-group" id="tmSubcontractorGroup">
+      <label class="tm-checkbox-item"><input type="checkbox" value="American Leak Detector" /> American Leak Detector</label>
+      <label class="tm-checkbox-item"><input type="checkbox" value="ABC" /> ABC</label>
+      <label class="tm-checkbox-item"><input type="checkbox" value="B&amp;G" /> B&amp;G</label>
+      <label class="tm-checkbox-item"><input type="checkbox" value="Duncan" /> Duncan</label>
+      <label class="tm-checkbox-item"><input type="checkbox" value="K&amp;G" /> K&amp;G</label>
+      <label class="tm-checkbox-item"><input type="checkbox" value="Reliable" /> Reliable</label>
+      <label class="tm-checkbox-item"><input type="checkbox" value="None" /> None</label>
+    </div>
+    <div class="tm-other-row"><label>Other:</label><input type="text" id="tmSubcontractorOther" maxlength="80" /></div>
+
+    <span class="tm-ticket-section-label">Equipment Used</span>
+    <div class="tm-checkbox-group" id="tmEquipmentGroup">
+      <label class="tm-checkbox-item"><input type="checkbox" value="Jetter" /> Jetter</label>
+      <label class="tm-checkbox-item"><input type="checkbox" value="Small Sewer Machine" /> Small Sewer Machine</label>
+      <label class="tm-checkbox-item"><input type="checkbox" value="Medium Sewer Machine" /> Medium Sewer Machine</label>
+      <label class="tm-checkbox-item"><input type="checkbox" value="Large Sewer Machine" /> Large Sewer Machine</label>
+      <label class="tm-checkbox-item"><input type="checkbox" value="Camera (push)" /> Camera (push)</label>
+      <label class="tm-checkbox-item"><input type="checkbox" value="Camera (crawler)" /> Camera (crawler)</label>
+      <label class="tm-checkbox-item"><input type="checkbox" value="Mini-Excavator" /> Mini-Excavator</label>
+      <label class="tm-checkbox-item"><input type="checkbox" value="Skid Steer" /> Skid Steer</label>
+    </div>
+    <div class="tm-other-row">
+      <label>Other:</label><input type="text" id="tmEquipmentOther" maxlength="80" />
+      <label style="margin-left:14px;">Hours Used:</label><input type="text" id="tmEquipmentHours" maxlength="20" style="flex:0 1 100px;" />
+    </div>
+
+    <div class="tm-page-nav">
+      <span></span>
+      <button type="button" id="tmTicketNextBtn" class="btn btn-sm btn-primary">Continue to Materials (Page 2) ›</button>
+    </div>
+    <div class="tm-page-indicator">Page 1 of 2</div>
+  </div>
+
+  <div id="tmTicketPage2" class="tm-ticket-page" hidden>
+    <span class="tm-ticket-section-label">Materials Used (From Stock)</span>
+    <label class="tm-checkbox-item"><input type="checkbox" id="tmMaterialsNone" /> NONE / No material used from stock or truck</label>
+    <div class="tm-materials-table">
+      <div class="tm-materials-head"><span>Qty</span><span>Size</span><span>Material Description</span></div>
+      <div id="tmMaterialsRows"></div>
+    </div>
+    <div class="tm-page-nav">
+      <button type="button" id="tmTicketBackToPage1Btn" class="btn btn-sm">‹ Back to Page 1</button>
+      <span></span>
+    </div>
+    <div class="tm-page-indicator">Page 2 of 2</div>
+    <div class="tm-send-row">
+      <button type="button" id="tmTicketSendBtn" class="btn btn-primary">Send Ticket</button>
+    </div>
+  </div>
+</div>
+
+<div id="tmTicketLogOverlay" class="calendar-overlay" hidden>
+  <div class="calendar-overlay-header">
+    <img src="logo.png" alt="Plumcore logo" class="brand-logo topbar-center-logo" />
+    <button type="button" id="tmTicketLogBackBtn" class="calendar-back-btn">‹ Back to board</button>
+    <span class="calendar-person-name">Submitted T&amp;M Tickets</span>
+    <button type="button" id="tmTicketLogRefreshBtn" class="calendar-back-btn">Refresh</button>
+    <div class="datetime-bar datetime-bar-compact overlay-header-datetime">
+      <span class="datetime-date"></span>
+      <span class="datetime-clock"></span>
+    </div>
+  </div>
+  <div id="tmTicketLogList" style="max-width:900px;margin:0 auto;width:100%;padding:16px;"></div>
+</div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, deleteField } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, deleteField, collection, addDoc, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getAuth, onAuthStateChanged, isSignInWithEmailLink, sendSignInLinkToEmail, signInWithEmailLink, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 // ---------------------------------------------------------------
@@ -1979,6 +2179,38 @@ var firebaseConfig = {
 var firebaseApp = initializeApp(firebaseConfig);
 var firestoreDb = getFirestore(firebaseApp);
 var firebaseAuth = getAuth(firebaseApp);
+
+// ---------------------------------------------------------------
+// T&M FIELD TICKET — EMAIL SETUP (added 2026-09-29)
+// The "Send Ticket" button on the T&M field ticket emails a submitted
+// ticket to schedule@plumcore.com using EmailJS (emailjs.com), a
+// third-party service that can send email straight from the browser
+// with no server of our own. This app has no way to sign up for that
+// service on its own — Jonathan needs to create the (free) account
+// himself and paste the three values below in. Until all three are
+// filled in, the Send button still saves the ticket (see the tmTickets
+// log) but shows "email sending isn't set up yet" instead of emailing it.
+//
+// To finish setup:
+//   1. Go to https://www.emailjs.com and sign up (free tier is enough).
+//   2. Add an Email Service (e.g. connect a Gmail account) — this gives
+//      you a Service ID.
+//   3. Create an Email Template. Set its "To email" to
+//      schedule@plumcore.com. In the template body, use these variables
+//      (EmailJS inserts the matching field automatically):
+//        {{job_name}} {{address}} {{job_po}} {{work_date}} {{techs}}
+//        {{crew_size}} {{start_time}} {{end_time}} {{work_description}}
+//        {{suppliers}} {{subcontractors}} {{equipment}} {{materials}}
+//        {{submitted_by}} {{full_ticket_text}} (this last one is the
+//        whole ticket formatted as one plain-text block, if you'd
+//        rather use just that one variable for the template body).
+//      This gives you a Template ID.
+//   4. In EmailJS, go to Account > General to find your Public Key.
+//   5. Paste all three below and send me the updated file (or tell
+//      Claude the three values and it'll be pushed live).
+var TM_EMAILJS_PUBLIC_KEY = '';
+var TM_EMAILJS_SERVICE_ID = '';
+var TM_EMAILJS_TEMPLATE_ID = '';
 
 (function () {
   'use strict';
@@ -2016,6 +2248,11 @@ var firebaseAuth = getAuth(firebaseApp);
   var currentUser = null;
   var isAdminUser = false;
   var PLUMCORE_EMAIL_RE = /^[^\s@]+@plumcore\.com$/i;
+  var tmTicketOpen = false;
+  var tmTicketPage = 1;
+  var tmTicketSending = false;
+  var tmTicketLogOpen = false;
+  var TM_MATERIALS_ROW_COUNT = 20;
   var AUTH_EMAIL_STORAGE_KEY = 'fab_authEmailForSignIn';
   var authGateMode = 'employee'; // 'employee' (email link) | 'admin' (email + password)
   var authAdminFirstTime = false;
@@ -4151,6 +4388,304 @@ var firebaseAuth = getAuth(firebaseApp);
     if (projectsOpenSup) renderProjectsOverlay();
     if (combinedCalendarOpen) renderCombinedCalendarOverlay();
     if (ganttOpen) renderGanttOverlay();
+    if (tmTicketOpen) els.tmTicketViewLogBtn.hidden = !canEdit;
+  }
+
+  // ---------------- T&M field ticket (added 2026-09-29) ----------------
+  // A fillable, two-page digital version of the paper "Field Ticket / Work
+  // Summary" (see status doc for the request this came from). Anyone
+  // signed in can open it and fill one out — it is NOT gated on canEdit,
+  // since this is a brand-new ticket every time, not existing
+  // schedule/project data. Deliberately does not read/write any of the
+  // scheduleDocsCache/board data this file is otherwise so careful about —
+  // it only ever touches its own separate `tmTickets` Firestore collection
+  // (one new auto-ID document per submission), so it cannot affect any
+  // existing schedule/project data no matter what happens to it.
+  function openTmTicketView() {
+    tmTicketOpen = true;
+    tmTicketPage = 1;
+    resetTmTicketForm();
+    setTmTicketStatus('', '');
+    els.tmTicketViewLogBtn.hidden = !canEdit;
+    els.tmTicketOverlay.hidden = false;
+  }
+
+  function closeTmTicketView() {
+    if (tmTicketSending) return;
+    tmTicketOpen = false;
+    els.tmTicketOverlay.hidden = true;
+  }
+
+  function goToTmTicketPage(pageNum) {
+    tmTicketPage = pageNum;
+    els.tmTicketPage1.hidden = pageNum !== 1;
+    els.tmTicketPage2.hidden = pageNum !== 2;
+    els.tmTicketOverlay.scrollTop = 0;
+  }
+
+  function resetTmTicketForm() {
+    ['tmJobName', 'tmAddress', 'tmJobPo', 'tmDate', 'tmTechs', 'tmCrewSize', 'tmStartTime', 'tmEndTime', 'tmWorkDescription', 'tmSupplierOther', 'tmSubcontractorOther', 'tmEquipmentOther', 'tmEquipmentHours'].forEach(function (id) {
+      var el = q(id);
+      if (el) el.value = '';
+    });
+    ['tmSupplierGroup', 'tmSubcontractorGroup', 'tmEquipmentGroup'].forEach(function (groupId) {
+      var group = q(groupId);
+      if (!group) return;
+      var boxes = group.querySelectorAll('input[type="checkbox"]');
+      for (var i = 0; i < boxes.length; i++) boxes[i].checked = false;
+    });
+    var noneBox = q('tmMaterialsNone');
+    if (noneBox) noneBox.checked = false;
+    renderTmMaterialsRows();
+    goToTmTicketPage(1);
+  }
+
+  function renderTmMaterialsRows() {
+    var container = els.tmMaterialsRows;
+    container.innerHTML = '';
+    for (var i = 0; i < TM_MATERIALS_ROW_COUNT; i++) {
+      var row = document.createElement('div');
+      row.className = 'tm-materials-row';
+      var qty = document.createElement('input');
+      qty.type = 'text'; qty.maxLength = 10; qty.setAttribute('aria-label', 'Qty, row ' + (i + 1));
+      qty.setAttribute('data-tm-materials-field', 'qty'); qty.setAttribute('data-tm-materials-row', String(i));
+      var size = document.createElement('input');
+      size.type = 'text'; size.maxLength = 20; size.setAttribute('aria-label', 'Size, row ' + (i + 1));
+      size.setAttribute('data-tm-materials-field', 'size'); size.setAttribute('data-tm-materials-row', String(i));
+      var desc = document.createElement('input');
+      desc.type = 'text'; desc.maxLength = 160; desc.setAttribute('aria-label', 'Material description, row ' + (i + 1));
+      desc.setAttribute('data-tm-materials-field', 'desc'); desc.setAttribute('data-tm-materials-row', String(i));
+      row.appendChild(qty); row.appendChild(size); row.appendChild(desc);
+      container.appendChild(row);
+    }
+  }
+
+  function collectCheckedValues(groupId) {
+    var group = q(groupId);
+    if (!group) return [];
+    var boxes = group.querySelectorAll('input[type="checkbox"]:checked');
+    var out = [];
+    for (var i = 0; i < boxes.length; i++) out.push(boxes[i].value);
+    return out;
+  }
+
+  function collectTmMaterialsRows() {
+    var rows = [];
+    var qtyInputs = els.tmMaterialsRows.querySelectorAll('input[data-tm-materials-field="qty"]');
+    for (var i = 0; i < qtyInputs.length; i++) {
+      var idx = qtyInputs[i].getAttribute('data-tm-materials-row');
+      var sizeInput = els.tmMaterialsRows.querySelector('input[data-tm-materials-field="size"][data-tm-materials-row="' + idx + '"]');
+      var descInput = els.tmMaterialsRows.querySelector('input[data-tm-materials-field="desc"][data-tm-materials-row="' + idx + '"]');
+      var qty = qtyInputs[i].value.trim();
+      var size = sizeInput ? sizeInput.value.trim() : '';
+      var desc = descInput ? descInput.value.trim() : '';
+      if (qty || size || desc) rows.push({ qty: qty, size: size, description: desc });
+    }
+    return rows;
+  }
+
+  function setTmTicketStatus(kind, msg) {
+    var el = els.tmTicketStatusMsg;
+    if (!msg) {
+      el.hidden = true;
+      el.textContent = '';
+      el.className = 'tm-status-msg';
+      return;
+    }
+    el.hidden = false;
+    el.textContent = msg;
+    el.className = 'tm-status-msg' + (kind === 'error' ? ' is-error' : kind === 'success' ? ' is-success' : '');
+  }
+
+  function buildTmTicketPayload() {
+    return {
+      jobName: q('tmJobName').value.trim(),
+      address: q('tmAddress').value.trim(),
+      jobPo: q('tmJobPo').value.trim(),
+      workDate: q('tmDate').value,
+      techs: q('tmTechs').value.trim(),
+      crewSize: q('tmCrewSize').value.trim(),
+      startTime: q('tmStartTime').value,
+      endTime: q('tmEndTime').value,
+      workDescription: q('tmWorkDescription').value.trim(),
+      suppliers: collectCheckedValues('tmSupplierGroup'),
+      supplierOther: q('tmSupplierOther').value.trim(),
+      subcontractors: collectCheckedValues('tmSubcontractorGroup'),
+      subcontractorOther: q('tmSubcontractorOther').value.trim(),
+      equipment: collectCheckedValues('tmEquipmentGroup'),
+      equipmentOther: q('tmEquipmentOther').value.trim(),
+      equipmentHours: q('tmEquipmentHours').value.trim(),
+      materialsNone: !!q('tmMaterialsNone').checked,
+      materials: collectTmMaterialsRows(),
+      submittedByEmail: (currentUser && currentUser.email) || '',
+      submittedAtClient: Date.now()
+    };
+  }
+
+  function formatTmTicketPlainText(t) {
+    var lines = [];
+    lines.push('FIELD TICKET / WORK SUMMARY');
+    lines.push('');
+    lines.push('Customer / Job Name: ' + (t.jobName || ''));
+    lines.push('Address / Location: ' + (t.address || ''));
+    lines.push('Job / PO Number: ' + (t.jobPo || '') + '    Date: ' + (t.workDate || ''));
+    lines.push('');
+    lines.push('Names of Techs on Job: ' + (t.techs || ''));
+    lines.push('# of Men on Crew: ' + (t.crewSize || ''));
+    lines.push('Start Time: ' + (t.startTime || '') + '    End Time: ' + (t.endTime || ''));
+    lines.push('');
+    lines.push('DESCRIPTION OF WORK PERFORMED:');
+    lines.push(t.workDescription || '(none entered)');
+    lines.push('');
+    lines.push('SUPPLIER: ' + ((t.suppliers && t.suppliers.length) ? t.suppliers.join(', ') : '(none checked)') + (t.supplierOther ? ('; Other: ' + t.supplierOther) : ''));
+    lines.push('SUB CONTRACTORS: ' + ((t.subcontractors && t.subcontractors.length) ? t.subcontractors.join(', ') : '(none checked)') + (t.subcontractorOther ? ('; Other: ' + t.subcontractorOther) : ''));
+    lines.push('EQUIPMENT USED: ' + ((t.equipment && t.equipment.length) ? t.equipment.join(', ') : '(none checked)') + (t.equipmentOther ? ('; Other: ' + t.equipmentOther) : '') + (t.equipmentHours ? ('; Hours Used: ' + t.equipmentHours) : ''));
+    lines.push('');
+    lines.push('MATERIALS USED (From Stock):');
+    if (t.materialsNone) {
+      lines.push('NONE / No material used from stock or truck');
+    } else if (t.materials && t.materials.length) {
+      t.materials.forEach(function (m) {
+        lines.push('  ' + (m.qty || '-') + ' x ' + (m.size || '-') + '  ' + (m.description || ''));
+      });
+    } else {
+      lines.push('(none entered)');
+    }
+    lines.push('');
+    lines.push('Submitted by: ' + (t.submittedByEmail || '(unknown)'));
+    return lines.join('\n');
+  }
+
+  function finishTmTicketSend(saved, emailed, warningMsg) {
+    tmTicketSending = false;
+    els.tmTicketSendBtn.disabled = false;
+    els.tmTicketSendBtn.textContent = 'Send Ticket';
+    if (emailed) {
+      setTmTicketStatus('success', 'Ticket sent to schedule@plumcore.com' + (saved ? ' and saved.' : '.'));
+      resetTmTicketForm();
+    } else if (saved) {
+      setTmTicketStatus('error', 'Ticket saved. ' + (warningMsg || ''));
+    } else {
+      setTmTicketStatus('error', warningMsg || 'Something went wrong — please try again, or let the office know directly.');
+    }
+  }
+
+  function sendTmTicket() {
+    if (tmTicketSending) return;
+    var payload = buildTmTicketPayload();
+    if (!payload.jobName || !payload.workDate) {
+      setTmTicketStatus('error', 'Please fill in at least the Customer/Job Name and Date (Page 1) before sending.');
+      goToTmTicketPage(1);
+      return;
+    }
+    tmTicketSending = true;
+    els.tmTicketSendBtn.disabled = true;
+    els.tmTicketSendBtn.textContent = 'Sending…';
+    setTmTicketStatus('', '');
+
+    var saveDone = false;
+    var savePromise;
+    try {
+      savePromise = addDoc(collection(firestoreDb, 'tmTickets'), payload).then(function () {
+        saveDone = true;
+      }).catch(function (err) {
+        console.error('T&M ticket save failed', err);
+      });
+    } catch (e) {
+      savePromise = Promise.resolve();
+    }
+
+    savePromise.then(function () {
+      var configured = TM_EMAILJS_PUBLIC_KEY && TM_EMAILJS_SERVICE_ID && TM_EMAILJS_TEMPLATE_ID && window.emailjs;
+      if (!configured) {
+        finishTmTicketSend(saveDone, false, 'Email sending isn\'t set up yet — ask your admin to finish connecting it (see the code comment near TM_EMAILJS_PUBLIC_KEY for the steps).');
+        return;
+      }
+      var suppliersText = (payload.suppliers.length ? payload.suppliers.join(', ') : 'None') + (payload.supplierOther ? ('; Other: ' + payload.supplierOther) : '');
+      var subcontractorsText = (payload.subcontractors.length ? payload.subcontractors.join(', ') : 'None') + (payload.subcontractorOther ? ('; Other: ' + payload.subcontractorOther) : '');
+      var equipmentText = (payload.equipment.length ? payload.equipment.join(', ') : 'None') + (payload.equipmentOther ? ('; Other: ' + payload.equipmentOther) : '') + (payload.equipmentHours ? ('; Hours Used: ' + payload.equipmentHours) : '');
+      var materialsText = payload.materialsNone ? 'NONE / No material used from stock or truck' : (payload.materials.length ? payload.materials.map(function (m) { return (m.qty || '-') + ' x ' + (m.size || '-') + ' ' + (m.description || ''); }).join('\n') : '(none entered)');
+      var templateParams = {
+        to_email: 'schedule@plumcore.com',
+        job_name: payload.jobName,
+        address: payload.address,
+        job_po: payload.jobPo,
+        work_date: payload.workDate,
+        techs: payload.techs,
+        crew_size: payload.crewSize,
+        start_time: payload.startTime,
+        end_time: payload.endTime,
+        work_description: payload.workDescription,
+        suppliers: suppliersText,
+        subcontractors: subcontractorsText,
+        equipment: equipmentText,
+        materials: materialsText,
+        submitted_by: payload.submittedByEmail,
+        full_ticket_text: formatTmTicketPlainText(payload)
+      };
+      window.emailjs.send(TM_EMAILJS_SERVICE_ID, TM_EMAILJS_TEMPLATE_ID, templateParams, TM_EMAILJS_PUBLIC_KEY).then(function () {
+        finishTmTicketSend(saveDone, true, '');
+      }).catch(function (err) {
+        console.error('T&M ticket email failed', err);
+        finishTmTicketSend(saveDone, false, 'Saved, but the email could not be sent. Please let the office know directly.');
+      });
+    });
+  }
+
+  // ---- Admin-only log of submitted tickets ----
+  function openTmTicketLogView() {
+    if (!canEdit) return;
+    tmTicketLogOpen = true;
+    els.tmTicketLogOverlay.hidden = false;
+    loadTmTicketLog();
+  }
+
+  function closeTmTicketLogView() {
+    tmTicketLogOpen = false;
+    els.tmTicketLogOverlay.hidden = true;
+  }
+
+  function loadTmTicketLog() {
+    els.tmTicketLogList.innerHTML = '<p class="projects-empty">Loading…</p>';
+    var ticketsQuery = query(collection(firestoreDb, 'tmTickets'), orderBy('submittedAtClient', 'desc'), limit(100));
+    getDocs(ticketsQuery).then(function (snap) {
+      if (!tmTicketLogOpen) return;
+      var rows = [];
+      snap.forEach(function (docSnap) { rows.push(docSnap.data()); });
+      renderTmTicketLogList(rows);
+    }).catch(function (err) {
+      console.error('Failed to load T&M ticket log', err);
+      if (!tmTicketLogOpen) return;
+      els.tmTicketLogList.innerHTML = '<p class="projects-empty">Could not load the ticket log. If this keeps happening, the "tmTickets" collection may need a Firestore security rule added (ask Claude for the exact rule to paste into the Firebase Console).</p>';
+    });
+  }
+
+  function renderTmTicketLogList(rows) {
+    els.tmTicketLogList.innerHTML = '';
+    if (!rows.length) {
+      els.tmTicketLogList.innerHTML = '<p class="projects-empty">No tickets submitted yet.</p>';
+      return;
+    }
+    rows.forEach(function (t) {
+      var row = document.createElement('div');
+      row.className = 'tm-log-row';
+      var title = document.createElement('div');
+      title.className = 'tm-log-title';
+      title.textContent = (t.jobName || '(no job name)') + ' — ' + (t.workDate || '(no date)');
+      var meta = document.createElement('div');
+      meta.className = 'tm-log-meta';
+      meta.textContent = 'Techs: ' + (t.techs || '—') + '  ·  Crew: ' + (t.crewSize || '—') + '  ·  Submitted by: ' + (t.submittedByEmail || '—');
+      row.appendChild(title);
+      row.appendChild(meta);
+      if (t.workDescription) {
+        var desc = document.createElement('div');
+        desc.className = 'tm-log-meta';
+        desc.style.marginTop = '6px';
+        desc.textContent = t.workDescription;
+        row.appendChild(desc);
+      }
+      els.tmTicketLogList.appendChild(row);
+    });
   }
 
   function wireStaticControls() {
@@ -4229,6 +4764,22 @@ var firebaseAuth = getAuth(firebaseApp);
       });
       saveProjectsList(projectsOpenSup, current);
     });
+
+    els.tmTicketBtn.addEventListener('click', openTmTicketView);
+    els.tmTicketBackBtn.addEventListener('click', closeTmTicketView);
+    els.tmTicketViewLogBtn.addEventListener('click', openTmTicketLogView);
+    els.tmTicketNextBtn.addEventListener('click', function () {
+      if (!q('tmJobName').value.trim() || !q('tmDate').value) {
+        setTmTicketStatus('error', 'Please fill in at least the Customer/Job Name and Date before continuing.');
+        return;
+      }
+      setTmTicketStatus('', '');
+      goToTmTicketPage(2);
+    });
+    els.tmTicketBackToPage1Btn.addEventListener('click', function () { goToTmTicketPage(1); });
+    els.tmTicketSendBtn.addEventListener('click', sendTmTicket);
+    els.tmTicketLogBackBtn.addEventListener('click', closeTmTicketLogView);
+    els.tmTicketLogRefreshBtn.addEventListener('click', loadTmTicketLog);
   }
 
   function start() {
@@ -4312,6 +4863,22 @@ var firebaseAuth = getAuth(firebaseApp);
     els.ganttSpan3Btn = q('ganttSpan3Btn');
     els.ganttMonthLabel = q('ganttMonthLabel');
     els.ganttBody = q('ganttBody');
+
+    els.tmTicketBtn = q('tmTicketBtn');
+    els.tmTicketOverlay = q('tmTicketOverlay');
+    els.tmTicketBackBtn = q('tmTicketBackBtn');
+    els.tmTicketViewLogBtn = q('tmTicketViewLogBtn');
+    els.tmTicketStatusMsg = q('tmTicketStatusMsg');
+    els.tmTicketPage1 = q('tmTicketPage1');
+    els.tmTicketPage2 = q('tmTicketPage2');
+    els.tmTicketNextBtn = q('tmTicketNextBtn');
+    els.tmTicketBackToPage1Btn = q('tmTicketBackToPage1Btn');
+    els.tmTicketSendBtn = q('tmTicketSendBtn');
+    els.tmMaterialsRows = q('tmMaterialsRows');
+    els.tmTicketLogOverlay = q('tmTicketLogOverlay');
+    els.tmTicketLogBackBtn = q('tmTicketLogBackBtn');
+    els.tmTicketLogRefreshBtn = q('tmTicketLogRefreshBtn');
+    els.tmTicketLogList = q('tmTicketLogList');
 
     // ---------------- Admin-only name updates (console-only, no UI control) ----------------
     // The leadership name fields above are permanently disabled (see
