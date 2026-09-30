@@ -2332,6 +2332,14 @@ var TM_EMAILJS_TEMPLATE_ID = '';
   var tmTicketLogOpen = false;
   var TM_MATERIALS_ROW_COUNT = 20;
   var AUTH_EMAIL_STORAGE_KEY = 'fab_authEmailForSignIn';
+  // Which flow the currently-signed-in user last completed on this device
+  // ('password' for admin sign-in, 'link' for the employee email-link
+  // flow). Firebase's providerData can't tell these apart (both live under
+  // the same "password" provider id), so we track it ourselves and persist
+  // it across reloads — Firebase restores the session silently, without
+  // re-running submitAdminSignIn/finishEmailLinkSignIn.
+  var AUTH_METHOD_STORAGE_KEY = 'fab_authMethod';
+  var signedInViaPassword = false;
   var authGateMode = 'employee'; // 'employee' (email link) | 'admin' (email + password)
   var authAdminFirstTime = false;
   var nameDebounce = {};
@@ -2697,7 +2705,9 @@ var TM_EMAILJS_TEMPLATE_ID = '';
     var authCall = authAdminFirstTime
       ? createUserWithEmailAndPassword(firebaseAuth, email, password)
       : signInWithEmailAndPassword(firebaseAuth, email, password);
-    authCall.catch(function (err) {
+    authCall.then(function () {
+      try { window.localStorage.setItem(AUTH_METHOD_STORAGE_KEY, 'password'); } catch (e) {}
+    }).catch(function (err) {
       setGateBusy(false);
       var code = err && err.code;
       if (code === 'auth/email-already-in-use') {
@@ -2748,6 +2758,7 @@ var TM_EMAILJS_TEMPLATE_ID = '';
     setGateMessage('Signing you in…', false);
     signInWithEmailLink(firebaseAuth, email, window.location.href).then(function () {
       try { window.localStorage.removeItem(AUTH_EMAIL_STORAGE_KEY); } catch (e) {}
+      try { window.localStorage.setItem(AUTH_METHOD_STORAGE_KEY, 'link'); } catch (e) {}
       window.history.replaceState(null, '', window.location.pathname);
     }).catch(function (err) {
       setGateBusy(false);
@@ -2798,11 +2809,13 @@ var TM_EMAILJS_TEMPLATE_ID = '';
       }
       currentUser = user || null;
       if (!user) {
+        signedInViaPassword = false;
         els.authGateOverlay.hidden = false;
         els.authSignedInAs.hidden = true;
         setGateBusy(false);
         return;
       }
+      try { signedInViaPassword = window.localStorage.getItem(AUTH_METHOD_STORAGE_KEY) === 'password'; } catch (e) { signedInViaPassword = false; }
       els.authGateOverlay.hidden = true;
       els.authSignedInAs.hidden = false;
       renderSignedInAs(user.email);
@@ -3177,7 +3190,11 @@ var TM_EMAILJS_TEMPLATE_ID = '';
       banner.textContent = 'Connecting to the shared board…';
       return;
     }
-    if (!canEdit) {
+    if (!canEdit && signedInViaPassword) {
+      // Only admin-flow (password) sign-ins ever expect edit access, so this
+      // nudge only makes sense for them — e.g. an admin account that hasn't
+      // been added to admins/config yet. Regular employees sign in via the
+      // email-link flow and are view-only by design, so they never see it.
       banner.hidden = false;
       banner.className = 'status-banner status-info';
       banner.textContent = 'View only — ask your project manager for edit access to make changes here.';
