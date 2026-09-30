@@ -626,6 +626,65 @@
     box-sizing: border-box;
   }
 
+  /* ---------- Gantt day-number row + vertical day gridlines (added
+     2026-09-30, Jonathan's request: "add dates and vertical lines
+     representing the day of the week" to the 1-month Gantt view). Only
+     built for the 1-month span (see renderGanttChart) - at 3 months the
+     ~90 resulting day columns would be too dense to read. The day-header
+     row below the month row gets its own per-day cells (each drawing its
+     own left border, same :first-child pattern as .gantt-month-seg), and
+     each person row gets the same vertical lines + weekend/today shading
+     as plain absolutely-positioned backdrop divs appended before that
+     row's bars, so the lines line up continuously down the whole chart. */
+  .gantt-day-header-row { border-bottom: 1px solid var(--color-border-strong); min-height: 28px; }
+  .gantt-day-header { position: relative; height: 28px; }
+  .gantt-day-seg {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    border-left: 1px solid var(--color-border);
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  .gantt-day-seg:first-child { border-left: none; }
+  .gantt-day-seg .gantt-day-dow {
+    font-size: 9px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: var(--color-ink-muted);
+    line-height: 1.2;
+  }
+  .gantt-day-seg .gantt-day-num {
+    font-size: var(--text-xs);
+    font-weight: 700;
+    color: var(--color-ink);
+    line-height: 1.2;
+  }
+  .gantt-day-seg.is-weekend { background: var(--color-surface-alt); }
+  .gantt-day-seg.is-today { background: var(--color-accent-soft); }
+  .gantt-day-seg.is-today .gantt-day-num { color: var(--color-accent); }
+  .gantt-day-line {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 0;
+    border-left: 1px solid var(--color-border);
+    pointer-events: none;
+  }
+  .gantt-day-shade {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    pointer-events: none;
+  }
+  .gantt-day-shade.is-weekend { background: var(--color-surface-alt); }
+  .gantt-day-shade.is-today { background: var(--color-accent-soft); }
+
   /* ---------- section divider (a second division's header further down the
      same home page, e.g. HVAC below Plumbing) - same brand-mark/title/logo
      look as the topbar above, but NOT sticky and with no signed-in-as /
@@ -3628,6 +3687,85 @@ var TM_EMAILJS_TEMPLATE_ID = '';
     return segments;
   }
 
+  // One entry per calendar day in the visible range - shared by the day-
+  // number header row and every person row below it, so the vertical
+  // gridlines and weekend/today shading line up continuously all the way
+  // down the chart (2026-09-30, Jonathan's request).
+  function buildGanttDayInfos(rangeStart, totalDays) {
+    var todayKey = dateKey(new Date());
+    var infos = [];
+    var cur = new Date(rangeStart);
+    for (var i = 0; i < totalDays; i++) {
+      var dow = cur.getDay();
+      infos.push({
+        leftPct: (i / totalDays) * 100,
+        widthPct: (1 / totalDays) * 100,
+        dayNum: cur.getDate(),
+        dowLabel: WEEKDAY_HEADERS[dow].charAt(0),
+        isWeekend: dow === 0 || dow === 6,
+        isToday: dateKey(cur) === todayKey
+      });
+      cur = addDays(cur, 1);
+    }
+    return infos;
+  }
+
+  // Appends plain backdrop divs (vertical day-boundary lines + weekend/
+  // today column shading) to a person row's timeline, behind that row's
+  // bars (appended first, so later-appended bars paint on top). The day-
+  // header row draws its own per-day cells instead (see
+  // buildGanttDayHeader) since those already carry a left border and
+  // background per day - this is only for the plain bar rows.
+  function appendGanttDayGrid(container, dayInfos) {
+    dayInfos.forEach(function (d, i) {
+      if (d.isToday || d.isWeekend) {
+        var shade = document.createElement('div');
+        shade.className = 'gantt-day-shade' + (d.isToday ? ' is-today' : ' is-weekend');
+        shade.style.left = d.leftPct + '%';
+        shade.style.width = d.widthPct + '%';
+        container.appendChild(shade);
+      }
+      if (i > 0) {
+        var line = document.createElement('div');
+        line.className = 'gantt-day-line';
+        line.style.left = d.leftPct + '%';
+        container.appendChild(line);
+      }
+    });
+  }
+
+  // The day-number/weekday-letter header row shown below the month row,
+  // only in the 1-month Gantt view (see renderGanttChart).
+  function buildGanttDayHeader(dayInfos) {
+    var row = document.createElement('div');
+    row.className = 'gantt-row gantt-day-header-row';
+    var nameSpacer = document.createElement('div');
+    nameSpacer.className = 'gantt-row-name';
+    row.appendChild(nameSpacer);
+    var timeline = document.createElement('div');
+    timeline.className = 'gantt-timeline';
+    var dayHeader = document.createElement('div');
+    dayHeader.className = 'gantt-day-header';
+    dayInfos.forEach(function (d) {
+      var seg = document.createElement('div');
+      seg.className = 'gantt-day-seg' + (d.isWeekend ? ' is-weekend' : '') + (d.isToday ? ' is-today' : '');
+      seg.style.left = d.leftPct + '%';
+      seg.style.width = d.widthPct + '%';
+      var dow = document.createElement('span');
+      dow.className = 'gantt-day-dow';
+      dow.textContent = d.dowLabel;
+      var num = document.createElement('span');
+      num.className = 'gantt-day-num';
+      num.textContent = String(d.dayNum);
+      seg.appendChild(dow);
+      seg.appendChild(num);
+      dayHeader.appendChild(seg);
+    });
+    timeline.appendChild(dayHeader);
+    row.appendChild(timeline);
+    return row;
+  }
+
   function buildGanttMonthHeader(rangeStart, rangeEndExclusive, totalDays) {
     var header = document.createElement('div');
     header.className = 'gantt-row gantt-timeline-header-row';
@@ -3691,7 +3829,7 @@ var TM_EMAILJS_TEMPLATE_ID = '';
     });
   }
 
-  function buildGanttRow(person, rangeStart, rangeEndExclusive, totalDays) {
+  function buildGanttRow(person, rangeStart, rangeEndExclusive, totalDays, dayInfos) {
     var row = document.createElement('div');
     row.className = 'gantt-row';
     var nameEl = document.createElement('div');
@@ -3702,6 +3840,7 @@ var TM_EMAILJS_TEMPLATE_ID = '';
 
     var timeline = document.createElement('div');
     timeline.className = 'gantt-row-timeline';
+    if (dayInfos) appendGanttDayGrid(timeline, dayInfos);
     buildGanttBars(person.key, rangeStart, rangeEndExclusive, totalDays).forEach(function (bar) {
       var barEl = document.createElement('div');
       barEl.className = 'gantt-bar';
@@ -3715,7 +3854,7 @@ var TM_EMAILJS_TEMPLATE_ID = '';
     return row;
   }
 
-  function buildGanttSection(title, people, rangeStart, rangeEndExclusive, totalDays) {
+  function buildGanttSection(title, people, rangeStart, rangeEndExclusive, totalDays, dayInfos) {
     var section = document.createElement('div');
     section.className = 'gantt-section';
     var heading = document.createElement('div');
@@ -3730,7 +3869,7 @@ var TM_EMAILJS_TEMPLATE_ID = '';
       return section;
     }
     people.forEach(function (p) {
-      section.appendChild(buildGanttRow(p, rangeStart, rangeEndExclusive, totalDays));
+      section.appendChild(buildGanttRow(p, rangeStart, rangeEndExclusive, totalDays, dayInfos));
     });
     return section;
   }
@@ -3743,9 +3882,15 @@ var TM_EMAILJS_TEMPLATE_ID = '';
     var plumbing = all.filter(function (p) { return p.division === 'Plumbing'; });
     var hvac = all.filter(function (p) { return p.division === 'HVAC'; });
 
+    // Day numbers + vertical gridlines only at the 1-month span - see the
+    // comment on buildGanttDayInfos/appendGanttDayGrid for why 3 months
+    // doesn't get them too.
+    var dayInfos = ganttSpan === 1 ? buildGanttDayInfos(rangeStart, totalDays) : null;
+
     body.appendChild(buildGanttMonthHeader(rangeStart, rangeEndExclusive, totalDays));
-    body.appendChild(buildGanttSection('Plumbing', plumbing, rangeStart, rangeEndExclusive, totalDays));
-    body.appendChild(buildGanttSection('HVAC', hvac, rangeStart, rangeEndExclusive, totalDays));
+    if (dayInfos) body.appendChild(buildGanttDayHeader(dayInfos));
+    body.appendChild(buildGanttSection('Plumbing', plumbing, rangeStart, rangeEndExclusive, totalDays, dayInfos));
+    body.appendChild(buildGanttSection('HVAC', hvac, rangeStart, rangeEndExclusive, totalDays, dayInfos));
   }
 
   function renderDayEditor(personKey, disableControls) {
