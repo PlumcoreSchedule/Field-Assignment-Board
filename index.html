@@ -1199,6 +1199,40 @@
     color: var(--color-ink-muted);
   }
 
+  /* Locks the per-person Schedule tab's day-box size (added 2026-09-30,
+     Jonathan: "lock the size of the schedule calendar boxes. i dont want
+     the boxes getting stretched because of too much text"). Before this,
+     a day with 2-3 tasks filled in (or one long job name) grew taller than
+     its neighbors, and since CSS Grid auto-sizes a whole row to its
+     tallest cell, that stretched every OTHER day in that same week too -
+     not just the one with more text. Scoped to #calendarGrid specifically
+     (the per-person Schedule tab) so this never touches the Combined
+     Calendar's own grid, which already handles this the same general way
+     (see .combined-day-entries below) but at its own larger fixed size. */
+  #calendarGrid .calendar-day-cell {
+    height: 100px;
+    overflow: hidden;
+  }
+  /* Wraps just the job chips (Task 1/2/3) - the day number and holiday
+     label above stay pinned at a fixed spot (same reasoning as the
+     existing .calendar-day-number standing rule: they shouldn't move
+     regardless of how much task content is below them). This wrapper
+     takes whatever vertical space is left in the locked-height cell and
+     scrolls internally instead of pushing the box taller - so a day with
+     all 3 tasks filled in is still just as tall as an empty day, with the
+     extra chip(s) reachable by a short scroll rather than stretching the
+     whole week's row. */
+  .calendar-day-entries {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    width: 100%;
+    min-height: 0;
+    flex: 1;
+    overflow-y: auto;
+  }
+
   /* ---------- Combined Calendar (view-only - click a day to see every
      schedule tab's entries for it combined together; no editing happens
      here, that still only happens on each person's own Schedule tab) ---------- */
@@ -3294,6 +3328,21 @@ var TM_EMAILJS_TEMPLATE_ID = '';
           cell.appendChild(holWrap);
         }
 
+        // Job chips go in their own scrollable wrapper (not appended
+        // straight to the cell) so a day with 2-3 tasks stays the same
+        // locked box height as an empty day instead of stretching the
+        // whole week's row taller - see the #calendarGrid .calendar-day-cell
+        // / .calendar-day-entries CSS above for why.
+        var entriesWrap = null;
+        function ensureEntriesWrap() {
+          if (!entriesWrap) {
+            entriesWrap = document.createElement('div');
+            entriesWrap.className = 'calendar-day-entries';
+            cell.appendChild(entriesWrap);
+          }
+          return entriesWrap;
+        }
+
         if (entry && entry.jobName) {
           var chip = document.createElement('span');
           chip.className = 'calendar-day-job';
@@ -3304,7 +3353,7 @@ var TM_EMAILJS_TEMPLATE_ID = '';
             chip.style.color = 'var(--color-ink)';
             chip.style.borderLeft = '3px solid ' + c.border;
           }
-          cell.appendChild(chip);
+          ensureEntriesWrap().appendChild(chip);
         }
         if (entry && entry.task2 && entry.task2.jobName) {
           var chip2 = document.createElement('span');
@@ -3316,7 +3365,7 @@ var TM_EMAILJS_TEMPLATE_ID = '';
             chip2.style.color = 'var(--color-ink)';
             chip2.style.borderLeft = '3px solid ' + c2.border;
           }
-          cell.appendChild(chip2);
+          ensureEntriesWrap().appendChild(chip2);
         }
         if (entry && entry.task3 && entry.task3.jobName) {
           var chip3 = document.createElement('span');
@@ -3328,7 +3377,7 @@ var TM_EMAILJS_TEMPLATE_ID = '';
             chip3.style.color = 'var(--color-ink)';
             chip3.style.borderLeft = '3px solid ' + c3.border;
           }
-          cell.appendChild(chip3);
+          ensureEntriesWrap().appendChild(chip3);
         }
 
         cell.addEventListener('click', function () { selectCalendarDay(dk); });
