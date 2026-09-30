@@ -4150,6 +4150,18 @@ var TM_EMAILJS_TEMPLATE_ID = '';
     editor.appendChild(colorRangeRow);
 
     function updateColorRangeLabel() {
+      // Guard: setActiveTask() runs once during initial setup (see
+      // setActiveTask(defaultTask) above) *before* colorRangeLabel is
+      // created further down this function (colorRangeLabel is a `var`,
+      // hoisted but still undefined at that point). Without this guard
+      // that early call threw "Cannot set properties of undefined",
+      // which aborted renderDayEditor() partway through and silently
+      // dropped every control appended after it - Off/Holiday, Clear
+      // this day, Copy this entry through + its Apply button, and the
+      // bulk color-apply row (found 2026-09-30, regression from the
+      // 2026-09-29 per-task color change). The real label is set by the
+      // explicit updateColorRangeLabel() call right after creation below.
+      if (!colorRangeLabel) return;
       colorRangeLabel.textContent = 'Apply Task ' + activeTaskIndex + '’s color through:';
     }
     updateColorRangeLabel();
