@@ -46,6 +46,16 @@
     --color-sup6-ink: #FFFFFF;
     --color-sup7: #C1600A;
     --color-sup7-ink: #FFFFFF;
+    /* T&M ticket section-label bars (2026-09-30): originally reused
+       --color-ink as the bar background, which is near-black in light
+       mode but flips to a pale cream in dark mode - combined with this
+       label's hardcoded white text, that made the bars wash out and
+       barely read in dark mode (Jonathan: "black strips... show up
+       better in dark mode"). Given its own green pair here so it's
+       visible and high-contrast in both themes instead of silently
+       inheriting whatever --color-ink happens to be. */
+    --color-tm-label: #1E5631;
+    --color-tm-label-ink: #FFFFFF;
     --color-hvac1: #1F6F6F;
     --color-hvac1-ink: #FFFFFF;
     --color-hvac2: #5B4B8A;
@@ -103,6 +113,8 @@
       --color-sup6-ink: #0A1B2E;
       --color-sup7: #E8985A;
       --color-sup7-ink: #241004;
+      --color-tm-label: #4FA868;
+      --color-tm-label-ink: #0F2A18;
       --color-hvac1: #5BAFAF;
       --color-hvac1-ink: #072323;
       --color-hvac2: #9C8AD1;
@@ -146,6 +158,8 @@
     --color-sup6-ink: #0A1B2E;
     --color-sup7: #E8985A;
     --color-sup7-ink: #241004;
+    --color-tm-label: #4FA868;
+    --color-tm-label-ink: #0F2A18;
     --color-hvac1: #5BAFAF;
     --color-hvac1-ink: #072323;
     --color-hvac2: #9C8AD1;
@@ -1572,8 +1586,13 @@
     text-transform: uppercase;
     letter-spacing: 0.06em;
     font-weight: 700;
-    color: #fff;
-    background: var(--color-ink);
+    /* Was color:#fff on background:var(--color-ink) - --color-ink flips
+       from near-black (light mode) to pale cream (dark mode), so the
+       hardcoded white text read fine in light mode but washed out to
+       near-invisible in dark mode (2026-09-30 fix - see --color-tm-label
+       definitions above for why this got its own color pair instead). */
+    color: var(--color-tm-label-ink);
+    background: var(--color-tm-label);
     padding: 6px 10px;
     border-radius: var(--radius-sm);
     display: block;
