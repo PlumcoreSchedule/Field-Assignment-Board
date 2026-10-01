@@ -19,6 +19,18 @@
      script checks for it and the TM_EMAILJS_* keys below before trying to
      send, and degrades to "saved only" if either is missing. -->
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+<!-- html2canvas + jsPDF (2026-10-01), used only to build the "attach a PDF
+     of the ticket" feature on the T&M field ticket's "Send Ticket" button.
+     A hidden, off-screen copy of the ticket (built by buildTmTicketPdfHtml()
+     below) is rasterized ONCE by html2canvas, then generateTmTicketPdfDataUri()
+     manually slices that single tall canvas into page-height chunks and
+     assembles them into a multi-page PDF with jsPDF's addImage()/addPage() —
+     that's why both scripts are needed, in either order, both loaded before
+     sendTmTicket() can call window.html2canvas / window.jspdf.jsPDF.
+     Classic (non-module) scripts, like the EmailJS one above, so they set
+     the globals window.html2canvas / window.jspdf. -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   :root {
     --color-canvas: #FAF5EC;
@@ -2326,6 +2338,20 @@ var firebaseAuth = getAuth(firebaseApp);
 // Connected 2026-10-01: Outlook service (schedule@plumcore.com, the "From"
 // address), template "T&M Field Ticket" (body uses {{full_ticket_text}},
 // "To email" set to {{to_email}} per step 3 above).
+//
+// PDF attachment (added 2026-10-01): every send also builds a PDF of the
+// ticket in the browser (generateTmTicketPdfDataUri(), using jsPDF +
+// html2canvas — see the <script> tags near the top of <head>) and passes it
+// as two extra template params: ticket_pdf (the whole PDF, base64/data-URI
+// encoded) and ticket_filename (a per-ticket file name). For these to
+// actually arrive as a downloadable attachment, the EmailJS template needs
+// a "Variable Attachment" added once in its Attachments tab: Attachment
+// type = Variable Attachment, Filename = {{ticket_filename}}, Content type
+// = application/pdf, Parameter name = ticket_pdf. If that's never set up
+// (or jsPDF/html2canvas fail to load — e.g. offline), the ticket still
+// saves and emails exactly as before, just without the PDF attached —
+// generateTmTicketPdfDataUri() failing is never allowed to block the ticket
+// itself (see the try/catch around it in sendTmTicket()).
 var TM_EMAILJS_PUBLIC_KEY = 'Sq4SfnwJSCvyGlVB_';
 var TM_EMAILJS_SERVICE_ID = 'service_1o4zk4d';
 var TM_EMAILJS_TEMPLATE_ID = 'template_uxlyxe8';
@@ -4807,6 +4833,245 @@ var TM_EMAILJS_RECIPIENT = 'jonathan@plumcore.com';
     return lines.join('\n');
   }
 
+  // ---------------- T&M ticket PDF attachment (added 2026-10-01) ----------------
+  // Builds a hidden, off-screen copy of the ticket — laid out the same way
+  // as the on-screen digital form (same section labels, same order), but as
+  // plain filled-in text rather than input boxes — then rasterizes it with
+  // html2canvas and slices that into letter-size pages added to a jsPDF
+  // document as images (see the <script> tags near the top of <head>).
+  // Always rendered in fixed light colors regardless of the viewer's theme,
+  // since a PDF has no dark mode. Spans multiple pages if the ticket's
+  // content — a long description, many material rows — doesn't fit on one.
+  //
+  // Earlier version used jsPDF's own doc.html({autoPaging:'text', ...})
+  // instead of manual slicing, which turned out to have two real problems,
+  // both caught by rendering real test tickets in a real browser (this
+  // sandbox can't reach the jsPDF/html2canvas CDN itself to test locally —
+  // see the project status doc): (1) with html2canvas scale:2 it sometimes
+  // produced a spurious near-empty extra page even for a trivially short
+  // ticket, a known jsPDF quirk, not something wrong with the ticket's own
+  // content; (2) a naive manual height-based slice (no page-break logic at
+  // all) could cut a materials row or a field row exactly in half across a
+  // page boundary — nothing was lost (both halves are still on the two
+  // pages combined), but it looks broken. Fixed by measuring the live DOM
+  // first (see "atoms" below) and never letting a page cut land inside one
+  // of those elements — see generateTmTicketPdfDataUri().
+  function sanitizeForFilename(s) {
+    return String(s || '').replace(/[\\/:*?"<>|]/g, '').trim();
+  }
+
+  function buildTmTicketPdfFilename(t) {
+    var job = sanitizeForFilename(t.jobName) || 'Ticket';
+    var date = sanitizeForFilename(t.workDate);
+    return 'TM Ticket - ' + job + (date ? (' - ' + date) : '') + '.pdf';
+  }
+
+  function pdfSectionLabelHtml(text) {
+    return '<div style="background:#1E5631;color:#FFFFFF;font-family:Arial,sans-serif;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:0.05em;padding:6px 10px;border-radius:3px;margin:16px 0 8px;">' + escapeHtml(text) + '</div>';
+  }
+
+  function pdfFieldRowHtml(label, value) {
+    return '<div style="display:table;width:100%;table-layout:fixed;margin-bottom:5px;">' +
+      '<div style="display:table-cell;width:230px;font-family:Arial,sans-serif;font-size:10px;text-transform:uppercase;letter-spacing:0.03em;color:#666666;vertical-align:top;padding-right:10px;">' + escapeHtml(label) + '</div>' +
+      '<div style="display:table-cell;font-family:Arial,sans-serif;font-size:13px;color:#1A1A1A;vertical-align:top;white-space:pre-wrap;">' + (value ? escapeHtml(value) : '&nbsp;') + '</div>' +
+      '</div>';
+  }
+
+  // A flex-based "table" row rather than a real <table>/<tr> — so each row
+  // can carry the "pdf-atom" marker class on a plain, independently
+  // measurable block element (see generateTmTicketPdfDataUri()'s atom scan;
+  // measuring a <tr>'s own box works in a live browser too, but keeping
+  // header and body rows structurally identical here is simpler and avoids
+  // ever depending on table layout quirks under html2canvas).
+  function pdfMaterialsRowHtml(qty, size, desc, isHeader) {
+    var cellStyle = isHeader
+      ? 'font-size:10px;text-transform:uppercase;letter-spacing:0.03em;color:#666666;font-weight:700;'
+      : 'font-size:12px;color:#1A1A1A;';
+    return '<div class="pdf-atom" style="display:flex;border-bottom:1px solid ' + (isHeader ? '#CCCCCC' : '#EEEEEE') + ';padding:4px 6px;font-family:Arial,sans-serif;">' +
+      '<div style="width:60px;' + cellStyle + '">' + escapeHtml(qty) + '</div>' +
+      '<div style="width:90px;' + cellStyle + '">' + escapeHtml(size) + '</div>' +
+      '<div style="flex:1;' + cellStyle + '">' + escapeHtml(desc) + '</div>' +
+      '</div>';
+  }
+
+  function buildTmTicketPdfHtml(t, suppliersText, subcontractorsText, equipmentText) {
+    var h = [];
+    h.push('<div style="width:720px;padding:0 4px;font-family:Arial,sans-serif;color:#1A1A1A;background:#FFFFFF;">');
+    // "pdf-atom" below marks a block that must never be split across a page
+    // break (see generateTmTicketPdfDataUri()). Used here for the header and
+    // the two short, fixed-field sections, and per-row on the materials
+    // list below — not on the free-text sections (Description/Supplier/
+    // Sub Contractors/Equipment), where ordinary prose splitting across a
+    // page the way it would in any normal document is fine, and forcing
+    // those never to split would risk a single long description (up to
+    // 4000 characters) not fitting on any page at all.
+    h.push('<div class="pdf-atom">');
+    h.push('<div style="text-align:center;font-family:Arial,sans-serif;font-size:18px;font-weight:700;letter-spacing:0.03em;margin-bottom:2px;">FIELD TICKET / WORK SUMMARY</div>');
+    h.push('<div style="text-align:center;font-family:Arial,sans-serif;font-size:11px;color:#666666;margin-bottom:14px;">Plumcore Field Assignment Board</div>');
+    h.push('</div>');
+
+    h.push('<div class="pdf-atom">');
+    h.push(pdfSectionLabelHtml('Job Information'));
+    h.push(pdfFieldRowHtml('Customer / Job Name', t.jobName));
+    h.push(pdfFieldRowHtml('Address / Location', t.address));
+    h.push(pdfFieldRowHtml('Job / PO Number', t.jobPo));
+    h.push(pdfFieldRowHtml('Date', t.workDate));
+    h.push('</div>');
+
+    h.push('<div class="pdf-atom">');
+    h.push(pdfSectionLabelHtml('Crew & Time on Job'));
+    h.push(pdfFieldRowHtml('Names of Techs on Job', t.techs));
+    h.push(pdfFieldRowHtml('# of Men on Crew', t.crewSize));
+    h.push(pdfFieldRowHtml('Start Time', t.startTime));
+    h.push(pdfFieldRowHtml('End Time', t.endTime));
+    h.push('</div>');
+
+    h.push(pdfSectionLabelHtml('Description of Work Performed'));
+    h.push('<div style="font-family:Arial,sans-serif;font-size:13px;color:#1A1A1A;white-space:pre-wrap;line-height:1.4;">' + escapeHtml(t.workDescription || '(none entered)') + '</div>');
+
+    h.push(pdfSectionLabelHtml('Supplier (attach ticket if purchased)'));
+    h.push('<div style="font-family:Arial,sans-serif;font-size:13px;color:#1A1A1A;">' + escapeHtml(suppliersText) + '</div>');
+
+    h.push(pdfSectionLabelHtml('Sub Contractors'));
+    h.push('<div style="font-family:Arial,sans-serif;font-size:13px;color:#1A1A1A;">' + escapeHtml(subcontractorsText) + '</div>');
+
+    h.push(pdfSectionLabelHtml('Equipment Used'));
+    h.push('<div style="font-family:Arial,sans-serif;font-size:13px;color:#1A1A1A;">' + escapeHtml(equipmentText) + '</div>');
+
+    h.push(pdfSectionLabelHtml('Materials Used (From Stock)'));
+    if (t.materialsNone) {
+      h.push('<div class="pdf-atom" style="font-family:Arial,sans-serif;font-size:13px;color:#1A1A1A;">NONE / No material used from stock or truck</div>');
+    } else if (t.materials && t.materials.length) {
+      h.push(pdfMaterialsRowHtml('Qty', 'Size', 'Material Description', true));
+      t.materials.forEach(function (m) {
+        h.push(pdfMaterialsRowHtml(m.qty || '', m.size || '', m.description || '', false));
+      });
+    } else {
+      h.push('<div style="font-family:Arial,sans-serif;font-size:13px;color:#1A1A1A;">(none entered)</div>');
+    }
+
+    h.push('<div class="pdf-atom" style="margin-top:22px;padding-top:10px;border-top:1px solid #CCCCCC;font-family:Arial,sans-serif;font-size:11px;color:#666666;">Submitted by: ' + escapeHtml(t.submittedByEmail || '(unknown)') + '</div>');
+    h.push('</div>');
+    return h.join('');
+  }
+
+  // Renders buildTmTicketPdfHtml() off-screen, rasterizes it once with
+  // html2canvas, then slices that single tall canvas into letter-page-size
+  // images added to a jsPDF document — rather than using jsPDF's own
+  // doc.html() auto-pager, which (see the comment above this section) both
+  // mis-measured page breaks and had no way to avoid cutting through a row.
+  // PDF_SCALE/PDF_JPEG_QUALITY were picked by testing real generated
+  // tickets: scale 2 (crisper text) pushed even a one-page ticket to ~1MB+
+  // (PNG) or several hundred KB (JPEG) — too large for an email attachment
+  // on a free EmailJS/mailbox plan for no visible benefit at email/print
+  // size; 1.5 + JPEG 0.9 reads cleanly and keeps a typical ticket under
+  // ~150KB (a 2-page, 25-material-row stress-tested ticket came to ~450KB).
+  // Resolves to a data: URI string (the whole PDF, base64-encoded) ready to
+  // hand to EmailJS as a Variable Attachment template param. Rejects (never
+  // throws synchronously) if the PDF libraries didn't load or rendering
+  // fails — callers should treat that as "no attachment this time" rather
+  // than blocking the ticket itself from saving/emailing (see sendTmTicket()).
+  var PDF_SCALE = 1.5;
+  var PDF_JPEG_QUALITY = 0.9;
+  var PDF_MARGIN_PT = 36;
+
+  function generateTmTicketPdfDataUri(t, suppliersText, subcontractorsText, equipmentText) {
+    return new Promise(function (resolve, reject) {
+      if (!window.jspdf || !window.jspdf.jsPDF || !window.html2canvas) {
+        reject(new Error('PDF libraries (jsPDF/html2canvas) not loaded'));
+        return;
+      }
+      var container = document.createElement('div');
+      container.style.position = 'fixed';
+      container.style.left = '-10000px';
+      container.style.top = '0';
+      container.style.zIndex = '-1';
+      container.innerHTML = buildTmTicketPdfHtml(t, suppliersText, subcontractorsText, equipmentText);
+      document.body.appendChild(container);
+
+      function cleanup() {
+        if (container.parentNode) container.parentNode.removeChild(container);
+      }
+
+      // Measured from the live DOM (in CSS px, relative to the container's
+      // own top) BEFORE rasterizing — html2canvas's output canvas has no
+      // concept of "this div's box ends here", only pixels, so this is the
+      // one point where that boundary information still exists. Converted
+      // to canvas-px by the same PDF_SCALE html2canvas is about to render
+      // at, since html2canvas scales 1:1 from CSS px.
+      var containerRect = container.getBoundingClientRect();
+      var atoms = [];
+      var atomEls = container.querySelectorAll('.pdf-atom');
+      for (var i = 0; i < atomEls.length; i++) {
+        var r = atomEls[i].getBoundingClientRect();
+        atoms.push({ top: (r.top - containerRect.top) * PDF_SCALE, bottom: (r.bottom - containerRect.top) * PDF_SCALE });
+      }
+
+      window.html2canvas(container, { scale: PDF_SCALE, useCORS: true }).then(function (sourceCanvas) {
+        cleanup();
+        try {
+          var doc = new window.jspdf.jsPDF({ unit: 'pt', format: 'letter' });
+          var contentWidthPt = doc.internal.pageSize.getWidth() - PDF_MARGIN_PT * 2;
+          var contentHeightPt = doc.internal.pageSize.getHeight() - PDF_MARGIN_PT * 2;
+          var pxPerPt = sourceCanvas.width / contentWidthPt;
+          var idealSliceHeightPx = Math.floor(contentHeightPt * pxPerPt);
+          var totalHeightPx = sourceCanvas.height;
+          var offsetPx = 0;
+          var first = true;
+          while (offsetPx < totalHeightPx) {
+            var idealCut = Math.min(offsetPx + idealSliceHeightPx, totalHeightPx);
+            // If the natural page-height cut would land inside an atom,
+            // move the cut up to that atom's top instead, pushing the
+            // whole atom onto the next page rather than slicing through
+            // it. Falls back to the natural cut if an atom is somehow
+            // taller than a whole page (atoms.top <= offsetPx) — somewhat
+            // pathological (would need an enormous number of materials
+            // rows bundled as one atom, which they're not; each row is its
+            // own atom), but better a rare mid-atom split than an infinite
+            // loop or a stuck zero-progress page.
+            var actualCut = idealCut;
+            if (idealCut < totalHeightPx) {
+              for (var a = 0; a < atoms.length; a++) {
+                if (atoms[a].top < idealCut && idealCut < atoms[a].bottom && atoms[a].top > offsetPx) {
+                  actualCut = atoms[a].top;
+                  break;
+                }
+              }
+            }
+            var thisSliceHeightPx = actualCut - offsetPx;
+            if (thisSliceHeightPx <= 0) thisSliceHeightPx = idealCut - offsetPx;
+            var sliceCanvas = document.createElement('canvas');
+            sliceCanvas.width = sourceCanvas.width;
+            sliceCanvas.height = thisSliceHeightPx;
+            var ctx = sliceCanvas.getContext('2d');
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(0, 0, sliceCanvas.width, sliceCanvas.height);
+            ctx.drawImage(sourceCanvas, 0, offsetPx, sourceCanvas.width, thisSliceHeightPx, 0, 0, sourceCanvas.width, thisSliceHeightPx);
+            var sliceDataUrl = sliceCanvas.toDataURL('image/jpeg', PDF_JPEG_QUALITY);
+            if (!first) doc.addPage();
+            doc.addImage(sliceDataUrl, 'JPEG', PDF_MARGIN_PT, PDF_MARGIN_PT, contentWidthPt, thisSliceHeightPx / pxPerPt);
+            offsetPx += thisSliceHeightPx;
+            first = false;
+          }
+          // jsPDF's own output('datauristring') includes a ";filename=...;"
+          // segment EmailJS's own docs/examples (built around canvas's
+          // plain toDataURL()) don't show and don't need — stripped here so
+          // what's handed to EmailJS is a plain "data:application/pdf;
+          // base64,..." string, matching their documented format exactly.
+          var raw = doc.output('datauristring');
+          var marker = ';base64,';
+          var idx = raw.indexOf(marker);
+          resolve('data:application/pdf;base64,' + raw.slice(idx + marker.length));
+        } catch (e) {
+          reject(e);
+        }
+      }).catch(function (err) {
+        cleanup();
+        reject(err);
+      });
+    });
+  }
+
   function finishTmTicketSend(saved, emailed, warningMsg) {
     tmTicketSending = false;
     els.tmTicketSendBtn.disabled = false;
@@ -4836,6 +5101,11 @@ var TM_EMAILJS_RECIPIENT = 'jonathan@plumcore.com';
     els.tmTicketSendBtn.textContent = 'Sending…';
     setTmTicketStatus('', '');
 
+    var suppliersText = (payload.suppliers.length ? payload.suppliers.join(', ') : 'None') + (payload.supplierOther ? ('; Other: ' + payload.supplierOther) : '');
+    var subcontractorsText = (payload.subcontractors.length ? payload.subcontractors.join(', ') : 'None') + (payload.subcontractorOther ? ('; Other: ' + payload.subcontractorOther) : '');
+    var equipmentText = (payload.equipment.length ? payload.equipment.join(', ') : 'None') + (payload.equipmentOther ? ('; Other: ' + payload.equipmentOther) : '') + (payload.equipmentHours ? ('; Hours Used: ' + payload.equipmentHours) : '');
+    var materialsText = payload.materialsNone ? 'NONE / No material used from stock or truck' : (payload.materials.length ? payload.materials.map(function (m) { return (m.qty || '-') + ' x ' + (m.size || '-') + ' ' + (m.description || ''); }).join('\n') : '(none entered)');
+
     var saveDone = false;
     var savePromise;
     try {
@@ -4848,16 +5118,24 @@ var TM_EMAILJS_RECIPIENT = 'jonathan@plumcore.com';
       savePromise = Promise.resolve();
     }
 
-    savePromise.then(function () {
+    // Kicked off in parallel with the Firestore save (not chained after
+    // it) so building the PDF never adds to how long saving takes. If this
+    // fails for any reason (library didn't load, rendering error), pdfData
+    // just comes back null below and the ticket still saves/emails exactly
+    // as before — a PDF attachment is a nice-to-have, never a precondition
+    // for the ticket itself going through.
+    var pdfPromise = generateTmTicketPdfDataUri(payload, suppliersText, subcontractorsText, equipmentText).catch(function (err) {
+      console.error('T&M ticket PDF generation failed — sending without an attachment', err);
+      return null;
+    });
+
+    Promise.all([savePromise, pdfPromise]).then(function (results) {
+      var pdfDataUri = results[1];
       var configured = TM_EMAILJS_PUBLIC_KEY && TM_EMAILJS_SERVICE_ID && TM_EMAILJS_TEMPLATE_ID && window.emailjs;
       if (!configured) {
         finishTmTicketSend(saveDone, false, 'Email sending isn\'t set up yet — ask your admin to finish connecting it (see the code comment near TM_EMAILJS_PUBLIC_KEY for the steps).');
         return;
       }
-      var suppliersText = (payload.suppliers.length ? payload.suppliers.join(', ') : 'None') + (payload.supplierOther ? ('; Other: ' + payload.supplierOther) : '');
-      var subcontractorsText = (payload.subcontractors.length ? payload.subcontractors.join(', ') : 'None') + (payload.subcontractorOther ? ('; Other: ' + payload.subcontractorOther) : '');
-      var equipmentText = (payload.equipment.length ? payload.equipment.join(', ') : 'None') + (payload.equipmentOther ? ('; Other: ' + payload.equipmentOther) : '') + (payload.equipmentHours ? ('; Hours Used: ' + payload.equipmentHours) : '');
-      var materialsText = payload.materialsNone ? 'NONE / No material used from stock or truck' : (payload.materials.length ? payload.materials.map(function (m) { return (m.qty || '-') + ' x ' + (m.size || '-') + ' ' + (m.description || ''); }).join('\n') : '(none entered)');
       var templateParams = {
         to_email: TM_EMAILJS_RECIPIENT,
         job_name: payload.jobName,
@@ -4876,6 +5154,15 @@ var TM_EMAILJS_RECIPIENT = 'jonathan@plumcore.com';
         submitted_by: payload.submittedByEmail,
         full_ticket_text: formatTmTicketPlainText(payload)
       };
+      // ticket_pdf/ticket_filename back the template's "Variable Attachment"
+      // (EmailJS dashboard > this template > Attachments tab — parameter
+      // name "ticket_pdf", content type application/pdf, filename set to
+      // the dynamic {{ticket_filename}}). Left out entirely when PDF
+      // generation failed, rather than sent empty.
+      if (pdfDataUri) {
+        templateParams.ticket_pdf = pdfDataUri;
+        templateParams.ticket_filename = buildTmTicketPdfFilename(payload);
+      }
       window.emailjs.send(TM_EMAILJS_SERVICE_ID, TM_EMAILJS_TEMPLATE_ID, templateParams, TM_EMAILJS_PUBLIC_KEY).then(function () {
         finishTmTicketSend(saveDone, true, '');
       }).catch(function (err) {
