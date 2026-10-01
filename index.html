@@ -2329,9 +2329,13 @@ var firebaseAuth = getAuth(firebaseApp);
 //   4. In EmailJS, go to Account > General to find your Public Key.
 //   5. Paste all three below and send me the updated file (or tell
 //      Claude the three values and it'll be pushed live).
-var TM_EMAILJS_PUBLIC_KEY = '';
-var TM_EMAILJS_SERVICE_ID = '';
-var TM_EMAILJS_TEMPLATE_ID = '';
+//
+// Connected 2026-10-01: Outlook service (schedule@plumcore.com, the "From"
+// address), template "T&M Field Ticket" (body uses {{full_ticket_text}},
+// "To email" set to {{to_email}} per step 3 above).
+var TM_EMAILJS_PUBLIC_KEY = 'Sq4SfnwJSCvyGlVB_';
+var TM_EMAILJS_SERVICE_ID = 'service_1o4zk4d';
+var TM_EMAILJS_TEMPLATE_ID = 'template_uxlyxe8';
 // Where submitted T&M tickets are emailed to. Change this one line (and
 // ask Claude to push it, or edit + push it yourself) any time the
 // recipient needs to change — as long as the EmailJS template's "To
