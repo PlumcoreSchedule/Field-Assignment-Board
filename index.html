@@ -1736,8 +1736,6 @@
     width: 100%;
     min-width: 0;
   }
-  .tm-page-nav { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding-top: 8px; }
-  .tm-page-indicator { font-size: var(--text-xs); color: var(--color-ink-muted); text-align: center; }
   .tm-send-row { display: flex; justify-content: flex-end; gap: 10px; padding-top: 12px; border-top: 1px solid var(--color-border); }
   .tm-status-msg { font-size: var(--text-sm); padding: 8px 10px; border-radius: var(--radius-sm); background: var(--color-surface-alt); }
   .tm-status-msg[hidden] { display: none; }
@@ -2171,7 +2169,7 @@
   </div>
   <div id="tmTicketStatusMsg" class="tm-status-msg" hidden style="max-width:900px;margin:12px auto 0;"></div>
 
-  <div id="tmTicketPage1" class="tm-ticket-page">
+  <div id="tmTicketForm" class="tm-ticket-page">
     <span class="tm-ticket-section-label">Job Information</span>
     <div class="calendar-field-grid">
       <div class="calendar-field span-2"><span class="calendar-field-label">Customer / Job Name</span><input type="text" id="tmJobName" maxlength="120" /></div>
@@ -2231,25 +2229,13 @@
       <label style="margin-left:14px;">Hours Used:</label><input type="text" id="tmEquipmentHours" maxlength="20" style="flex:0 1 100px;" />
     </div>
 
-    <div class="tm-page-nav">
-      <span></span>
-      <button type="button" id="tmTicketNextBtn" class="btn btn-sm btn-primary">Continue to Materials (Page 2) ›</button>
-    </div>
-    <div class="tm-page-indicator">Page 1 of 2</div>
-  </div>
-
-  <div id="tmTicketPage2" class="tm-ticket-page" hidden>
     <span class="tm-ticket-section-label">Materials Used (From Stock)</span>
     <label class="tm-checkbox-item"><input type="checkbox" id="tmMaterialsNone" /> NONE / No material used from stock or truck</label>
     <div class="tm-materials-table">
       <div class="tm-materials-head"><span>Qty</span><span>Size</span><span>Material Description</span></div>
       <div id="tmMaterialsRows"></div>
     </div>
-    <div class="tm-page-nav">
-      <button type="button" id="tmTicketBackToPage1Btn" class="btn btn-sm">‹ Back to Page 1</button>
-      <span></span>
-    </div>
-    <div class="tm-page-indicator">Page 2 of 2</div>
+
     <div class="tm-send-row">
       <button type="button" id="tmTicketSendBtn" class="btn btn-primary">Send Ticket</button>
     </div>
@@ -2380,7 +2366,6 @@ var TM_EMAILJS_RECIPIENT = 'jonathan@plumcore.com';
   var isAdminUser = false;
   var PLUMCORE_EMAIL_RE = /^[^\s@]+@plumcore\.com$/i;
   var tmTicketOpen = false;
-  var tmTicketPage = 1;
   var tmTicketSending = false;
   var tmTicketLogOpen = false;
   var TM_MATERIALS_ROW_COUNT = 20;
@@ -4653,8 +4638,10 @@ var TM_EMAILJS_RECIPIENT = 'jonathan@plumcore.com';
   }
 
   // ---------------- T&M field ticket (added 2026-09-29) ----------------
-  // A fillable, two-page digital version of the paper "Field Ticket / Work
-  // Summary" (see status doc for the request this came from). Anyone
+  // A fillable digital version of the paper "Field Ticket / Work Summary"
+  // (see status doc for the request this came from) — one continuous
+  // scrolling form (changed 2026-10-01 from an earlier two-page design;
+  // see status doc) ending in the Send Ticket button at the bottom. Anyone
   // signed in can open it and fill one out — it is NOT gated on canEdit,
   // since this is a brand-new ticket every time, not existing
   // schedule/project data. Deliberately does not read/write any of the
@@ -4664,7 +4651,6 @@ var TM_EMAILJS_RECIPIENT = 'jonathan@plumcore.com';
   // existing schedule/project data no matter what happens to it.
   function openTmTicketView() {
     tmTicketOpen = true;
-    tmTicketPage = 1;
     resetTmTicketForm();
     setTmTicketStatus('', '');
     els.tmTicketViewLogBtn.hidden = !canEdit;
@@ -4677,10 +4663,7 @@ var TM_EMAILJS_RECIPIENT = 'jonathan@plumcore.com';
     els.tmTicketOverlay.hidden = true;
   }
 
-  function goToTmTicketPage(pageNum) {
-    tmTicketPage = pageNum;
-    els.tmTicketPage1.hidden = pageNum !== 1;
-    els.tmTicketPage2.hidden = pageNum !== 2;
+  function scrollTmTicketToTop() {
     els.tmTicketOverlay.scrollTop = 0;
   }
 
@@ -4698,7 +4681,7 @@ var TM_EMAILJS_RECIPIENT = 'jonathan@plumcore.com';
     var noneBox = q('tmMaterialsNone');
     if (noneBox) noneBox.checked = false;
     renderTmMaterialsRows();
-    goToTmTicketPage(1);
+    scrollTmTicketToTop();
   }
 
   function renderTmMaterialsRows() {
@@ -4835,8 +4818,10 @@ var TM_EMAILJS_RECIPIENT = 'jonathan@plumcore.com';
     if (tmTicketSending) return;
     var payload = buildTmTicketPayload();
     if (!payload.jobName || !payload.workDate) {
-      setTmTicketStatus('error', 'Please fill in at least the Customer/Job Name and Date (Page 1) before sending.');
-      goToTmTicketPage(1);
+      setTmTicketStatus('error', 'Please fill in at least the Customer/Job Name and Date before sending.');
+      scrollTmTicketToTop();
+      var missingField = !payload.jobName ? q('tmJobName') : q('tmDate');
+      if (missingField) missingField.focus();
       return;
     }
     tmTicketSending = true;
@@ -5029,15 +5014,6 @@ var TM_EMAILJS_RECIPIENT = 'jonathan@plumcore.com';
     els.tmTicketBtn.addEventListener('click', openTmTicketView);
     els.tmTicketBackBtn.addEventListener('click', closeTmTicketView);
     els.tmTicketViewLogBtn.addEventListener('click', openTmTicketLogView);
-    els.tmTicketNextBtn.addEventListener('click', function () {
-      if (!q('tmJobName').value.trim() || !q('tmDate').value) {
-        setTmTicketStatus('error', 'Please fill in at least the Customer/Job Name and Date before continuing.');
-        return;
-      }
-      setTmTicketStatus('', '');
-      goToTmTicketPage(2);
-    });
-    els.tmTicketBackToPage1Btn.addEventListener('click', function () { goToTmTicketPage(1); });
     els.tmTicketSendBtn.addEventListener('click', sendTmTicket);
     els.tmTicketLogBackBtn.addEventListener('click', closeTmTicketLogView);
     els.tmTicketLogRefreshBtn.addEventListener('click', loadTmTicketLog);
@@ -5130,10 +5106,6 @@ var TM_EMAILJS_RECIPIENT = 'jonathan@plumcore.com';
     els.tmTicketBackBtn = q('tmTicketBackBtn');
     els.tmTicketViewLogBtn = q('tmTicketViewLogBtn');
     els.tmTicketStatusMsg = q('tmTicketStatusMsg');
-    els.tmTicketPage1 = q('tmTicketPage1');
-    els.tmTicketPage2 = q('tmTicketPage2');
-    els.tmTicketNextBtn = q('tmTicketNextBtn');
-    els.tmTicketBackToPage1Btn = q('tmTicketBackToPage1Btn');
     els.tmTicketSendBtn = q('tmTicketSendBtn');
     els.tmMaterialsRows = q('tmMaterialsRows');
     els.tmTicketLogOverlay = q('tmTicketLogOverlay');
