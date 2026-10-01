@@ -1532,29 +1532,13 @@
     border-color: #2FBE71;
   }
   /* A day can in principle be marked both Off and Holiday at once (the two
-     buttons toggle independently - see the day editor below). Without this,
-     Holiday's green would win and hide the Off state - in light mode just
-     from source order, but in dark mode the .is-holiday dark-theme rules
-     above are MORE specific ([data-theme="dark"] + two classes) than a
-     plain .is-off.is-holiday rule would be, so dark mode needs its own
-     equally-specific override too, not just one rule placed last. Off (the
-     more operationally important status - nobody's on the job that day)
-     always wins the box color when both are set, in both themes. */
-  .calendar-day-cell.is-off.is-holiday {
-    background: var(--color-danger-soft);
-    border-color: var(--color-danger);
-  }
-  .calendar-day-cell.is-off.is-holiday:hover { border-color: var(--color-danger); }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) .calendar-day-cell.is-off.is-holiday {
-      background: var(--color-danger-soft);
-      border-color: var(--color-danger);
-    }
-  }
-  :root[data-theme="dark"] .calendar-day-cell.is-off.is-holiday {
-    background: var(--color-danger-soft);
-    border-color: var(--color-danger);
-  }
+     buttons toggle independently - see the day editor below). Holiday means
+     the company is closed that day, which supersedes an individual being
+     marked Off, so Holiday's green is meant to win the box color whenever
+     both are set - no extra rule needed for that: in light mode source
+     order already does it (this .is-holiday block comes after .is-off
+     above), and in dark mode the dark-theme .is-holiday rules just above
+     are more specific than the plain .is-off rule, so they win there too. */
   .calendar-holiday-btn {
     flex: none;
     font-family: var(--font-body);
