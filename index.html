@@ -12,8 +12,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Public+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@600&display=swap">
 <!-- EmailJS browser SDK, used only by the T&M field ticket's "Send Ticket"
-     button (2026-09-29) to email a submitted ticket to schedule@plumcore.com
-     with no backend server of our own. Loaded as a classic (non-module)
+     button (2026-09-29) to email a submitted ticket to whichever address
+     TM_EMAILJS_RECIPIENT below is set to, with no backend server of our
+     own. Loaded as a classic (non-module)
      script so it sets the global `window.emailjs`; the app's own module
      script checks for it and the TM_EMAILJS_* keys below before trying to
      send, and degrades to "saved only" if either is missing. -->
@@ -2293,23 +2294,31 @@ var firestoreDb = getFirestore(firebaseApp);
 var firebaseAuth = getAuth(firebaseApp);
 
 // ---------------------------------------------------------------
-// T&M FIELD TICKET — EMAIL SETUP (added 2026-09-29)
+// T&M FIELD TICKET — EMAIL SETUP (added 2026-09-29, recipient set 2026-10-01)
 // The "Send Ticket" button on the T&M field ticket emails a submitted
-// ticket to schedule@plumcore.com using EmailJS (emailjs.com), a
+// ticket to TM_EMAILJS_RECIPIENT below using EmailJS (emailjs.com), a
 // third-party service that can send email straight from the browser
 // with no server of our own. This app has no way to sign up for that
 // service on its own — Jonathan needs to create the (free) account
-// himself and paste the three values below in. Until all three are
-// filled in, the Send button still saves the ticket (see the tmTickets
-// log) but shows "email sending isn't set up yet" instead of emailing it.
+// himself and paste the three ID/key values below in. Until all three
+// are filled in, the Send button still saves the ticket (see the
+// tmTickets log) but shows "email sending isn't set up yet" instead of
+// emailing it.
 //
 // To finish setup:
 //   1. Go to https://www.emailjs.com and sign up (free tier is enough).
-//   2. Add an Email Service (e.g. connect a Gmail account) — this gives
-//      you a Service ID.
-//   3. Create an Email Template. Set its "To email" to
-//      schedule@plumcore.com. In the template body, use these variables
-//      (EmailJS inserts the matching field automatically):
+//   2. Add an Email Service (e.g. connect a Gmail account — this can be
+//      any mailbox Jonathan controls, not necessarily his own personal
+//      one; its address is what recipients will see as the "From") —
+//      this gives you a Service ID.
+//   3. Create an Email Template. Set its "To email" field to the
+//      dynamic placeholder {{to_email}} (NOT a fixed address typed
+//      directly into that field) — this makes TM_EMAILJS_RECIPIENT
+//      below the single place that controls where tickets go, so
+//      changing the recipient later is just a one-line code change,
+//      never something that needs editing on EmailJS's site. In the
+//      template body, use these variables (EmailJS inserts the
+//      matching field automatically):
 //        {{job_name}} {{address}} {{job_po}} {{work_date}} {{techs}}
 //        {{crew_size}} {{start_time}} {{end_time}} {{work_description}}
 //        {{suppliers}} {{subcontractors}} {{equipment}} {{materials}}
@@ -2323,6 +2332,12 @@ var firebaseAuth = getAuth(firebaseApp);
 var TM_EMAILJS_PUBLIC_KEY = '';
 var TM_EMAILJS_SERVICE_ID = '';
 var TM_EMAILJS_TEMPLATE_ID = '';
+// Where submitted T&M tickets are emailed to. Change this one line (and
+// ask Claude to push it, or edit + push it yourself) any time the
+// recipient needs to change — as long as the EmailJS template's "To
+// email" field is set to {{to_email}} per step 3 above, nothing on
+// EmailJS's own site ever needs to be touched for a recipient change.
+var TM_EMAILJS_RECIPIENT = 'jonathan@plumcore.com';
 
 (function () {
   'use strict';
@@ -4803,7 +4818,7 @@ var TM_EMAILJS_TEMPLATE_ID = '';
     els.tmTicketSendBtn.disabled = false;
     els.tmTicketSendBtn.textContent = 'Send Ticket';
     if (emailed) {
-      setTmTicketStatus('success', 'Ticket sent to schedule@plumcore.com' + (saved ? ' and saved.' : '.'));
+      setTmTicketStatus('success', 'Ticket sent to ' + TM_EMAILJS_RECIPIENT + (saved ? ' and saved.' : '.'));
       resetTmTicketForm();
     } else if (saved) {
       setTmTicketStatus('error', 'Ticket saved. ' + (warningMsg || ''));
@@ -4848,7 +4863,7 @@ var TM_EMAILJS_TEMPLATE_ID = '';
       var equipmentText = (payload.equipment.length ? payload.equipment.join(', ') : 'None') + (payload.equipmentOther ? ('; Other: ' + payload.equipmentOther) : '') + (payload.equipmentHours ? ('; Hours Used: ' + payload.equipmentHours) : '');
       var materialsText = payload.materialsNone ? 'NONE / No material used from stock or truck' : (payload.materials.length ? payload.materials.map(function (m) { return (m.qty || '-') + ' x ' + (m.size || '-') + ' ' + (m.description || ''); }).join('\n') : '(none entered)');
       var templateParams = {
-        to_email: 'schedule@plumcore.com',
+        to_email: TM_EMAILJS_RECIPIENT,
         job_name: payload.jobName,
         address: payload.address,
         job_po: payload.jobPo,
