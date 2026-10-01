@@ -1145,19 +1145,18 @@
   .calendar-day-cell.is-other-month { opacity: 0.45; }
   .calendar-day-cell.is-today { outline: 2px solid var(--color-focus); outline-offset: -2px; }
   .calendar-day-cell.is-selected { border-color: var(--color-accent); border-width: 2px; }
-  /* Marked "off" (job foreman not at work): a red X drawn corner-to-corner
-     over the day box (var(--color-danger) so it stays visible against the
-     dark-mode background too, instead of a fixed black). */
-  .calendar-day-cell.is-off::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    border-radius: inherit;
-    background:
-      linear-gradient(to bottom right, transparent calc(50% - 1.5px), var(--color-danger) calc(50% - 1.5px), var(--color-danger) calc(50% + 1.5px), transparent calc(50% + 1.5px)),
-      linear-gradient(to bottom left, transparent calc(50% - 1.5px), var(--color-danger) calc(50% - 1.5px), var(--color-danger) calc(50% + 1.5px), transparent calc(50% + 1.5px));
+  /* Marked "off" (job foreman not at work): the whole day box is
+     highlighted red, the same way "holiday" highlights it green below
+     (changed 2026-10-01 from an earlier red-X-over-the-box design).
+     --color-danger/--color-danger-soft already carry their own
+     light/dark values (see the :root blocks near the top of this file),
+     so no separate dark-mode override is needed here the way the
+     holiday block below needs one for its fixed hex colors. */
+  .calendar-day-cell.is-off {
+    background: var(--color-danger-soft);
+    border-color: var(--color-danger);
   }
+  .calendar-day-cell.is-off:hover { border-color: var(--color-danger); }
   .calendar-day-number {
     font-family: var(--font-mono);
     font-size: var(--text-sm);
@@ -1531,6 +1530,30 @@
   :root[data-theme="dark"] .calendar-day-cell.is-holiday {
     background: #163B24;
     border-color: #2FBE71;
+  }
+  /* A day can in principle be marked both Off and Holiday at once (the two
+     buttons toggle independently - see the day editor below). Without this,
+     Holiday's green would win and hide the Off state - in light mode just
+     from source order, but in dark mode the .is-holiday dark-theme rules
+     above are MORE specific ([data-theme="dark"] + two classes) than a
+     plain .is-off.is-holiday rule would be, so dark mode needs its own
+     equally-specific override too, not just one rule placed last. Off (the
+     more operationally important status - nobody's on the job that day)
+     always wins the box color when both are set, in both themes. */
+  .calendar-day-cell.is-off.is-holiday {
+    background: var(--color-danger-soft);
+    border-color: var(--color-danger);
+  }
+  .calendar-day-cell.is-off.is-holiday:hover { border-color: var(--color-danger); }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .calendar-day-cell.is-off.is-holiday {
+      background: var(--color-danger-soft);
+      border-color: var(--color-danger);
+    }
+  }
+  :root[data-theme="dark"] .calendar-day-cell.is-off.is-holiday {
+    background: var(--color-danger-soft);
+    border-color: var(--color-danger);
   }
   .calendar-holiday-btn {
     flex: none;
