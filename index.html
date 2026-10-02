@@ -1633,15 +1633,37 @@
   }
   .calendar-holiday-icon {
     display: inline-block;
-    font-size: 12px;
+    /* 3x the original 12px (added 2026-10-02, Jonathan: "lets make the
+       holiday animations three time larger") - bumped straight to 36px
+       rather than scaling the element with `transform: scale(3)`, so the
+       emoji is rendered at its larger size natively (crisper) instead of
+       stretched, and so `flex`/line-height-driven layout around it (the
+       .calendar-day-holiday row, the day cell's flex column) sizes
+       correctly off its real box instead of a visually-scaled one that
+       layout still thinks is 12px. Safe in both calendars this is shared
+       with: the per-person Schedule grid's cell has a flexible
+       `.calendar-day-entries` wrapper below it that simply yields the
+       extra space (never clips - see that wrapper's own comment), and the
+       Combined Calendar's cell has no fixed height at all (grows via
+       min-height), so a taller icon just grows the box there instead of
+       being cut off either way. */
+    font-size: 36px;
     line-height: 1;
     flex: none;
   }
+  /* The two glow-based animations' blur radii below are scaled 3x along
+     with the icon (2px/4px -> 6px/12px, 1px/2px -> 3px/6px, 4px/7px ->
+     12px/21px) so the glow halo stays proportional to the now-3x-larger
+     icon instead of looking like a thin ring around a big emoji. The
+     turkey-gobble/fireworks-burst animations below need no equivalent
+     change - they're driven entirely by unitless `scale()`/`rotate()`,
+     which already move 3x as many actual pixels now that the icon
+     they're animating is 3x bigger, with zero extra CSS needed. */
   @keyframes holiday-xmas-blink {
-    0%, 100% { text-shadow: 0 0 2px #2ecc71, 0 0 4px #2ecc71; }
-    25% { text-shadow: 0 0 2px #e74c3c, 0 0 4px #e74c3c; }
-    50% { text-shadow: 0 0 2px #f1c40f, 0 0 4px #f1c40f; }
-    75% { text-shadow: 0 0 2px #3498db, 0 0 4px #3498db; }
+    0%, 100% { text-shadow: 0 0 6px #2ecc71, 0 0 12px #2ecc71; }
+    25% { text-shadow: 0 0 6px #e74c3c, 0 0 12px #e74c3c; }
+    50% { text-shadow: 0 0 6px #f1c40f, 0 0 12px #f1c40f; }
+    75% { text-shadow: 0 0 6px #3498db, 0 0 12px #3498db; }
   }
   .calendar-holiday-christmas .calendar-holiday-icon {
     animation: holiday-xmas-blink 2s steps(1, end) infinite;
@@ -1665,8 +1687,8 @@
     animation: holiday-fireworks-burst 1.1s ease-in-out infinite;
   }
   @keyframes holiday-pumpkin-glow {
-    0%, 100% { filter: drop-shadow(0 0 1px #ff9d1f) drop-shadow(0 0 2px #ff7300); }
-    50% { filter: drop-shadow(0 0 4px #ffb347) drop-shadow(0 0 7px #ff8c00); }
+    0%, 100% { filter: drop-shadow(0 0 3px #ff9d1f) drop-shadow(0 0 6px #ff7300); }
+    50% { filter: drop-shadow(0 0 12px #ffb347) drop-shadow(0 0 21px #ff8c00); }
   }
   .calendar-holiday-halloween .calendar-holiday-icon {
     animation: holiday-pumpkin-glow 1.8s ease-in-out infinite;
