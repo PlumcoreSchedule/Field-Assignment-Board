@@ -1258,6 +1258,34 @@
     overflow-y: auto;
   }
 
+  /* Admin-only "has a Comment" indicator (added 2026-10-02) - Jonathan:
+     "when a comment does occur, i want the number only from that task
+     shown in the calendar dates box in the top right corner in red...
+     the red number badge should coincide with the task it was entered
+     in." So this shows just the task number(s) (1/2/3) that have a
+     Comment filled in on that day - e.g. "2", or "1,3" if more than one
+     - never the comment text itself (the Comment box itself is already
+     admin-only; this badge is rendered only when canEdit is true, see
+     the JS in renderCalendarGrid). Absolutely positioned against
+     .calendar-day-cell's `position: relative` so it never affects the
+     flex layout/locked height of the box, and sits over the already-
+     reserved padding, not over the day number (which is centered, not
+     top-right). --color-danger matches the existing "day off" red used
+     elsewhere on this calendar for visual consistency.
+     pointer-events: none keeps it from intercepting clicks meant for
+     the day cell button underneath it. */
+  .calendar-day-comment-badge {
+    position: absolute;
+    top: 4px;
+    right: 5px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--color-danger);
+    pointer-events: none;
+  }
+
   /* ---------- Combined Calendar (view-only - click a day to see every
      schedule tab's entries for it combined together; no editing happens
      here, that still only happens on each person's own Schedule tab) ---------- */
@@ -3371,6 +3399,26 @@ var TM_EMAILJS_RECIPIENT_LABEL = 'Plumcore.com';
         num.className = 'calendar-day-number';
         num.textContent = String(date.getDate());
         cell.appendChild(num);
+
+        // Admin-only "has a Comment" badge - top-right corner, red, shows
+        // just the task number(s) (1/2/3) whose Comment box is filled in
+        // on this day (e.g. "2", or "1,3"), never the comment text itself.
+        // Gated on canEdit (the same admin flag that gates the editable
+        // form) since the Comment box itself is admin-only - see the CSS
+        // comment on .calendar-day-comment-badge for the full rationale.
+        if (canEdit && entry) {
+          var commentTaskNums = [];
+          if (entry.comment) commentTaskNums.push('1');
+          if (entry.task2 && entry.task2.comment) commentTaskNums.push('2');
+          if (entry.task3 && entry.task3.comment) commentTaskNums.push('3');
+          if (commentTaskNums.length) {
+            var commentBadge = document.createElement('span');
+            commentBadge.className = 'calendar-day-comment-badge';
+            commentBadge.textContent = commentTaskNums.join(',');
+            commentBadge.setAttribute('aria-hidden', 'true');
+            cell.appendChild(commentBadge);
+          }
+        }
 
         // US holiday label — computed from the date itself, shown on every
         // calendar automatically, never stored. Four holidays also get a
