@@ -2374,6 +2374,12 @@ var TM_EMAILJS_TEMPLATE_ID = 'template_uxlyxe8';
 // email" field is set to {{to_email}} per step 3 above, nothing on
 // EmailJS's own site ever needs to be touched for a recipient change.
 var TM_EMAILJS_RECIPIENT = 'jonathan@plumcore.com';
+// What the on-screen "Ticket sent to ..." success message shows an employee
+// after they submit a ticket — deliberately NOT the same as the actual
+// address above, so the confirmation reads as "sent to the company" rather
+// than exposing a specific person's inbox. Update this alongside
+// TM_EMAILJS_RECIPIENT if the displayed label should ever change too.
+var TM_EMAILJS_RECIPIENT_LABEL = 'Plumcore.com';
 
 (function () {
   'use strict';
@@ -5090,7 +5096,7 @@ var TM_EMAILJS_RECIPIENT = 'jonathan@plumcore.com';
     els.tmTicketSendBtn.disabled = false;
     els.tmTicketSendBtn.textContent = 'Send Ticket';
     if (emailed) {
-      setTmTicketStatus('success', 'Ticket sent to ' + TM_EMAILJS_RECIPIENT + (saved ? ' and saved.' : '.'));
+      setTmTicketStatus('success', 'Ticket sent to ' + TM_EMAILJS_RECIPIENT_LABEL + (saved ? ' and saved.' : '.'));
       resetTmTicketForm();
     } else if (saved) {
       setTmTicketStatus('error', 'Ticket saved. ' + (warningMsg || ''));
