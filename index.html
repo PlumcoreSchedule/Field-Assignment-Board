@@ -2589,6 +2589,9 @@ var TM_EMAILJS_RECIPIENT_LABEL = 'Plumcore.com';
         contractor: typeof t.contractor === 'string' ? t.contractor : '',
         superintendent: typeof t.superintendent === 'string' ? t.superintendent : '',
         superintendentPhone: typeof t.superintendentPhone === 'string' ? t.superintendentPhone : '',
+        // Short free-text note per task (added 2026-10-02, ~50 chars) —
+        // see the matching note in saveScheduleEntry's sanitizeTask below.
+        comment: typeof t.comment === 'string' ? t.comment : '',
         // Task 2/3's own independent color (added 2026-09-29 — each task
         // now gets its own admin-settable color, separate from Task 1's).
         // Harmless when this runs on Task 1's own flat fields too (via the
@@ -3062,13 +3065,18 @@ var TM_EMAILJS_RECIPIENT_LABEL = 'Plumcore.com';
         contractor: (t.contractor || '').trim().slice(0, 60),
         superintendent: (t.superintendent || '').trim().slice(0, 60),
         superintendentPhone: (t.superintendentPhone || '').trim().slice(0, 20),
+        // Short free-text note per task (added 2026-10-02) — Jonathan asked
+        // for "a 'Comment' box for around 50 characters" at the bottom of
+        // each Task 1/2/3 pane; 50 is used as a hard cap here, mirroring
+        // the trim/slice pattern every other field already uses.
+        comment: (t.comment || '').trim().slice(0, 50),
         // Task 2/3's own independent color (2026-09-29) — see the matching
         // note in cloneDayMap's sanitizeTask above.
         color: DAY_COLOR_KEYS.indexOf(t.color) !== -1 ? t.color : ''
       };
     }
     function taskHasData(t) {
-      return !!(t.jobName || t.po || t.address || t.stage || t.pm || t.contractor || t.superintendent || t.superintendentPhone || t.color);
+      return !!(t.jobName || t.po || t.address || t.stage || t.pm || t.contractor || t.superintendent || t.superintendentPhone || t.comment || t.color);
     }
     var task1 = sanitizeTask(fields);
     var task2 = sanitizeTask(fields.task2);
@@ -3088,6 +3096,7 @@ var TM_EMAILJS_RECIPIENT_LABEL = 'Plumcore.com';
         localDayMap[dk] = {
           jobName: task1.jobName, po: task1.po, address: task1.address, stage: task1.stage,
           pm: task1.pm, contractor: task1.contractor, superintendent: task1.superintendent, superintendentPhone: task1.superintendentPhone,
+          comment: task1.comment,
           task2: task2, task3: task3,
           color: color, off: off, holiday: holiday
         };
@@ -3575,10 +3584,24 @@ var TM_EMAILJS_RECIPIENT_LABEL = 'Plumcore.com';
   var COMBINED_TASK_FIELD_DEFS = [
     ['jobName', 'Job Name'], ['po', 'PO #'], ['address', 'Address'], ['stage', 'Stage of Work'],
     ['pm', 'PM'], ['contractor', 'Contractor'], ['superintendent', 'Superintendent'], ['superintendentPhone', 'Superintendent Phone']
+    // Deliberately NOT ['comment', 'Comment'] - the per-task Comment box
+    // (added 2026-10-02) is admin-only, per Jonathan's follow-up
+    // ("this comment box is for admin only"). This field list drives both
+    // of the read-only views non-admin employees can reach (this per-
+    // person Schedule day card, via renderDayEditor's !canEdit branch, and
+    // the Combined Calendar's day-detail panel below - neither is
+    // admin-gated), so a comment must never be added here. Admins see/edit
+    // the comment through the editable Task 1/2/3 form instead (see
+    // buildTaskPane), which non-admins never reach at all.
   ];
 
   function taskHasAnyField(task) {
     if (!task) return false;
+    // Comment is deliberately excluded here too (see the note on
+    // COMBINED_TASK_FIELD_DEFS above) - this function decides whether a
+    // task block/person card shows up at all in the two non-admin-visible
+    // read-only views, so a day with ONLY an admin comment and no other
+    // field must still read as empty to a non-admin viewer.
     return !!(task.jobName || task.po || task.address || task.stage || task.pm || task.contractor || task.superintendent || task.superintendentPhone);
   }
 
@@ -3635,6 +3658,9 @@ var TM_EMAILJS_RECIPIENT_LABEL = 'Plumcore.com';
       var dayMap = scheduleDocsCache[p.key] || {};
       var entry = dayMap[dk];
       if (!entry) return;
+      // entry.comment deliberately excluded - admin-only, see the note on
+      // COMBINED_TASK_FIELD_DEFS above; a day with only a Task 1 comment
+      // must not surface this person's card to a non-admin viewer here.
       var hasContent = !!(entry.jobName || entry.off || entry.holiday || taskHasAnyField(entry.task2) || taskHasAnyField(entry.task3));
       if (!hasContent) return;
       any = true;
@@ -4025,8 +4051,8 @@ var TM_EMAILJS_RECIPIENT_LABEL = 'Plumcore.com';
     var dp = dk.split('-');
     var date = new Date(parseInt(dp[0], 10), parseInt(dp[1], 10) - 1, parseInt(dp[2], 10));
     var entries = scheduleDocsCache[personKey] || {};
-    var emptyTask = { jobName: '', po: '', address: '', stage: '', pm: '', contractor: '', superintendent: '', superintendentPhone: '', color: '' };
-    var entry = entries[dk] || { jobName: '', po: '', address: '', stage: '', pm: '', contractor: '', superintendent: '', superintendentPhone: '', color: '', off: false, holiday: false };
+    var emptyTask = { jobName: '', po: '', address: '', stage: '', pm: '', contractor: '', superintendent: '', superintendentPhone: '', comment: '', color: '' };
+    var entry = entries[dk] || { jobName: '', po: '', address: '', stage: '', pm: '', contractor: '', superintendent: '', superintendentPhone: '', comment: '', color: '', off: false, holiday: false };
     var task2Source = entry.task2 || emptyTask;
     var task3Source = entry.task3 || emptyTask;
 
@@ -4224,6 +4250,15 @@ var TM_EMAILJS_RECIPIENT_LABEL = 'Plumcore.com';
       DAY_COLOR_KEYS.forEach(function (k) { colorDots[k].classList.toggle('is-selected', currentColor === k); });
       pane.appendChild(colorRow);
 
+      // Short free-text "Comment" box, deliberately the very last thing in
+      // the pane (added after the Color row, which is itself the last
+      // thing appended above) — Jonathan asked for "a 'Comment' box for
+      // around 50 characters" at the bottom of each Task 1/2/3 section.
+      // span-2 (spanFull=true) so it gets its own full-width row like
+      // Address/Stage of Work above, rather than being squeezed into half
+      // the pane's width.
+      fields.comment = makeField(pane, 'Comment', source.comment || '', 50, true);
+
       editor.appendChild(pane);
 
       return {
@@ -4233,19 +4268,21 @@ var TM_EMAILJS_RECIPIENT_LABEL = 'Plumcore.com';
         getFieldValues: function () {
           return {
             jobName: fields.jobName.value, po: fields.po.value, address: fields.address.value, stage: fields.stage.value,
-            pm: fields.pm.value, contractor: fields.contractor.value, superintendent: fields.superintendent.value, superintendentPhone: fields.superintendentPhone.value
+            pm: fields.pm.value, contractor: fields.contractor.value, superintendent: fields.superintendent.value, superintendentPhone: fields.superintendentPhone.value,
+            comment: fields.comment.value
           };
         },
         getColor: function () { return currentColor; },
         clearAll: function () {
           fields.jobName.value = ''; fields.po.value = ''; fields.address.value = ''; fields.stage.value = '';
           fields.pm.value = ''; fields.contractor.value = ''; fields.superintendent.value = ''; fields.superintendentPhone.value = '';
+          fields.comment.value = '';
           currentColor = '';
           DAY_COLOR_KEYS.forEach(function (k) { colorDots[k].classList.remove('is-selected'); });
         },
         hasData: function () {
           var v = this.getFieldValues();
-          return !!(v.jobName || v.po || v.address || v.stage || v.pm || v.contractor || v.superintendent || v.superintendentPhone || currentColor);
+          return !!(v.jobName || v.po || v.address || v.stage || v.pm || v.contractor || v.superintendent || v.superintendentPhone || v.comment || currentColor);
         }
       };
     }
@@ -4282,6 +4319,7 @@ var TM_EMAILJS_RECIPIENT_LABEL = 'Plumcore.com';
       saveScheduleEntry(personKey, dk, {
         jobName: t1v.jobName, po: t1v.po, address: t1v.address, stage: t1v.stage,
         pm: t1v.pm, contractor: t1v.contractor, superintendent: t1v.superintendent, superintendentPhone: t1v.superintendentPhone,
+        comment: t1v.comment,
         color: task1Pane.getColor(),
         task2: t2v, task3: t3v,
         off: currentOff, holiday: currentHoliday
@@ -4289,7 +4327,7 @@ var TM_EMAILJS_RECIPIENT_LABEL = 'Plumcore.com';
       renderCalendarGrid(personKey, disableControls);
     };
     panes.forEach(function (p) {
-      ['jobName', 'po', 'address', 'stage', 'pm', 'contractor', 'superintendent', 'superintendentPhone'].forEach(function (k) {
+      ['jobName', 'po', 'address', 'stage', 'pm', 'contractor', 'superintendent', 'superintendentPhone', 'comment'].forEach(function (k) {
         p.fields[k].addEventListener('blur', function () { save(); updateTabIndicators(); });
       });
     });
@@ -4385,6 +4423,7 @@ var TM_EMAILJS_RECIPIENT_LABEL = 'Plumcore.com';
       var values = {
         jobName: t1v.jobName, po: t1v.po, address: t1v.address, stage: t1v.stage,
         pm: t1v.pm, contractor: t1v.contractor, superintendent: t1v.superintendent, superintendentPhone: t1v.superintendentPhone,
+        comment: t1v.comment,
         color: task1Pane.getColor(),
         task2: t2v, task3: t3v,
         off: currentOff, holiday: currentHoliday
@@ -4475,14 +4514,15 @@ var TM_EMAILJS_RECIPIENT_LABEL = 'Plumcore.com';
           var existingTask2 = existing.task2 || emptyTask;
           var existingTask3 = existing.task3 || emptyTask;
           var newColor1 = existing.color || '';
-          var newTask2 = { jobName: existingTask2.jobName, po: existingTask2.po, address: existingTask2.address, stage: existingTask2.stage, pm: existingTask2.pm, contractor: existingTask2.contractor, superintendent: existingTask2.superintendent, superintendentPhone: existingTask2.superintendentPhone, color: existingTask2.color || '' };
-          var newTask3 = { jobName: existingTask3.jobName, po: existingTask3.po, address: existingTask3.address, stage: existingTask3.stage, pm: existingTask3.pm, contractor: existingTask3.contractor, superintendent: existingTask3.superintendent, superintendentPhone: existingTask3.superintendentPhone, color: existingTask3.color || '' };
+          var newTask2 = { jobName: existingTask2.jobName, po: existingTask2.po, address: existingTask2.address, stage: existingTask2.stage, pm: existingTask2.pm, contractor: existingTask2.contractor, superintendent: existingTask2.superintendent, superintendentPhone: existingTask2.superintendentPhone, comment: existingTask2.comment, color: existingTask2.color || '' };
+          var newTask3 = { jobName: existingTask3.jobName, po: existingTask3.po, address: existingTask3.address, stage: existingTask3.stage, pm: existingTask3.pm, contractor: existingTask3.contractor, superintendent: existingTask3.superintendent, superintendentPhone: existingTask3.superintendentPhone, comment: existingTask3.comment, color: existingTask3.color || '' };
           if (targetTask === 1) newColor1 = targetColor;
           if (targetTask === 2) newTask2.color = targetColor;
           if (targetTask === 3) newTask3.color = targetColor;
           saveScheduleEntry(personKey, curDk, {
             jobName: existing.jobName, po: existing.po, address: existing.address, stage: existing.stage,
             pm: existing.pm, contractor: existing.contractor, superintendent: existing.superintendent, superintendentPhone: existing.superintendentPhone,
+            comment: existing.comment,
             task2: newTask2, task3: newTask3,
             color: newColor1, off: existing.off === true, holiday: existing.holiday === true
           });
