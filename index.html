@@ -9,6 +9,19 @@
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="favicon-192x192.png">
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<!-- Web app manifest + home-screen meta tags (2026-10-02), so employees who
+     use "Add to Home Screen" on an iPad/iPhone/Android phone get a proper
+     icon and a standalone (no browser chrome) launch instead of a plain
+     bookmark. The apple-touch-icon link above already covers iOS Safari's
+     icon on its own; manifest.json is what Android Chrome needs for its own
+     "Add to Home Screen" icon + install prompt, and the apple-mobile-web-app-*
+     tags give iOS a short home-screen label and a standalone launch too. -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#FAF5EC">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Field Board">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Public+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@600&display=swap">
 <!-- EmailJS browser SDK, used only by the T&M field ticket's "Send Ticket"
