@@ -968,7 +968,6 @@
   .foreman-box-sup4 { border-left-color: var(--color-sup4); }
   .foreman-box-sup7 { border-left-color: var(--color-sup7); }
   .foreman-name-text { font-weight: 600; font-size: var(--text-sm); overflow-wrap: anywhere; }
-  .foreman-box-actions { display: flex; align-items: center; gap: 6px; flex: none; }
   .foreman-empty {
     font-size: var(--text-xs);
     color: var(--color-ink-muted);
@@ -3092,105 +3091,6 @@ var TM_EMAILJS_RECIPIENT_LABEL = 'Plumcore.com';
     });
   }
 
-  // Deep, key-order-independent equality check used only to verify a
-  // schedule-document copy below before anything else is touched — never
-  // used for app logic elsewhere.
-  function valuesDeepEqual(a, b) {
-    if (a === b) return true;
-    if (typeof a !== typeof b) return false;
-    if (!a || !b || typeof a !== 'object') return false;
-    var ak = Object.keys(a), bk = Object.keys(b);
-    if (ak.length !== bk.length) return false;
-    for (var i = 0; i < ak.length; i++) {
-      var k = ak[i];
-      if (bk.indexOf(k) === -1) return false;
-      if (!valuesDeepEqual(a[k], b[k])) return false;
-    }
-    return true;
-  }
-
-  // Renames a foreman/truck entry WITHOUT losing that person's saved
-  // schedule. A person's name is the identity key their whole schedule is
-  // stored under ('schedules/' + slugify('foreman:' + supKey + ':' + name)
-  // — see ensureScheduleSub/saveScheduleEntry above), so a plain text swap
-  // of the name in state.foremen would silently orphan their existing
-  // schedule under the old key and start them fresh under the new one.
-  // Instead this: (1) confirms oldName is still exactly where we think it
-  // is, (2) copies the existing schedule document to the new key, (3)
-  // reads that copy back and verifies it matches field-for-field, and only
-  // then (4) renames the entry in the board doc. If anything in 1-3 fails,
-  // nothing is written to the board doc and the error is surfaced via the
-  // normal status banner — the rename simply didn't happen, nothing is
-  // lost either way. The old schedule document is deliberately left in
-  // place afterward (an inert, unreferenced orphan) rather than deleted,
-  // so a rename can never be the reason data disappears.
-  function renameForeman(supKey, oldName, newName) {
-    var v = newName.trim().slice(0, 40);
-    if (!v || v === oldName) return false;
-    var list = state.foremen[supKey] || [];
-    if (list.indexOf(oldName) === -1) {
-      lastWriteError = 'Could not find "' + oldName + '" to rename — reload the page and try again.';
-      render();
-      return false;
-    }
-    if (list.indexOf(v) !== -1) {
-      lastWriteError = '"' + v + '" is already listed under this foreman.';
-      render();
-      return false;
-    }
-    if (!dbHandle) {
-      lastWriteError = "Can't rename right now — not connected. Try again in a moment.";
-      render();
-      return false;
-    }
-    var oldKey = 'foreman:' + supKey + ':' + oldName;
-    var newKey = 'foreman:' + supKey + ':' + v;
-    var oldRef = doc(dbHandle, 'schedules', slugify(oldKey));
-    var newRef = doc(dbHandle, 'schedules', slugify(newKey));
-    lastWriteError = '';
-
-    function applyNameChange() {
-      var merged = cloneForemen(state.foremen);
-      var idx = (merged[supKey] || []).indexOf(oldName);
-      if (idx === -1) {
-        lastWriteError = '"' + oldName + '" is no longer listed — someone else may have changed it. Reload and try again.';
-        render();
-        return;
-      }
-      merged[supKey][idx] = v;
-      enqueueWrite(function () {
-        return updateDoc(docRef, { foremen: merged }).catch(function (err) { handleWriteError(err); });
-      });
-    }
-
-    authReady.then(function () {
-      return getDoc(oldRef).then(function (oldSnap) {
-        var oldData = oldSnap.exists() ? oldSnap.data() : null;
-        if (!oldData) {
-          // Nothing saved for this truck yet — no schedule document to
-          // migrate, so the rename is just the name change.
-          applyNameChange();
-          return;
-        }
-        return setDoc(newRef, oldData).then(function () {
-          return getDoc(newRef);
-        }).then(function (verifySnap) {
-          var verifyData = verifySnap.exists() ? verifySnap.data() : null;
-          if (!valuesDeepEqual(oldData, verifyData)) {
-            lastWriteError = "Couldn't verify the copied schedule — nothing was changed. Try again.";
-            render();
-            return;
-          }
-          applyNameChange();
-        });
-      }).catch(function () {
-        lastWriteError = "Couldn't read the existing schedule — nothing was changed. Try again.";
-        render();
-      });
-    });
-    return true;
-  }
-
   function clearAllForemen() {
     if (!window.confirm('Remove all trucks from every foreman? This cannot be undone.')) return;
     lastWriteError = '';
@@ -4814,14 +4714,14 @@ var TM_EMAILJS_RECIPIENT_LABEL = 'Plumcore.com';
 
   function renderForemen() {
     // Job Foremen names are locked too — same rule as the leadership
-    // names above: nobody types directly into a name box. Admins keep
+    // names above: nobody edits names by clicking into a box. Admins keep
     // editing only the individual Schedule (see the Schedule buttons
     // below — opening that view is gated on dbUnavailable only, since
     // read-only users can still look; the fields inside it are gated on
     // canEdit too, in renderCalendarOverlay/renderProjectsOverlay above).
-    // The one exception is the admin-only "Rename" button below — for
-    // fixing a typo in a name without losing that person's schedule, see
-    // renameForeman's own comment for how it keeps the data safe.
+    // A name typo is fixed the same console-only way as everything else
+    // in this section — see window.__fabRenameForeman, next to the other
+    // __fab* hooks below — never through a box in this UI.
     var disableControls = true;
 
     SUP_KEYS.forEach(function (supKey) {
@@ -4852,32 +4752,14 @@ var TM_EMAILJS_RECIPIENT_LABEL = 'Plumcore.com';
           nameSpan.textContent = name;
           box.appendChild(nameSpan);
 
-          var actions = document.createElement('div');
-          actions.className = 'foreman-box-actions';
-
           var scheduleBtn = document.createElement('button');
           scheduleBtn.type = 'button';
           scheduleBtn.className = 'schedule-toggle-btn';
           scheduleBtn.textContent = 'Schedule';
           scheduleBtn.disabled = dbUnavailable;
           scheduleBtn.addEventListener('click', function () { openCalendarView(personKey); });
-          actions.appendChild(scheduleBtn);
+          box.appendChild(scheduleBtn);
 
-          var renameBtn = document.createElement('button');
-          renameBtn.type = 'button';
-          renameBtn.className = 'schedule-toggle-btn';
-          renameBtn.textContent = 'Rename';
-          renameBtn.disabled = dbUnavailable || !canEdit;
-          renameBtn.addEventListener('click', function () {
-            var current = name;
-            var next = window.prompt('Rename "' + current + '" to:', current);
-            if (next === null) return;
-            if (!next.trim() || next.trim() === current) return;
-            renameForeman(supKey, current, next);
-          });
-          actions.appendChild(renameBtn);
-
-          box.appendChild(actions);
           entryWrap.appendChild(box);
           listEl.appendChild(entryWrap);
         });
@@ -5745,6 +5627,93 @@ var TM_EMAILJS_RECIPIENT_LABEL = 'Plumcore.com';
     };
     window.__fabGetForemen = function () {
       return cloneForemen(state.foremen);
+    };
+    // Fixes a typo in a Job Foreman/Truck's name WITHOUT losing that
+    // person's saved schedule. A name isn't just a label here — it's the
+    // identity key their whole schedule is stored under
+    // ('schedules/' + slugify('foreman:' + supKey + ':' + name), see
+    // ensureScheduleSub/saveScheduleEntry) — so a plain __fabRemoveForeman
+    // + __fabAddForeman (or any direct text edit) would silently orphan
+    // their existing schedule under the old key and start them fresh
+    // under the new one. This instead: (1) confirms oldName is still
+    // exactly where expected, (2) copies the existing schedule document
+    // to the new key, (3) reads that copy back and verifies it matches
+    // field-for-field, and only then (4) renames the entry in the board
+    // doc. If anything in 1-3 fails, the promise rejects and nothing is
+    // written to the board doc — the rename simply didn't happen,
+    // nothing is ever lost either way. The old schedule document is
+    // deliberately left in place afterward (inert, unreferenced) rather
+    // than deleted, so this can never be the reason data disappears.
+    window.__fabRenameForeman = function (supKey, oldName, newName) {
+      function deepEqual(a, b) {
+        if (a === b) return true;
+        if (typeof a !== typeof b) return false;
+        if (!a || !b || typeof a !== 'object') return false;
+        var ak = Object.keys(a), bk = Object.keys(b);
+        if (ak.length !== bk.length) return false;
+        for (var i = 0; i < ak.length; i++) {
+          var k = ak[i];
+          if (bk.indexOf(k) === -1) return false;
+          if (!deepEqual(a[k], b[k])) return false;
+        }
+        return true;
+      }
+      if (SUP_KEYS.indexOf(supKey) === -1) {
+        return Promise.reject(new Error('Unknown supervisor key "' + supKey + '". Valid: ' + SUP_KEYS.join(', ')));
+      }
+      if (!docRef || !dbHandle) {
+        return Promise.reject(new Error('Board not loaded yet — try again in a moment.'));
+      }
+      var v = String(newName || '').trim().slice(0, 40);
+      if (!v) {
+        return Promise.reject(new Error('New name cannot be empty.'));
+      }
+      var list = state.foremen[supKey] || [];
+      if (list.indexOf(oldName) === -1) {
+        return Promise.reject(new Error('"' + oldName + '" is not currently listed under ' + supKey + '. Current list: ' + JSON.stringify(list)));
+      }
+      if (v === oldName) {
+        return Promise.reject(new Error('New name is identical to the old name — nothing to do.'));
+      }
+      if (list.indexOf(v) !== -1) {
+        return Promise.reject(new Error('"' + v + '" is already listed under ' + supKey + '.'));
+      }
+      var oldRef = doc(dbHandle, 'schedules', slugify('foreman:' + supKey + ':' + oldName));
+      var newRef = doc(dbHandle, 'schedules', slugify('foreman:' + supKey + ':' + v));
+      lastWriteError = '';
+      return authReady.then(function () {
+        return getDoc(oldRef).then(function (oldSnap) {
+          var oldData = oldSnap.exists() ? oldSnap.data() : null;
+          function applyNameChange() {
+            var merged = cloneForemen(state.foremen);
+            var idx = (merged[supKey] || []).indexOf(oldName);
+            if (idx === -1) {
+              throw new Error('"' + oldName + '" is no longer listed — someone else may have changed it. Re-check and try again.');
+            }
+            merged[supKey][idx] = v;
+            return enqueueWrite(function () {
+              return updateDoc(docRef, { foremen: merged }).catch(function (err) {
+                handleWriteError(err);
+                throw err;
+              });
+            });
+          }
+          if (!oldData) {
+            // Nothing saved for this truck yet — no schedule document to
+            // migrate, so the rename is just the name change.
+            return applyNameChange();
+          }
+          return setDoc(newRef, oldData).then(function () {
+            return getDoc(newRef);
+          }).then(function (verifySnap) {
+            var verifyData = verifySnap.exists() ? verifySnap.data() : null;
+            if (!deepEqual(oldData, verifyData)) {
+              throw new Error("Couldn't verify the copied schedule — nothing was changed. Try again.");
+            }
+            return applyNameChange();
+          });
+        });
+      });
     };
 
     // Admin list (admins/config, a separate doc from board/week1) is not
