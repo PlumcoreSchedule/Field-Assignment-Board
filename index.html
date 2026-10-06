@@ -11,15 +11,20 @@
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
 <!-- Web app manifest + home-screen meta tags (2026-10-02), so employees who
      use "Add to Home Screen" on an iPad/iPhone/Android phone get a proper
-     icon and a standalone (no browser chrome) launch instead of a plain
-     bookmark. The apple-touch-icon link above already covers iOS Safari's
-     icon on its own; manifest.json is what Android Chrome needs for its own
-     "Add to Home Screen" icon + install prompt, and the apple-mobile-web-app-*
-     tags give iOS a short home-screen label and a standalone launch too. -->
+     icon and short label. The apple-touch-icon link above already covers iOS
+     Safari's icon on its own; manifest.json is what Android Chrome needs for
+     its own "Add to Home Screen" icon.
+     DELIBERATELY NOT STANDALONE (corrected 2026-10-06): this originally also
+     asked for a standalone, no-browser-bar launch (apple-mobile-web-app-capable
+     + mobile-web-app-capable + manifest display "standalone"). On iOS that
+     makes the home-screen icon a separate "web app" with its OWN storage,
+     completely isolated from Safari. Sign-in here is an emailed link that
+     opens in Safari, so the person signed in inside Safari but the home-screen
+     icon never saw that session and showed the sign-in page again. Do NOT
+     re-add those two meta tags or switch the manifest back to "standalone"
+     unless sign-in is first redesigned to work inside an isolated web app. -->
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#FAF5EC">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Field Board">
 <link rel="preconnect" href="https://fonts.googleapis.com">

@@ -4,7 +4,7 @@
   "description": "Plumcore field assignment scheduling board",
   "start_url": "./",
   "scope": "./",
-  "display": "standalone",
+  "display": "browser",
   "background_color": "#FAF5EC",
   "theme_color": "#FAF5EC",
   "icons": [
