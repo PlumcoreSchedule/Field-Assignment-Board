@@ -1700,19 +1700,19 @@
   }
 
   /* ---------- per-supervisor project list ---------- */
-  .projects-toolbar { max-width: 1000px; margin: 0 auto; width: 100%; padding: 16px 16px 0; display: flex; justify-content: flex-end; }
-  .projects-list { padding: 12px 16px 24px; max-width: 1000px; margin: 0 auto; width: 100%; overflow-x: auto; }
+  .projects-toolbar { max-width: 1140px; margin: 0 auto; width: 100%; padding: 16px 16px 0; display: flex; justify-content: flex-end; }
+  .projects-list { padding: 12px 16px 24px; max-width: 1140px; margin: 0 auto; width: 100%; overflow-x: auto; }
   .projects-table {
     display: flex;
     flex-direction: column;
-    min-width: 860px;
+    min-width: 1060px;
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
     overflow: hidden;
   }
   .project-table-head, .project-row {
     display: grid;
-    grid-template-columns: 2fr 1.1fr 1.3fr 1.3fr 1.2fr 1.3fr 84px;
+    grid-template-columns: 2fr 1.1fr 1.3fr 1.3fr 1.2fr 1.3fr 190px 84px;
     gap: 8px;
     align-items: center;
     padding: 8px 10px;
@@ -1743,6 +1743,22 @@
   .project-cell-input:hover:not(:disabled) { border-color: var(--color-border-strong); }
   .project-cell-input:focus { border-color: var(--color-focus); outline: none; background: var(--color-surface); }
   .project-cell-input:disabled { opacity: 0.55; }
+  /* "Final/Date" column: a small checkbox + a date box side by side. */
+  .project-final-cell { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .project-final-checkbox { width: 18px; height: 18px; flex: none; margin: 0; cursor: pointer; accent-color: #1F9D4C; }
+  .project-final-checkbox:disabled { cursor: not-allowed; }
+  .project-final-cell .project-cell-input { flex: 1; min-width: 0; }
+  /* A project marked Final: the whole row turns green (same greens already
+     used for a company holiday on the Schedule calendar). The nth-child(even)
+     selector is repeated on purpose so the zebra striping can't win. */
+  .project-row.is-final,
+  .project-row.is-final:nth-child(even) { background: #CFF3DA; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .project-row.is-final,
+    :root:not([data-theme="light"]) .project-row.is-final:nth-child(even) { background: #163B24; }
+  }
+  :root[data-theme="dark"] .project-row.is-final,
+  :root[data-theme="dark"] .project-row.is-final:nth-child(even) { background: #163B24; }
   .project-remove-btn {
     font-family: var(--font-body);
     font-size: var(--text-xs);
@@ -2713,9 +2729,32 @@ var TM_EMAILJS_RECIPIENT_LABEL = 'Plumcore.com';
         contractor: typeof it.contractor === 'string' ? it.contractor : '',
         contact: typeof it.contact === 'string' ? it.contact : '',
         contactPhone: typeof it.contactPhone === 'string' ? it.contactPhone : '',
-        pm: typeof it.pm === 'string' ? it.pm : ''
+        pm: typeof it.pm === 'string' ? it.pm : '',
+        // "Final/Date" column (added 2026-10-08). Both default safely for
+        // every project saved before this existed.
+        final: it.final === true,
+        finalDate: typeof it.finalDate === 'string' ? it.finalDate : ''
       };
     });
+  }
+
+  // Display order for the Projects table: latest Start Date at the top.
+  // Projects with no (valid) Start Date yet stay at the very top, so a project
+  // that was just added doesn't vanish to the bottom before its date is
+  // filled in. Ties keep their stored order. This only orders what is SHOWN;
+  // the stored list is never re-ordered or rewritten by it.
+  function sortProjectsForDisplay(items) {
+    var isoRe = /^\d{4}-\d{2}-\d{2}$/;
+    var indexed = items.map(function (it, i) { return { item: it, i: i }; });
+    indexed.sort(function (a, b) {
+      var ad = isoRe.test(a.item.startDate) ? a.item.startDate : '';
+      var bd = isoRe.test(b.item.startDate) ? b.item.startDate : '';
+      if (ad === bd) return a.i - b.i;
+      if (!ad) return -1;
+      if (!bd) return 1;
+      return ad < bd ? 1 : -1;
+    });
+    return indexed.map(function (x) { return x.item; });
   }
 
   var projectsDocsCache = {};
@@ -4636,11 +4675,26 @@ var TM_EMAILJS_RECIPIENT_LABEL = 'Plumcore.com';
 
     var list = els.projectsList;
     list.innerHTML = '';
-    var items = projectsDocsCache[supKey] || [];
+    // Shown latest Start Date first (see sortProjectsForDisplay). Every edit
+    // below finds its project by id, never by position in this sorted view,
+    // so what's displayed can never be mistaken for the stored order.
+    var items = sortProjectsForDisplay(projectsDocsCache[supKey] || []);
+
+    function updateProjectById(id, mutate) {
+      var current = (projectsDocsCache[supKey] || []).slice();
+      for (var i = 0; i < current.length; i++) {
+        if (current[i].id !== id) continue;
+        var updated = {};
+        Object.keys(current[i]).forEach(function (k) { updated[k] = current[i][k]; });
+        mutate(updated);
+        current[i] = updated;
+        saveProjectsList(supKey, current);
+        return;
+      }
+    }
 
     // Rendered as a real spreadsheet-style table: one header row with the
-    // column names, then one compact data row per project (newest first -
-    // see the "Add project" handler below, which unshifts). Horizontally
+    // column names, then one compact data row per project. Horizontally
     // scrollable on narrow screens rather than reflowing, so columns stay
     // aligned with the header like an actual spreadsheet.
     var table = document.createElement('div');
@@ -4648,7 +4702,7 @@ var TM_EMAILJS_RECIPIENT_LABEL = 'Plumcore.com';
 
     var head = document.createElement('div');
     head.className = 'project-table-head';
-    ['Job', 'Start Date', 'Contractor', 'Contact', 'Contact #', 'PM', ''].forEach(function (labelText) {
+    ['Job', 'Start Date', 'Contractor', 'Contact', 'Contact #', 'PM', 'Final/Date', ''].forEach(function (labelText) {
       var cell = document.createElement('span');
       cell.textContent = labelText;
       head.appendChild(cell);
@@ -4662,9 +4716,9 @@ var TM_EMAILJS_RECIPIENT_LABEL = 'Plumcore.com';
       table.appendChild(empty);
     }
 
-    items.forEach(function (item, idx) {
+    items.forEach(function (item) {
       var row = document.createElement('div');
-      row.className = 'project-row';
+      row.className = 'project-row' + (item.final ? ' is-final' : '');
 
       function makeProjectField(key, type) {
         var input = document.createElement('input');
@@ -4674,20 +4728,10 @@ var TM_EMAILJS_RECIPIENT_LABEL = 'Plumcore.com';
         input.value = item[key];
         input.disabled = disableControls;
         input.addEventListener('blur', function () {
-          var current = (projectsDocsCache[supKey] || []).slice();
-          if (!current[idx]) return;
-          var updated = {
-            id: current[idx].id,
-            job: current[idx].job,
-            startDate: current[idx].startDate,
-            contractor: current[idx].contractor,
-            contact: current[idx].contact,
-            contactPhone: current[idx].contactPhone,
-            pm: current[idx].pm
-          };
-          updated[key] = input.value;
-          current[idx] = updated;
-          saveProjectsList(supKey, current);
+          // Nothing to save if the box wasn't actually changed - avoids
+          // rewriting the whole list (and re-sorting) on a plain click-through.
+          if (input.value === item[key]) return;
+          updateProjectById(item.id, function (updated) { updated[key] = input.value; });
         });
         return input;
       }
@@ -4699,6 +4743,24 @@ var TM_EMAILJS_RECIPIENT_LABEL = 'Plumcore.com';
       row.appendChild(makeProjectField('contactPhone', 'text'));
       row.appendChild(makeProjectField('pm', 'text'));
 
+      // Final/Date: a small checkbox + a date box. Checking "Final" turns the
+      // whole row green (the is-final class above); the date is independent
+      // and optional.
+      var finalCell = document.createElement('div');
+      finalCell.className = 'project-final-cell';
+      var finalBox = document.createElement('input');
+      finalBox.type = 'checkbox';
+      finalBox.className = 'project-final-checkbox';
+      finalBox.checked = item.final === true;
+      finalBox.disabled = disableControls;
+      finalBox.setAttribute('aria-label', 'Final');
+      finalBox.addEventListener('change', function () {
+        updateProjectById(item.id, function (updated) { updated.final = finalBox.checked; });
+      });
+      finalCell.appendChild(finalBox);
+      finalCell.appendChild(makeProjectField('finalDate', 'date'));
+      row.appendChild(finalCell);
+
       var removeBtn = document.createElement('button');
       removeBtn.type = 'button';
       removeBtn.className = 'project-remove-btn';
@@ -4706,7 +4768,9 @@ var TM_EMAILJS_RECIPIENT_LABEL = 'Plumcore.com';
       removeBtn.disabled = disableControls;
       removeBtn.addEventListener('click', function () {
         var current = (projectsDocsCache[supKey] || []).slice();
-        current.splice(idx, 1);
+        for (var i = 0; i < current.length; i++) {
+          if (current[i].id === item.id) { current.splice(i, 1); break; }
+        }
         saveProjectsList(supKey, current);
       });
       row.appendChild(removeBtn);
@@ -5437,7 +5501,8 @@ var TM_EMAILJS_RECIPIENT_LABEL = 'Plumcore.com';
       // Newest project goes at the top of the list, not the bottom.
       current.unshift({
         id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
-        job: '', startDate: '', contractor: '', contact: '', contactPhone: '', pm: ''
+        job: '', startDate: '', contractor: '', contact: '', contactPhone: '', pm: '',
+        final: false, finalDate: ''
       });
       saveProjectsList(projectsOpenSup, current);
     });
