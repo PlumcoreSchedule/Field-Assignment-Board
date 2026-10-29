@@ -2097,15 +2097,10 @@
             </div>
           </div>
 
-          <div class="supervisor-branch">
-            <div class="crew-card">
-              <span class="swatch swatch-sup5" aria-hidden="true"></span>
-              <div class="crew-field">
-                <input id="sup5Input" class="crew-input" type="text" maxlength="40" autocomplete="off" aria-label="Name" />
-              </div>
-              <button type="button" id="scheduleToggle-sup5" class="schedule-toggle-btn">Schedule</button>
-            </div>
-          </div>
+          <!-- sup5 (Rob Smith) card removed 2026-10-29: he now appears in Chris Clark's
+               Trucks list (foremen.sup3) instead. His old schedule doc schedules/sup5
+               was copied to schedules/foreman:sup3:rob-smith (verified identical) and the
+               old one is deliberately left in place, unreferenced, as a backup. -->
 
           <div class="supervisor-branch">
             <div class="crew-card">
@@ -3252,7 +3247,7 @@ var TM_EMAILJS_RECIPIENT_LABEL = 'Plumcore.com';
     // sup6 (formerly Sid Carter, "Installer") removed from this fixed-role
     // list 2026-09-29 — he now appears via the sup2 dynamic Job Foremen
     // ("Trucks") list below instead, see the standing-constraint note above.
-    ['sup4', 'sup5', 'sup7'].forEach(function (supKey) {
+    ['sup4', 'sup7'].forEach(function (supKey) {
       list.push({ key: supKey, name: state[supKey + 'Name'] || supKey, division: 'Plumbing' });
     });
     SUP_KEYS.forEach(function (supKey) { // ['sup2', 'sup3'] - each has a dynamic Job Foremen list
@@ -3401,7 +3396,6 @@ var TM_EMAILJS_RECIPIENT_LABEL = 'Plumcore.com';
     if (document.activeElement !== els.sup2Input) els.sup2Input.value = state.sup2Name;
     if (document.activeElement !== els.sup3Input) els.sup3Input.value = state.sup3Name;
     if (document.activeElement !== els.sup4Input) els.sup4Input.value = state.sup4Name;
-    if (document.activeElement !== els.sup5Input) els.sup5Input.value = state.sup5Name;
     if (document.activeElement !== els.sup7Input) els.sup7Input.value = state.sup7Name;
     if (document.activeElement !== els.hvac1Input) els.hvac1Input.value = state.hvac1Name;
     if (document.activeElement !== els.hvac2Input) els.hvac2Input.value = state.hvac2Name;
@@ -3415,7 +3409,6 @@ var TM_EMAILJS_RECIPIENT_LABEL = 'Plumcore.com';
     els.sup2Input.disabled = disable;
     els.sup3Input.disabled = disable;
     els.sup4Input.disabled = disable;
-    els.sup5Input.disabled = disable;
     els.sup7Input.disabled = disable;
     els.hvac1Input.disabled = disable;
     els.hvac2Input.disabled = disable;
@@ -4855,7 +4848,7 @@ var TM_EMAILJS_RECIPIENT_LABEL = 'Plumcore.com';
     renderStatusBanner();
     syncCrewInputs();
     renderForemen();
-    ['sup4', 'sup5', 'sup7'].forEach(function (supKey) {
+    ['sup4', 'sup7'].forEach(function (supKey) {
       els.scheduleToggle[supKey].disabled = dbUnavailable;
     });
     ['hvac1', 'hvac2', 'hvac3', 'hvac4'].forEach(function (hvacKey) {
@@ -5434,7 +5427,6 @@ var TM_EMAILJS_RECIPIENT_LABEL = 'Plumcore.com';
     els.sup2Input.addEventListener('input', function (e) { onSupInput('sup2Name', e.target.value); });
     els.sup3Input.addEventListener('input', function (e) { onSupInput('sup3Name', e.target.value); });
     els.sup4Input.addEventListener('input', function (e) { onSupInput('sup4Name', e.target.value); });
-    els.sup5Input.addEventListener('input', function (e) { onSupInput('sup5Name', e.target.value); });
     els.sup7Input.addEventListener('input', function (e) { onSupInput('sup7Name', e.target.value); });
     els.hvac1Input.addEventListener('input', function (e) { onSupInput('hvac1Name', e.target.value); });
     els.hvac2Input.addEventListener('input', function (e) { onSupInput('hvac2Name', e.target.value); });
@@ -5444,14 +5436,13 @@ var TM_EMAILJS_RECIPIENT_LABEL = 'Plumcore.com';
     els.sup2Input.addEventListener('blur', function () { clearTimeout(nameDebounce.sup2Name); saveSupName('sup2Name'); });
     els.sup3Input.addEventListener('blur', function () { clearTimeout(nameDebounce.sup3Name); saveSupName('sup3Name'); });
     els.sup4Input.addEventListener('blur', function () { clearTimeout(nameDebounce.sup4Name); saveSupName('sup4Name'); });
-    els.sup5Input.addEventListener('blur', function () { clearTimeout(nameDebounce.sup5Name); saveSupName('sup5Name'); });
     els.sup7Input.addEventListener('blur', function () { clearTimeout(nameDebounce.sup7Name); saveSupName('sup7Name'); });
     els.hvac1Input.addEventListener('blur', function () { clearTimeout(nameDebounce.hvac1Name); saveSupName('hvac1Name'); });
     els.hvac2Input.addEventListener('blur', function () { clearTimeout(nameDebounce.hvac2Name); saveSupName('hvac2Name'); });
     els.hvac3Input.addEventListener('blur', function () { clearTimeout(nameDebounce.hvac3Name); saveSupName('hvac3Name'); });
     els.hvac4Input.addEventListener('blur', function () { clearTimeout(nameDebounce.hvac4Name); saveSupName('hvac4Name'); });
 
-    ['sup4', 'sup5', 'sup7'].forEach(function (supKey) {
+    ['sup4', 'sup7'].forEach(function (supKey) {
       els.scheduleToggle[supKey].addEventListener('click', function () { openCalendarView(supKey); });
     });
     ['hvac1', 'hvac2', 'hvac3', 'hvac4'].forEach(function (hvacKey) {
@@ -5539,7 +5530,6 @@ var TM_EMAILJS_RECIPIENT_LABEL = 'Plumcore.com';
     els.sup2Input = q('sup2Input');
     els.sup3Input = q('sup3Input');
     els.sup4Input = q('sup4Input');
-    els.sup5Input = q('sup5Input');
     els.sup7Input = q('sup7Input');
     els.hvac1Input = q('hvac1Input');
     els.hvac2Input = q('hvac2Input');
@@ -5553,7 +5543,7 @@ var TM_EMAILJS_RECIPIENT_LABEL = 'Plumcore.com';
 
     els.datetimeDate = q('datetimeDate');
     els.datetimeClock = q('datetimeClock');
-    els.scheduleToggle = { sup4: q('scheduleToggle-sup4'), sup5: q('scheduleToggle-sup5'), sup7: q('scheduleToggle-sup7'), hvac1: q('scheduleToggle-hvac1'), hvac2: q('scheduleToggle-hvac2'), hvac3: q('scheduleToggle-hvac3'), hvac4: q('scheduleToggle-hvac4') };
+    els.scheduleToggle = { sup4: q('scheduleToggle-sup4'), sup7: q('scheduleToggle-sup7'), hvac1: q('scheduleToggle-hvac1'), hvac2: q('scheduleToggle-hvac2'), hvac3: q('scheduleToggle-hvac3'), hvac4: q('scheduleToggle-hvac4') };
     els.calendarOverlay = q('calendarOverlay');
     els.calendarBackBtn = q('calendarBackBtn');
     els.calendarPersonName = q('calendarPersonName');
@@ -5618,7 +5608,7 @@ var TM_EMAILJS_RECIPIENT_LABEL = 'Plumcore.com';
     // sup6Name removed 2026-09-29 (Sid Carter moved to the sup2 dynamic
     // Job Foremen/"Trucks" list, renamed via addForeman/removeForeman
     // instead of this leadership-name mechanism — see standing constraint).
-    var LEADERSHIP_NAME_KEYS = ['sup1Name', 'sup2Name', 'sup3Name', 'sup4Name', 'sup5Name', 'sup7Name', 'hvac1Name', 'hvac2Name', 'hvac3Name', 'hvac4Name'];
+    var LEADERSHIP_NAME_KEYS = ['sup1Name', 'sup2Name', 'sup3Name', 'sup4Name', 'sup7Name', 'hvac1Name', 'hvac2Name', 'hvac3Name', 'hvac4Name'];
     window.__fabSetLeadershipName = function (which, value) {
       if (LEADERSHIP_NAME_KEYS.indexOf(which) === -1) {
         return Promise.reject(new Error('Unknown field "' + which + '". Valid: ' + LEADERSHIP_NAME_KEYS.join(', ')));
