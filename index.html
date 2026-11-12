@@ -400,7 +400,7 @@
        right there via its `margin-left: auto`) rather than overlapping
        or truncating anything. */
     .topbar .combined-calendar-btn,
-    .section-divider > #tmTicketBtnHvac {
+    .section-divider .combined-calendar-btn {
       padding: 6px 10px;
       font-size: var(--text-xs);
     }
@@ -612,7 +612,10 @@
      this band, level with the orange label. Absolutely positioned so the label
      stays exactly centered and the band's height doesn't change; right:16px
      lines it up with the right edge of the buttons in the row above. */
-  .topbar > .topbar-left > #tmTicketBtn {
+  /* Time-Off + T&M buttons (2026-11-12): the pair sits together at the far right
+     of each orange-label band (Time-Off just left of T&M), level with the label. */
+  .band-btns { display: flex; align-items: center; gap: 8px; }
+  .topbar > .topbar-left > .band-btns {
     position: absolute;
     right: 16px;
     top: 50%;
@@ -623,11 +626,24 @@
      at the far right of the HVAC band, level with the orange "HVAC Field Ops" label.
      (The .section-divider is already position:relative and spans the page width,
      so right:0 lines it up with the right edge of the HVAC cards below.) */
-  .section-divider > #tmTicketBtnHvac {
+  .section-divider > .band-btns {
     position: absolute;
     right: 0;
     top: 50%;
     transform: translateY(-50%);
+  }
+  /* Phones/small tablets: two buttons would run into the centered label, so each
+     band's pair of buttons drops onto its own centered line under the label. */
+  @media (max-width: 600px) {
+    .topbar > .topbar-left > .band-btns,
+    .section-divider > .band-btns {
+      position: static;
+      transform: none;
+      justify-content: center;
+      margin-top: 8px;
+    }
+    .section-divider > .band-btns { flex: 0 0 100%; }
+    .topbar > .topbar-left > .band-btns { flex: none; align-self: center; }
   }
   .topbar-brand-col {
     display: flex;
@@ -1996,7 +2012,10 @@
   <header class="topbar">
     <div class="topbar-left">
       <span class="brand-mark">Plumbing Field OPS</span>
-      <button type="button" id="tmTicketBtn" class="combined-calendar-btn">T&amp;M</button>
+      <span class="band-btns">
+        <button type="button" id="timeOffBtn" class="combined-calendar-btn">Time-Off</button>
+        <button type="button" id="tmTicketBtn" class="combined-calendar-btn">T&amp;M</button>
+      </span>
     </div>
     <div class="topbar-brand-col">
       <img src="logo.png" alt="Plumcore logo" class="brand-logo topbar-center-logo" />
@@ -2106,7 +2125,10 @@
     <div class="section-divider-left">
       <span class="brand-mark">HVAC Field Ops</span>
     </div>
-    <button type="button" id="tmTicketBtnHvac" class="combined-calendar-btn">T&amp;M</button>
+    <span class="band-btns">
+      <button type="button" id="timeOffBtnHvac" class="combined-calendar-btn">Time-Off</button>
+      <button type="button" id="tmTicketBtnHvac" class="combined-calendar-btn">T&amp;M</button>
+    </span>
   </div>
 
   <section class="hvac-content" aria-label="HVAC field ops" style="display:flex; flex-direction:column; gap:18px;">
@@ -2327,6 +2349,71 @@
   </div>
 </div>
 
+<div id="timeOffOverlay" class="calendar-overlay" hidden>
+  <div class="calendar-overlay-header">
+    <img src="logo.png" alt="Plumcore logo" class="brand-logo topbar-center-logo" />
+    <button type="button" id="timeOffBackBtn" class="calendar-back-btn">‹ Back to board</button>
+    <span class="calendar-person-name">Time-Off Request</span>
+    <div class="datetime-bar datetime-bar-compact overlay-header-datetime">
+      <span class="datetime-date"></span>
+      <span class="datetime-clock"></span>
+    </div>
+  </div>
+  <div id="timeOffStatusMsg" class="tm-status-msg" hidden style="max-width:900px;margin:12px auto 0;"></div>
+
+  <div id="timeOffForm" class="tm-ticket-page">
+    <span class="tm-ticket-section-label">Employee Vacation Request Form</span>
+    <div class="calendar-field-grid">
+      <div class="calendar-field"><span class="calendar-field-label">Today’s Date</span><input type="date" id="toTodayDate" /></div>
+      <div class="calendar-field"><span class="calendar-field-label">Employee’s Name</span><input type="text" id="toEmployeeName" maxlength="80" /></div>
+    </div>
+
+    <span class="tm-ticket-section-label">Time-off request for</span>
+    <div class="tm-other-row">
+      <label class="tm-checkbox-item"><input type="checkbox" id="toDaysChk" /> Days:</label>
+      <input type="text" id="toDaysVal" maxlength="10" inputmode="decimal" aria-label="Number of days" style="max-width:160px;" />
+    </div>
+    <div class="tm-other-row">
+      <label class="tm-checkbox-item"><input type="checkbox" id="toHoursChk" /> Hours:</label>
+      <input type="text" id="toHoursVal" maxlength="10" inputmode="decimal" aria-label="Number of hours" style="max-width:160px;" />
+    </div>
+    <div class="calendar-field-grid">
+      <div class="calendar-field"><span class="calendar-field-label">Beginning on</span><input type="date" id="toBeginDate" /></div>
+      <div class="calendar-field"><span class="calendar-field-label">Ending on</span><input type="date" id="toEndDate" /></div>
+    </div>
+
+    <span class="tm-ticket-section-label">Reason for Request</span>
+    <label class="tm-checkbox-item"><input type="checkbox" id="toVacation" /> Vacation - if this box is marked, vacation time will be used.</label>
+    <div class="tm-checkbox-group">
+      <label class="tm-checkbox-item"><input type="checkbox" id="toVacUsed" /> Vacation time to be used for time off marked below</label>
+      <span style="font-size:var(--text-sm);color:var(--color-ink-muted);">or</span>
+      <label class="tm-checkbox-item"><input type="checkbox" id="toVacUnpaid" /> NO Vacation time / unpaid</label>
+    </div>
+    <div class="tm-checkbox-group" id="toReasonGroup">
+      <label class="tm-checkbox-item"><input type="checkbox" value="Personal Leave" /> Personal Leave</label>
+      <label class="tm-checkbox-item"><input type="checkbox" value="Funeral/Bereavement" /> Funeral/Bereavement</label>
+      <label class="tm-checkbox-item"><input type="checkbox" value="Jury Duty" /> Jury Duty</label>
+      <label class="tm-checkbox-item"><input type="checkbox" value="Family Reasons" /> Family Reasons</label>
+      <label class="tm-checkbox-item"><input type="checkbox" value="Medical Leave" /> Medical Leave</label>
+    </div>
+    <div class="tm-other-row">
+      <label class="tm-checkbox-item"><input type="checkbox" id="toOtherChk" /> Other:</label>
+      <input type="text" id="toOtherText" maxlength="80" aria-label="Other reason" />
+    </div>
+
+    <span class="tm-ticket-section-label">Employee Signature</span>
+    <div style="font-size:var(--text-sm);font-weight:700;color:var(--color-ink);">I understand that this request is subject to approval by my employer.</div>
+    <div class="calendar-field-grid">
+      <div class="calendar-field"><span class="calendar-field-label">Employee’s Signature (type your full name)</span><input type="text" id="toSignature" maxlength="80" /></div>
+      <div class="calendar-field"><span class="calendar-field-label">Date</span><input type="date" id="toSignatureDate" /></div>
+    </div>
+
+    <div class="tm-send-row">
+      <button type="button" id="timeOffSendBtn" class="btn btn-primary">Send Request</button>
+    </div>
+  </div>
+</div>
+
 <div id="tmTicketLogOverlay" class="calendar-overlay" hidden>
   <div class="calendar-overlay-header">
     <img src="logo.png" alt="Plumcore logo" class="brand-logo topbar-center-logo" />
@@ -2439,6 +2526,19 @@ var TM_EMAILJS_RECIPIENT_HVAC = 'JHendricks@plumcore.com, Tom@plumcore.com';
 // TM_EMAILJS_RECIPIENT if the displayed label should ever change too.
 var TM_EMAILJS_RECIPIENT_LABEL = 'Plumcore.com';
 
+// TIME-OFF REQUEST FORM (added 2026-11-12): the "Time-Off" button next to T&M in
+// each band. It emails the filled-in form (as the email body plus a PDF) through
+// the SAME EmailJS service/template as the T&M tickets, with its own recipients:
+// Plumbing -> 5-8@plumcore.com; HVAC -> jhendricks@plumcore.com and
+// tom@plumcore.com (comma-separated list, as with the HVAC T&M tickets). To give
+// Time-Off its own EmailJS template (e.g. so the email subject doesn't say
+// "T&M"), create one with "To email" = {{to_email}}, body {{full_ticket_text}} and
+// the same Variable Attachment (ticket_pdf / ticket_filename), then paste its
+// template ID below in place of TM_EMAILJS_TEMPLATE_ID.
+var TIMEOFF_EMAILJS_TEMPLATE_ID = TM_EMAILJS_TEMPLATE_ID;
+var TIMEOFF_EMAILJS_RECIPIENT = '5-8@plumcore.com';
+var TIMEOFF_EMAILJS_RECIPIENT_HVAC = 'jhendricks@plumcore.com, tom@plumcore.com';
+
 (function () {
   'use strict';
 
@@ -2481,6 +2581,9 @@ var TM_EMAILJS_RECIPIENT_LABEL = 'Plumcore.com';
   var tmTicketOpen = false;
   var tmTicketDivision = 'Plumbing'; // which home-screen T&M button opened the form: 'Plumbing' or 'HVAC' (decides who the ticket is emailed to)
   var tmTicketSending = false;
+  var timeOffOpen = false;
+  var timeOffDivision = 'Plumbing'; // which home-screen Time-Off button opened the form (decides who it is emailed to)
+  var timeOffSending = false;
   var tmTicketLogOpen = false;
   var TM_MATERIALS_ROW_COUNT = 20;
   var AUTH_EMAIL_STORAGE_KEY = 'fab_authEmailForSignIn';
@@ -4905,7 +5008,7 @@ var TM_EMAILJS_RECIPIENT_LABEL = 'Plumcore.com';
   var PDF_JPEG_QUALITY = 0.9;
   var PDF_MARGIN_PT = 36;
 
-  function generateTmTicketPdfDataUri(t, suppliersText, subcontractorsText, equipmentText) {
+  function generateTmTicketPdfDataUri(t, suppliersText, subcontractorsText, equipmentText, htmlOverride) {
     return new Promise(function (resolve, reject) {
       if (!window.jspdf || !window.jspdf.jsPDF || !window.html2canvas) {
         reject(new Error('PDF libraries (jsPDF/html2canvas) not loaded'));
@@ -4916,7 +5019,7 @@ var TM_EMAILJS_RECIPIENT_LABEL = 'Plumcore.com';
       container.style.left = '-10000px';
       container.style.top = '0';
       container.style.zIndex = '-1';
-      container.innerHTML = buildTmTicketPdfHtml(t, suppliersText, subcontractorsText, equipmentText);
+      container.innerHTML = htmlOverride || buildTmTicketPdfHtml(t, suppliersText, subcontractorsText, equipmentText);
       document.body.appendChild(container);
 
       function cleanup() {
@@ -5102,6 +5205,258 @@ var TM_EMAILJS_RECIPIENT_LABEL = 'Plumcore.com';
     });
   }
 
+  // ---------------- Time-Off request form (added 2026-11-12) ----------------
+  // The "Time-Off" button next to T&M in each band opens a digital copy of the
+  // Employee Vacation Request Form. Like the T&M ticket it is NOT gated on
+  // canEdit (any signed-in person can fill one out), and it never reads or
+  // writes any schedule/board data: "Send Request" only builds a PDF + email
+  // and sends it through EmailJS (see TIMEOFF_EMAILJS_* near the top of this
+  // script). Nothing is saved to Firestore (no new collection, so no new
+  // security rule is needed); the form is only cleared after a successful send.
+  function todayIsoLocal() {
+    var d = new Date();
+    var m = d.getMonth() + 1;
+    var day = d.getDate();
+    return d.getFullYear() + '-' + (m < 10 ? '0' : '') + m + '-' + (day < 10 ? '0' : '') + day;
+  }
+
+  function isoToUs(iso) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || '');
+    return m ? (m[2] + '/' + m[3] + '/' + m[1]) : (iso || '');
+  }
+
+  function openTimeOffView(division) {
+    timeOffDivision = (division === 'HVAC') ? 'HVAC' : 'Plumbing';
+    timeOffOpen = true;
+    resetTimeOffForm();
+    setTimeOffStatus('', '');
+    els.timeOffOverlay.hidden = false;
+  }
+
+  function closeTimeOffView() {
+    if (timeOffSending) return;
+    timeOffOpen = false;
+    els.timeOffOverlay.hidden = true;
+  }
+
+  function resetTimeOffForm() {
+    ['toEmployeeName', 'toDaysVal', 'toHoursVal', 'toBeginDate', 'toEndDate', 'toOtherText', 'toSignature'].forEach(function (id) {
+      var el = q(id);
+      if (el) el.value = '';
+    });
+    ['toDaysChk', 'toHoursChk', 'toVacation', 'toVacUsed', 'toVacUnpaid', 'toOtherChk'].forEach(function (id) {
+      var el = q(id);
+      if (el) el.checked = false;
+    });
+    var boxes = q('toReasonGroup').querySelectorAll('input[type="checkbox"]');
+    for (var i = 0; i < boxes.length; i++) boxes[i].checked = false;
+    q('toTodayDate').value = todayIsoLocal();
+    q('toSignatureDate').value = todayIsoLocal();
+    els.timeOffOverlay.scrollTop = 0;
+  }
+
+  function setTimeOffStatus(kind, msg) {
+    var el = els.timeOffStatusMsg;
+    if (!msg) {
+      el.hidden = true;
+      el.textContent = '';
+      el.className = 'tm-status-msg';
+      return;
+    }
+    el.hidden = false;
+    el.textContent = msg;
+    el.className = 'tm-status-msg' + (kind === 'error' ? ' is-error' : kind === 'success' ? ' is-success' : '');
+  }
+
+  function buildTimeOffPayload() {
+    var reasons = collectCheckedValues('toReasonGroup');
+    var otherText = q('toOtherText').value.trim();
+    if (q('toOtherChk').checked || otherText) reasons.push('Other' + (otherText ? (': ' + otherText) : ''));
+    var vacationUse = q('toVacUsed').checked ? 'Vacation time to be used for time off marked below' : (q('toVacUnpaid').checked ? 'NO Vacation time / unpaid' : '');
+    var daysVal = q('toDaysVal').value.trim();
+    var hoursVal = q('toHoursVal').value.trim();
+    return {
+      todayDate: q('toTodayDate').value,
+      employeeName: q('toEmployeeName').value.trim(),
+      days: (q('toDaysChk').checked || daysVal) ? daysVal : '',
+      daysMarked: !!(q('toDaysChk').checked || daysVal),
+      hours: (q('toHoursChk').checked || hoursVal) ? hoursVal : '',
+      hoursMarked: !!(q('toHoursChk').checked || hoursVal),
+      beginDate: q('toBeginDate').value,
+      endDate: q('toEndDate').value,
+      vacation: !!q('toVacation').checked,
+      vacationUse: vacationUse,
+      reasons: reasons,
+      signature: q('toSignature').value.trim(),
+      signatureDate: q('toSignatureDate').value,
+      submittedByEmail: (currentUser && currentUser.email) || '',
+      division: timeOffDivision
+    };
+  }
+
+  function formatTimeOffAmount(t) {
+    var parts = [];
+    if (t.daysMarked) parts.push((t.days || '?') + ' day(s)');
+    if (t.hoursMarked) parts.push((t.hours || '?') + ' hour(s)');
+    return parts.join(' and ');
+  }
+
+  function formatTimeOffPlainText(t) {
+    var lines = [];
+    lines.push('TIME-OFF REQUEST (Employee Vacation Request Form)');
+    lines.push('Division: ' + t.division);
+    lines.push('');
+    lines.push('Employee: ' + t.employeeName);
+    lines.push('Today’s Date: ' + isoToUs(t.todayDate));
+    lines.push('Time off requested: ' + (formatTimeOffAmount(t) || '(not entered)'));
+    lines.push('Beginning on: ' + isoToUs(t.beginDate) + '    Ending on: ' + isoToUs(t.endDate));
+    lines.push('');
+    lines.push('REASON FOR REQUEST:');
+    lines.push('Vacation (vacation time will be used): ' + (t.vacation ? 'YES' : 'No'));
+    lines.push('Vacation / unpaid: ' + (t.vacationUse || '(not marked)'));
+    lines.push('Reason(s): ' + (t.reasons.length ? t.reasons.join(', ') : '(none marked)'));
+    lines.push('');
+    lines.push('Employee acknowledged: "I understand that this request is subject to approval by my employer."');
+    lines.push('Employee’s Signature (typed): ' + t.signature + '    Date: ' + isoToUs(t.signatureDate));
+    lines.push('');
+    lines.push('Submitted by: ' + (t.submittedByEmail || '(unknown)'));
+    return lines.join('\n');
+  }
+
+  function buildTimeOffPdfFilename(t) {
+    var nm = sanitizeForFilename(t.employeeName) || 'Employee';
+    return 'Time-Off Request - ' + nm + (t.beginDate ? (' - ' + t.beginDate) : '') + '.pdf';
+  }
+
+  // Check box drawn with plain CSS (not a font symbol) so it always renders in the PDF.
+  function pdfCheckHtml(checked, label) {
+    return '<span style="display:inline-block;width:12px;height:12px;border:1.5px solid #1A1A1A;text-align:center;line-height:12px;font-size:11px;font-weight:700;vertical-align:middle;margin-right:6px;box-sizing:content-box;">' + (checked ? 'X' : '&nbsp;') + '</span>' +
+      '<span style="vertical-align:middle;">' + escapeHtml(label) + '</span>';
+  }
+
+  function pdfLineFieldHtml(value, label, width) {
+    return '<div style="display:inline-block;width:' + width + ';vertical-align:top;margin-right:3%;">' +
+      '<div style="border-bottom:1px solid #1A1A1A;min-height:20px;font-size:14px;padding:0 2px 2px;">' + (value ? escapeHtml(value) : '&nbsp;') + '</div>' +
+      '<div style="text-align:center;font-size:11px;color:#444444;margin-top:3px;">' + escapeHtml(label) + '</div></div>';
+  }
+
+  function buildTimeOffPdfHtml(t) {
+    var h = [];
+    var R = function (label) { return t.reasons.indexOf(label) !== -1; };
+    var otherEntry = '';
+    t.reasons.forEach(function (r) { if (r === 'Other' || r.indexOf('Other: ') === 0) otherEntry = r.replace(/^Other:?\s*/, ''); });
+    var hasOther = t.reasons.some(function (r) { return r === 'Other' || r.indexOf('Other: ') === 0; });
+    h.push('<div style="width:720px;padding:0 4px 8px;font-family:Georgia,\'Times New Roman\',serif;color:#1A1A1A;background:#FFFFFF;">');
+    h.push('<div class="pdf-atom" style="text-align:center;font-size:24px;font-weight:700;margin:6px 0 24px;">Employee Vacation Request Form</div>');
+    h.push('<div class="pdf-atom" style="margin-bottom:18px;">' + pdfLineFieldHtml(isoToUs(t.todayDate), 'Today’s Date', '46%') + pdfLineFieldHtml(t.employeeName, 'Employee’s Name', '46%') + '</div>');
+    h.push('<div class="pdf-atom" style="margin-bottom:16px;">');
+    h.push('<div style="font-size:15px;font-weight:700;margin-bottom:10px;">Time-off request for:</div>');
+    h.push('<div style="margin-bottom:10px;font-size:14px;">' + pdfCheckHtml(t.daysMarked, '') + '<span style="display:inline-block;min-width:150px;border-bottom:1px solid #1A1A1A;text-align:center;vertical-align:middle;margin-right:6px;">' + (t.days ? escapeHtml(t.days) : '&nbsp;') + '</span><span style="vertical-align:middle;">Days</span>' +
+      '<span style="display:inline-block;width:40px;"></span>' + pdfCheckHtml(t.hoursMarked, '') + '<span style="display:inline-block;min-width:150px;border-bottom:1px solid #1A1A1A;text-align:center;vertical-align:middle;margin-right:6px;">' + (t.hours ? escapeHtml(t.hours) : '&nbsp;') + '</span><span style="vertical-align:middle;">Hours</span></div>');
+    h.push('<div style="font-size:14px;">Beginning on: <span style="display:inline-block;min-width:150px;border-bottom:1px solid #1A1A1A;text-align:center;">' + (t.beginDate ? escapeHtml(isoToUs(t.beginDate)) : '&nbsp;') + '</span>' +
+      '<span style="display:inline-block;width:40px;"></span>Ending on: <span style="display:inline-block;min-width:150px;border-bottom:1px solid #1A1A1A;text-align:center;">' + (t.endDate ? escapeHtml(isoToUs(t.endDate)) : '&nbsp;') + '</span></div>');
+    h.push('</div>');
+    h.push('<div class="pdf-atom" style="margin-bottom:18px;">');
+    h.push('<div style="text-align:center;font-size:18px;font-weight:700;margin-bottom:12px;">Reason for Request</div>');
+    h.push('<div style="font-size:14px;margin:0 0 8px 24px;">' + pdfCheckHtml(t.vacation, 'Vacation - if this box is marked, vacation time will be used.') + '</div>');
+    h.push('<div style="border-top:1px dashed #666666;margin:6px 0 10px;"></div>');
+    h.push('<div style="font-size:14px;margin:0 0 12px 24px;">' + pdfCheckHtml(t.vacationUse.indexOf('Vacation time') === 0, 'Vacation time to be used for time off marked below') + '<span style="display:inline-block;width:18px;"></span> or <span style="display:inline-block;width:12px;"></span>' + pdfCheckHtml(t.vacationUse.indexOf('NO Vacation') === 0, 'NO Vacation time/unpaid') + '</div>');
+    h.push('<div style="font-size:14px;margin:0 0 0 24px;display:table;width:690px;"><div style="display:table-row;"><div style="display:table-cell;width:50%;padding-bottom:10px;">' + pdfCheckHtml(R('Personal Leave'), 'Personal Leave;') + '</div><div style="display:table-cell;padding-bottom:10px;">' + pdfCheckHtml(R('Family Reasons'), 'Family Reasons;') + '</div></div>' +
+      '<div style="display:table-row;"><div style="display:table-cell;padding-bottom:10px;">' + pdfCheckHtml(R('Funeral/Bereavement'), 'Funeral/Bereavement;') + '</div><div style="display:table-cell;padding-bottom:10px;">' + pdfCheckHtml(R('Medical Leave'), 'Medical Leave;') + '</div></div>' +
+      '<div style="display:table-row;"><div style="display:table-cell;">' + pdfCheckHtml(R('Jury Duty'), 'Jury Duty;') + '</div><div style="display:table-cell;">' + pdfCheckHtml(hasOther, 'Other:') + ' <span style="display:inline-block;min-width:190px;border-bottom:1px solid #1A1A1A;vertical-align:middle;">' + (otherEntry ? escapeHtml(otherEntry) : '&nbsp;') + '</span></div></div></div>');
+    h.push('</div>');
+    h.push('<div class="pdf-atom" style="margin-bottom:10px;">');
+    h.push('<div style="font-size:14px;font-weight:700;margin-bottom:22px;">I understand that this request is subject to approval by my employer.</div>');
+    h.push(pdfLineFieldHtml(t.signature, 'Employee’s Signature', '46%') + pdfLineFieldHtml(isoToUs(t.signatureDate), 'Date', '46%'));
+    h.push('</div>');
+    h.push('<div class="pdf-atom" style="margin-top:26px;padding-top:10px;border-top:1px solid #CCCCCC;font-family:Arial,sans-serif;font-size:11px;color:#666666;">Division: ' + escapeHtml(t.division) + ' &nbsp;|&nbsp; Submitted by: ' + escapeHtml(t.submittedByEmail || '(unknown)') + ' &nbsp;|&nbsp; Plumcore Field Assignment Board</div>');
+    h.push('</div>');
+    return h.join('');
+  }
+
+  function finishTimeOffSend(emailed, warningMsg) {
+    timeOffSending = false;
+    els.timeOffSendBtn.disabled = false;
+    els.timeOffSendBtn.textContent = 'Send Request';
+    if (emailed) {
+      resetTimeOffForm();
+      setTimeOffStatus('success', 'Time-off request sent to ' + TM_EMAILJS_RECIPIENT_LABEL + '.');
+    } else {
+      setTimeOffStatus('error', warningMsg || 'Something went wrong — please try again, or let the office know directly.');
+    }
+  }
+
+  function sendTimeOff() {
+    if (timeOffSending) return;
+    var t = buildTimeOffPayload();
+    var problem = '';
+    var focusEl = null;
+    if (!t.employeeName) { problem = 'Please enter the employee’s name.'; focusEl = q('toEmployeeName'); }
+    else if (!t.daysMarked && !t.hoursMarked) { problem = 'Please enter how many days or hours of time off.'; focusEl = q('toDaysVal'); }
+    else if ((t.daysMarked && !t.days) || (t.hoursMarked && !t.hours)) { problem = 'Please enter the number of days or hours you checked.'; focusEl = (t.daysMarked && !t.days) ? q('toDaysVal') : q('toHoursVal'); }
+    else if (!t.beginDate) { problem = 'Please enter the beginning date.'; focusEl = q('toBeginDate'); }
+    else if (!t.endDate) { problem = 'Please enter the ending date.'; focusEl = q('toEndDate'); }
+    else if (t.endDate < t.beginDate) { problem = 'The ending date can’t be before the beginning date.'; focusEl = q('toEndDate'); }
+    else if (!t.signature) { problem = 'Please type your full name as your signature.'; focusEl = q('toSignature'); }
+    if (problem) {
+      setTimeOffStatus('error', problem);
+      els.timeOffOverlay.scrollTop = 0;
+      if (focusEl) focusEl.focus();
+      return;
+    }
+    timeOffSending = true;
+    els.timeOffSendBtn.disabled = true;
+    els.timeOffSendBtn.textContent = 'Sending…';
+    setTimeOffStatus('', '');
+
+    // PDF is built in the browser; if that fails the email still goes out without it.
+    var pdfPromise = generateTmTicketPdfDataUri(null, '', '', '', buildTimeOffPdfHtml(t)).catch(function (err) {
+      console.error('Time-off PDF generation failed — sending without an attachment', err);
+      return null;
+    });
+    pdfPromise.then(function (pdfDataUri) {
+      var configured = TM_EMAILJS_PUBLIC_KEY && TM_EMAILJS_SERVICE_ID && TIMEOFF_EMAILJS_TEMPLATE_ID && window.emailjs;
+      if (!configured) {
+        finishTimeOffSend(false, 'Email sending isn\'t set up yet — ask your admin to finish connecting it.');
+        return;
+      }
+      var plain = formatTimeOffPlainText(t);
+      var amount = formatTimeOffAmount(t);
+      var params = {
+        to_email: (t.division === 'HVAC') ? TIMEOFF_EMAILJS_RECIPIENT_HVAC : TIMEOFF_EMAILJS_RECIPIENT,
+        // The T&M template's own variable names are filled in too (with the
+        // time-off equivalents) so an email subject/body built from them still reads sensibly.
+        job_name: 'Time-Off Request - ' + t.employeeName,
+        address: '',
+        job_po: '',
+        work_date: isoToUs(t.beginDate),
+        techs: t.employeeName,
+        crew_size: '',
+        start_time: isoToUs(t.beginDate),
+        end_time: isoToUs(t.endDate),
+        work_description: amount + (t.reasons.length ? ('; ' + t.reasons.join(', ')) : ''),
+        suppliers: '',
+        subcontractors: '',
+        equipment: '',
+        materials: '',
+        submitted_by: t.submittedByEmail,
+        subject: 'Time-Off Request - ' + t.employeeName + ' (' + t.division + ')',
+        request_type: 'Time-Off Request',
+        full_ticket_text: plain
+      };
+      if (pdfDataUri) {
+        params.ticket_pdf = pdfDataUri;
+        params.ticket_filename = buildTimeOffPdfFilename(t);
+      }
+      window.emailjs.send(TM_EMAILJS_SERVICE_ID, TIMEOFF_EMAILJS_TEMPLATE_ID, params, TM_EMAILJS_PUBLIC_KEY).then(function () {
+        finishTimeOffSend(true, '');
+      }).catch(function (err) {
+        console.error('Time-off email failed', err);
+        finishTimeOffSend(false, 'The email could not be sent. Your form is still here — please try again, or let the office know directly.');
+      });
+    });
+  }
+
   // ---- Admin-only log of submitted tickets ----
   function openTmTicketLogView() {
     if (!canEdit) return;
@@ -5233,6 +5588,20 @@ var TM_EMAILJS_RECIPIENT_LABEL = 'Plumcore.com';
       saveProjectsList(projectsOpenSup, current);
     });
 
+    els.timeOffBtn.addEventListener('click', function () { openTimeOffView('Plumbing'); });
+    els.timeOffBtnHvac.addEventListener('click', function () { openTimeOffView('HVAC'); });
+    els.timeOffBackBtn.addEventListener('click', closeTimeOffView);
+    els.timeOffSendBtn.addEventListener('click', sendTimeOff);
+    // An old "please fill in..." message goes away as soon as the person starts fixing the form.
+    els.timeOffOverlay.addEventListener('input', function () {
+      if (els.timeOffStatusMsg.classList.contains('is-error')) setTimeOffStatus('', '');
+    });
+    // Typing an amount ticks its Days/Hours box; the two "vacation / unpaid" boxes act as a pair (only one at a time).
+    q('toDaysVal').addEventListener('input', function () { if (q('toDaysVal').value) q('toDaysChk').checked = true; });
+    q('toHoursVal').addEventListener('input', function () { if (q('toHoursVal').value) q('toHoursChk').checked = true; });
+    q('toOtherText').addEventListener('input', function () { if (q('toOtherText').value) q('toOtherChk').checked = true; });
+    q('toVacUsed').addEventListener('change', function () { if (q('toVacUsed').checked) q('toVacUnpaid').checked = false; });
+    q('toVacUnpaid').addEventListener('change', function () { if (q('toVacUnpaid').checked) q('toVacUsed').checked = false; });
     els.tmTicketBtn.addEventListener('click', function () { openTmTicketView('Plumbing'); });
     els.tmTicketBtnHvac.addEventListener('click', function () { openTmTicketView('HVAC'); });
     els.tmTicketBackBtn.addEventListener('click', closeTmTicketView);
@@ -5316,6 +5685,12 @@ var TM_EMAILJS_RECIPIENT_LABEL = 'Plumcore.com';
     els.combinedCalendarFilterAllBtn = q('combinedCalendarFilterAllBtn');
 
 
+    els.timeOffBtn = q('timeOffBtn');
+    els.timeOffBtnHvac = q('timeOffBtnHvac');
+    els.timeOffOverlay = q('timeOffOverlay');
+    els.timeOffBackBtn = q('timeOffBackBtn');
+    els.timeOffStatusMsg = q('timeOffStatusMsg');
+    els.timeOffSendBtn = q('timeOffSendBtn');
     els.tmTicketBtn = q('tmTicketBtn');
     els.tmTicketBtnHvac = q('tmTicketBtnHvac');
     els.tmTicketOverlay = q('tmTicketOverlay');
