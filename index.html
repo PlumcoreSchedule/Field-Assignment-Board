@@ -2582,6 +2582,8 @@ var TM_EMAILJS_RECIPIENT_LABEL = 'Plumcore.com';
     return { bg: 'hsla(' + hue + ', 55%, 55%, 0.18)', border: 'hsl(' + hue + ', 50%, 45%)' };
   }
 
+  var dayFieldSeq = 0; // counter for unique names on the day-editor text boxes
+
   function q(id) { return document.getElementById(id); }
 
   // Turns "jonathan@plumcore.com" into "Jonathan", "5-8@plumcore.com" into
@@ -4011,6 +4013,17 @@ var TM_EMAILJS_RECIPIENT_LABEL = 'Plumcore.com';
       input.maxLength = maxLen;
       input.value = value;
       input.disabled = disableControls;
+      // Keep the browser's autofill / password-manager helpers away from these
+      // boxes (2026-11-12): with identical-looking Task 1/2/3 boxes on one page,
+      // autofill was filling the other tasks' boxes with what was typed in Task 1.
+      // A unique name per box, autocomplete off, and the common "ignore me" hints.
+      dayFieldSeq += 1;
+      input.name = 'fab-day-field-' + dayFieldSeq;
+      input.setAttribute('autocomplete', 'off');
+      input.setAttribute('autocorrect', 'off');
+      input.setAttribute('data-lpignore', 'true');
+      input.setAttribute('data-1p-ignore', 'true');
+      input.setAttribute('data-form-type', 'other');
       wrap.appendChild(input);
       grid.appendChild(wrap);
       return input;
@@ -4116,7 +4129,15 @@ var TM_EMAILJS_RECIPIENT_LABEL = 'Plumcore.com';
     var activeTaskIndex = 1;
     function setActiveTask(idx) {
       activeTaskIndex = idx;
-      panes.forEach(function (p) { p.pane.hidden = (p.index !== idx); });
+      panes.forEach(function (p) {
+        p.pane.hidden = (p.index !== idx);
+        // Boxes in the tabs that aren't showing are switched off, so nothing
+        // (browser autofill, password managers) can type into them behind the
+        // scenes. Their saved text is untouched and still saved with the day.
+        Object.keys(p.fields).forEach(function (k) {
+          p.fields[k].disabled = disableControls || (p.index !== idx);
+        });
+      });
       [1, 2, 3].forEach(function (i) { tabBtns[i].classList.toggle('is-active', i === idx); });
       updateColorRangeLabel();
     }
