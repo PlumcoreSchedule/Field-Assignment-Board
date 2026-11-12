@@ -28,7 +28,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Field Board">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Public+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Public+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@600;700&display=swap">
 <!-- EmailJS browser SDK, used only by the T&M field ticket's "Send Ticket"
      button (2026-09-29) to email a submitted ticket to whichever address
      TM_EMAILJS_RECIPIENT below is set to, with no backend server of our
@@ -775,15 +775,12 @@
       order: -1;
       z-index: auto;
     }
+    /* HVAC header has no logo (removed 2026-11-12): its title block is a plain
+       in-flow, centered block (absolute centering would collapse the header). */
+    .section-divider { justify-content: center; }
     .section-divider > .section-divider-left {
-      position: absolute;
-      left: 50%;
-      top: 50%;
-      transform: translate(-50%, -50%);
       align-items: center;
       text-align: center;
-      z-index: 1;
-      max-width: 40%;
     }
     /* Plumbing header, medium widths (tablets / small windows): the right-hand
        button block is ~300px wide, so a title absolutely centered on the page
@@ -824,6 +821,12 @@
     }
     .topbar > .topbar-left .title-row,
     .section-divider > .section-divider-left .title-row { justify-content: center; }
+  }
+  /* HVAC header's orange label ("Plumcore HVAC Field Ops"): larger and bold
+     (2026-11-12). Only the HVAC header; the Plumbing header's label is unchanged. */
+  .section-divider .brand-mark {
+    font-size: 1.15rem;
+    font-weight: 700;
   }
   .hvac-placeholder {
     color: var(--color-ink-muted);
@@ -2225,7 +2228,6 @@
         <h2 class="page-title">Assignment Board</h2>
       </div>
     </div>
-    <img src="logo.png" alt="Plumcore logo" class="brand-logo topbar-center-logo" />
   </div>
 
   <section class="hvac-content" aria-label="HVAC field ops" style="display:flex; flex-direction:column; gap:18px;">
