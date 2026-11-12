@@ -86,7 +86,7 @@
        visible and high-contrast in both themes instead of silently
        inheriting whatever --color-ink happens to be. */
     --color-tm-label: #1E5631;
-    --color-panel-green: #D0E8CA; /* light Plumcore-green tint for every person's name panel (made slightly darker per Jonathan; was #E0F0DC) */
+    --color-panel-green: #D0E8CA; /* light Plumcore-green tint for the Plumbing Field OPS and HVAC Field Ops header bands (moved off the name panels 2026-11-12) */
     --color-panel-green-border: #9CC794;
     --color-tm-label-ink: #FFFFFF;
     --color-hvac1: #1F6F6F;
@@ -528,7 +528,7 @@
      date-time (those already show once, in the real topbar). ---------- */
   .section-divider {
     position: relative;
-    background: var(--color-canvas);
+    background: var(--color-panel-green);
     margin-top: 8px;
     padding-block: 16px;
     border-top: 1px solid var(--color-border);
@@ -612,6 +612,7 @@
     margin: 0 -16px -10px;
     padding: 16px;
     border-top: 1px solid var(--color-border);
+    background: var(--color-panel-green);
     position: relative;
   }
   /* T&M button (2026-11-12): moved out of the sign-in row to the far right of
@@ -802,8 +803,8 @@
     gap: 10px;
   }
   .crew-card {
-    background: var(--color-panel-green);
-    border: 1px solid var(--color-panel-green-border);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-sm);
     padding: 12px 14px;
@@ -968,8 +969,8 @@
     align-items: center;
     justify-content: space-between;
     gap: 8px;
-    background: var(--color-panel-green);
-    border: 1px solid var(--color-panel-green-border);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
     border-left: 4px solid var(--color-border-strong);
     border-radius: var(--radius-sm);
     padding: 7px 10px;
