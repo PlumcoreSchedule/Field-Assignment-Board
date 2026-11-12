@@ -920,13 +920,15 @@
     justify-content: center;
     gap: 14px;
   }
-  /* 7 HVAC foremen = rows of 3, 3 and 1: center the lone last card. */
-  .hvac-foreman-row > .crew-card:last-child:nth-child(3n+1) { grid-column: 2; }
+  /* 7 HVAC cards laid out as three columns of stacked cards (2026-11-12):
+     left Brian/Baylee/Josh, middle Nic/Matthew/Dalton, right the Service Tech.
+     Cards fill DOWN each column (3 rows), so the order in the page's HTML is
+     the order top-to-bottom, left column first. */
+  .hvac-foreman-row { grid-template-rows: repeat(3, auto); grid-auto-flow: column; }
   /* Phones: 3 across leaves each card ~105px wide, too narrow to show a
      name beside its Schedule button — stack the cards full width instead. */
   @media (max-width: 720px) {
-    .hvac-foreman-row { grid-template-columns: 1fr; }
-    .hvac-foreman-row > .crew-card:last-child:nth-child(3n+1) { grid-column: auto; }
+    .hvac-foreman-row { grid-template-columns: 1fr; grid-template-rows: none; grid-auto-flow: row; }
   }
 
   /* ---------- job foremen ---------- */
@@ -2119,39 +2121,12 @@
       </div>
 
       <div class="crew-card">
-        <span class="swatch swatch-hvac2" aria-hidden="true"></span>
-        <div class="crew-field">
-          <label class="field-label" for="hvac2Input">Job Foreman</label>
-          <input id="hvac2Input" class="crew-input" type="text" maxlength="40" autocomplete="off" />
-        </div>
-        <button type="button" id="scheduleToggle-hvac2" class="schedule-toggle-btn">Schedule</button>
-      </div>
-
-      <div class="crew-card">
-        <span class="swatch swatch-hvac3" aria-hidden="true"></span>
-        <div class="crew-field">
-          <label class="field-label" for="hvac3Input">Job Foreman</label>
-          <input id="hvac3Input" class="crew-input" type="text" maxlength="40" autocomplete="off" />
-        </div>
-        <button type="button" id="scheduleToggle-hvac3" class="schedule-toggle-btn">Schedule</button>
-      </div>
-
-      <div class="crew-card">
         <span class="swatch swatch-hvac4" aria-hidden="true"></span>
         <div class="crew-field">
           <label class="field-label" for="hvac4Input">Job Foreman</label>
           <input id="hvac4Input" class="crew-input" type="text" maxlength="40" autocomplete="off" />
         </div>
         <button type="button" id="scheduleToggle-hvac4" class="schedule-toggle-btn">Schedule</button>
-      </div>
-
-      <div class="crew-card">
-        <span class="swatch swatch-hvac5" aria-hidden="true"></span>
-        <div class="crew-field">
-          <label class="field-label" for="hvac5Input">Job Foreman</label>
-          <input id="hvac5Input" class="crew-input" type="text" maxlength="40" autocomplete="off" />
-        </div>
-        <button type="button" id="scheduleToggle-hvac5" class="schedule-toggle-btn">Schedule</button>
       </div>
 
       <div class="crew-card">
@@ -2164,9 +2139,36 @@
       </div>
 
       <div class="crew-card">
+        <span class="swatch swatch-hvac3" aria-hidden="true"></span>
+        <div class="crew-field">
+          <label class="field-label" for="hvac3Input">Job Foreman</label>
+          <input id="hvac3Input" class="crew-input" type="text" maxlength="40" autocomplete="off" />
+        </div>
+        <button type="button" id="scheduleToggle-hvac3" class="schedule-toggle-btn">Schedule</button>
+      </div>
+
+      <div class="crew-card">
+        <span class="swatch swatch-hvac2" aria-hidden="true"></span>
+        <div class="crew-field">
+          <label class="field-label" for="hvac2Input">Job Foreman</label>
+          <input id="hvac2Input" class="crew-input" type="text" maxlength="40" autocomplete="off" />
+        </div>
+        <button type="button" id="scheduleToggle-hvac2" class="schedule-toggle-btn">Schedule</button>
+      </div>
+
+      <div class="crew-card">
+        <span class="swatch swatch-hvac5" aria-hidden="true"></span>
+        <div class="crew-field">
+          <label class="field-label" for="hvac5Input">Job Foreman</label>
+          <input id="hvac5Input" class="crew-input" type="text" maxlength="40" autocomplete="off" />
+        </div>
+        <button type="button" id="scheduleToggle-hvac5" class="schedule-toggle-btn">Schedule</button>
+      </div>
+
+      <div class="crew-card">
         <span class="swatch swatch-hvac7" aria-hidden="true"></span>
         <div class="crew-field">
-          <label class="field-label" for="hvac7Input">Job Foreman</label>
+          <label class="field-label" for="hvac7Input">Service Tech</label>
           <input id="hvac7Input" class="crew-input" type="text" maxlength="40" autocomplete="off" />
         </div>
         <button type="button" id="scheduleToggle-hvac7" class="schedule-toggle-btn">Schedule</button>
