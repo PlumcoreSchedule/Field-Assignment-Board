@@ -632,7 +632,7 @@
   .topbar-brand-col {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center; /* logo centered above the "Assignment Board" title (2026-11-12) */
     gap: 2px;
     min-width: 0;
   }
@@ -1970,7 +1970,7 @@
         <button type="button" id="authSignedInAs" class="authgate-signedout" hidden></button>
       </div>
       <div class="topbar-right-row">
-        <button type="button" id="combinedCalendarBtn" class="combined-calendar-btn">Master Schedule</button>
+        <button type="button" id="combinedCalendarBtn" class="combined-calendar-btn">Full Schedule</button>
         <div class="datetime-bar datetime-bar-compact">
           <span class="datetime-date" id="datetimeDate"></span>
           <span class="datetime-clock" id="datetimeClock"></span>
@@ -2181,7 +2181,7 @@
   <div class="calendar-overlay-header">
     <img src="logo.png" alt="Plumcore logo" class="brand-logo topbar-center-logo" />
     <button type="button" id="combinedCalendarBackBtn" class="calendar-back-btn">‹ Back to board</button>
-    <span class="calendar-person-name">Master Schedule</span>
+    <span class="calendar-person-name">Full Schedule</span>
     <div class="datetime-bar datetime-bar-compact overlay-header-datetime">
       <span class="datetime-date"></span>
       <span class="datetime-clock"></span>
