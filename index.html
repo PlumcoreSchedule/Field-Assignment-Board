@@ -653,6 +653,18 @@
     .topbar::before { content: ''; flex: 1 1 0; order: -2; min-width: 0; }
     .topbar > .topbar-brand-col { order: -1; flex: 0 0 auto; }
     .topbar > .topbar-right { flex: 1 1 0; }
+    /* Date/time box as wide as the signed-in pill (2026-11-12): the two sit in
+       one right-aligned column that is exactly as wide as the wider of them,
+       and both stretch to fill it (their contents are centered). */
+    .topbar .topbar-right {
+      display: grid;
+      grid-template-columns: max-content;
+      justify-content: end;
+      justify-items: stretch;
+      align-items: center;
+    }
+    .topbar .topbar-signout-row #authSignedInAs { flex: 1 1 auto; justify-content: center; }
+    .topbar .topbar-right-row .datetime-bar { flex: 1 1 auto; align-items: center; text-align: center; }
     /* "Full Schedule" button moved to the far left of the header (2026-11-12),
        staying on the same line it was on (level with the date/time box). With
        only `left` set (no top/bottom), the absolutely positioned button keeps
