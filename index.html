@@ -794,7 +794,6 @@
       /* Orange label sits at the bottom of the header, level with the
          "Assignment Board" title (2026-11-12). */
       align-self: flex-end;
-      margin-bottom: -3px; /* nudges the label text baseline level with the title baseline */
     }
     .topbar > .topbar-left .title-row,
     .section-divider > .section-divider-left .title-row { justify-content: center; }
@@ -807,9 +806,8 @@
       position: absolute;
       left: 50%;
       top: auto;
-      bottom: 7px; /* header bottom padding 10px, minus 3px so the label text baseline is level with the title baseline */
+      bottom: 10px; /* = the header's bottom padding; puts the label text level with the title text */
       transform: translateX(-50%);
-      margin-bottom: 0;
       flex: none;
       z-index: 1;
       max-width: 40%;
