@@ -95,6 +95,12 @@
     --color-hvac3-ink: #FFFFFF;
     --color-hvac4: #8C4B6B;
     --color-hvac4-ink: #FFFFFF;
+    --color-hvac5: #B0702A;
+    --color-hvac5-ink: #FFFFFF;
+    --color-hvac6: #4F7F3A;
+    --color-hvac6-ink: #FFFFFF;
+    --color-hvac7: #4A5FA8;
+    --color-hvac7-ink: #FFFFFF;
     --color-empty-bg: #F3ECDF;
     --color-empty-border: #D8CBAF;
     --color-focus: #1F6F6F;
@@ -154,6 +160,12 @@
       --color-hvac3-ink: #0B2430;
       --color-hvac4: #D090AC;
       --color-hvac4-ink: #2E0F1C;
+      --color-hvac5: #E0A765;
+      --color-hvac5-ink: #2A1A06;
+      --color-hvac6: #8FC27A;
+      --color-hvac6-ink: #12260A;
+      --color-hvac7: #8FA3E0;
+      --color-hvac7-ink: #0E1530;
       --color-empty-bg: #2C251C;
       --color-empty-border: #443A2B;
       --color-focus: #7ED0CA;
@@ -199,6 +211,12 @@
     --color-hvac3-ink: #0B2430;
     --color-hvac4: #D090AC;
     --color-hvac4-ink: #2E0F1C;
+    --color-hvac5: #E0A765;
+    --color-hvac5-ink: #2A1A06;
+    --color-hvac6: #8FC27A;
+    --color-hvac6-ink: #12260A;
+    --color-hvac7: #8FA3E0;
+    --color-hvac7-ink: #0E1530;
     --color-empty-bg: #2C251C;
     --color-empty-border: #443A2B;
     --color-focus: #7ED0CA;
@@ -839,6 +857,9 @@
   .swatch-hvac2 { background: var(--color-hvac2); }
   .swatch-hvac3 { background: var(--color-hvac3); }
   .swatch-hvac4 { background: var(--color-hvac4); }
+  .swatch-hvac5 { background: var(--color-hvac5); }
+  .swatch-hvac6 { background: var(--color-hvac6); }
+  .swatch-hvac7 { background: var(--color-hvac7); }
 
   .crew-field { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1; }
   .field-label {
@@ -934,16 +955,24 @@
   .installer-row { flex: 0 0 auto; width: 316px; max-width: 100%; margin-left: 14px; padding-left: 16px; }
   .installer-row .crew-card { width: 100%; }
 
-  /* ---------- HVAC job foremen: two rows of two, centered under the board.
+  /* ---------- HVAC job foremen: rows of three, centered under the board.
      Each column is sized to exactly 1/3 of the row's width (minus the two
      14px gaps a 3-column row would have) so a card matches the width of a
      Supervisor/Supervisor/Utilities column above (Jimmy's box) at any
-     window width, even though only 2 of those 3 "slots" are used here. ---------- */
+     window width. (2026-11-12: now 3 cards per row since 7 HVAC foremen.) ---------- */
   .hvac-foreman-row {
     display: grid;
-    grid-template-columns: repeat(2, calc((100% - 28px) / 3));
+    grid-template-columns: repeat(3, calc((100% - 28px) / 3));
     justify-content: center;
     gap: 14px;
+  }
+  /* 7 HVAC foremen = rows of 3, 3 and 1: center the lone last card. */
+  .hvac-foreman-row > .crew-card:last-child:nth-child(3n+1) { grid-column: 2; }
+  /* Phones: 3 across leaves each card ~105px wide, too narrow to show a
+     name beside its Schedule button — stack the cards full width instead. */
+  @media (max-width: 720px) {
+    .hvac-foreman-row { grid-template-columns: 1fr; }
+    .hvac-foreman-row > .crew-card:last-child:nth-child(3n+1) { grid-column: auto; }
   }
 
   /* ---------- job foremen ---------- */
@@ -2163,6 +2192,33 @@
         </div>
         <button type="button" id="scheduleToggle-hvac4" class="schedule-toggle-btn">Schedule</button>
       </div>
+
+      <div class="crew-card">
+        <span class="swatch swatch-hvac5" aria-hidden="true"></span>
+        <div class="crew-field">
+          <label class="field-label" for="hvac5Input">Job Foreman</label>
+          <input id="hvac5Input" class="crew-input" type="text" maxlength="40" autocomplete="off" />
+        </div>
+        <button type="button" id="scheduleToggle-hvac5" class="schedule-toggle-btn">Schedule</button>
+      </div>
+
+      <div class="crew-card">
+        <span class="swatch swatch-hvac6" aria-hidden="true"></span>
+        <div class="crew-field">
+          <label class="field-label" for="hvac6Input">Job Foreman</label>
+          <input id="hvac6Input" class="crew-input" type="text" maxlength="40" autocomplete="off" />
+        </div>
+        <button type="button" id="scheduleToggle-hvac6" class="schedule-toggle-btn">Schedule</button>
+      </div>
+
+      <div class="crew-card">
+        <span class="swatch swatch-hvac7" aria-hidden="true"></span>
+        <div class="crew-field">
+          <label class="field-label" for="hvac7Input">Job Foreman</label>
+          <input id="hvac7Input" class="crew-input" type="text" maxlength="40" autocomplete="off" />
+        </div>
+        <button type="button" id="scheduleToggle-hvac7" class="schedule-toggle-btn">Schedule</button>
+      </div>
     </div>
   </section>
 
@@ -2451,7 +2507,7 @@ var TM_EMAILJS_RECIPIENT_LABEL = 'Plumcore.com';
   'use strict';
 
   var SUP_KEYS = ['sup2', 'sup3'];
-  var SUP_FALLBACK = { sup1Name: 'General Superintendent', sup2Name: 'Supervisor 1', sup3Name: 'Supervisor 2', sup4Name: 'Layout Manager', sup5Name: 'Plumbing Foreman', sup6Name: 'Installer', sup7Name: 'Charlie Cheetum', hvac1Name: 'Brian Schwarz', hvac2Name: 'Matthew Lewis', hvac3Name: 'Nic Perry', hvac4Name: 'Baylee Crowe' };
+  var SUP_FALLBACK = { sup1Name: 'General Superintendent', sup2Name: 'Supervisor 1', sup3Name: 'Supervisor 2', sup4Name: 'Layout Manager', sup5Name: 'Plumbing Foreman', sup6Name: 'Installer', sup7Name: 'Charlie Cheetum', hvac1Name: 'Brian Schwarz', hvac2Name: 'Matthew Lewis', hvac3Name: 'Nic Perry', hvac4Name: 'Baylee Crowe', hvac5Name: 'Dalton Tate', hvac6Name: 'Josh Blake', hvac7Name: 'Terry Crawford' };
 
   var state = {
     sup1Name: 'General Superintendent',
@@ -2465,11 +2521,14 @@ var TM_EMAILJS_RECIPIENT_LABEL = 'Plumcore.com';
     hvac2Name: 'Matthew Lewis',
     hvac3Name: 'Nic Perry',
     hvac4Name: 'Baylee Crowe',
+    hvac5Name: 'Dalton Tate',
+    hvac6Name: 'Josh Blake',
+    hvac7Name: 'Terry Crawford',
     foremen: { sup2: [], sup3: [] }
   };
   // Last server-confirmed supervisor names, used to roll back a name
   // edit locally if the write turns out not to be permitted.
-  var confirmedNames = { sup1Name: 'General Superintendent', sup2Name: 'Supervisor 1', sup3Name: 'Supervisor 2', sup4Name: 'Layout Manager', sup5Name: 'Plumbing Foreman', sup6Name: 'Installer', sup7Name: 'Charlie Cheetum', hvac1Name: 'Brian Schwarz', hvac2Name: 'Matthew Lewis', hvac3Name: 'Nic Perry', hvac4Name: 'Baylee Crowe' };
+  var confirmedNames = { sup1Name: 'General Superintendent', sup2Name: 'Supervisor 1', sup3Name: 'Supervisor 2', sup4Name: 'Layout Manager', sup5Name: 'Plumbing Foreman', sup6Name: 'Installer', sup7Name: 'Charlie Cheetum', hvac1Name: 'Brian Schwarz', hvac2Name: 'Matthew Lewis', hvac3Name: 'Nic Perry', hvac4Name: 'Baylee Crowe', hvac5Name: 'Dalton Tate', hvac6Name: 'Josh Blake', hvac7Name: 'Terry Crawford' };
 
   var docRef = null;
   var loaded = false;
@@ -2814,6 +2873,9 @@ var TM_EMAILJS_RECIPIENT_LABEL = 'Plumcore.com';
     if (which === 'hvac2Name') return els.hvac2Input;
     if (which === 'hvac3Name') return els.hvac3Input;
     if (which === 'hvac4Name') return els.hvac4Input;
+    if (which === 'hvac5Name') return els.hvac5Input;
+    if (which === 'hvac6Name') return els.hvac6Input;
+    if (which === 'hvac7Name') return els.hvac7Input;
     return els.sup6Input;
   }
 
@@ -3037,6 +3099,9 @@ var TM_EMAILJS_RECIPIENT_LABEL = 'Plumcore.com';
           state.hvac2Name = (typeof data.hvac2Name === 'string' && data.hvac2Name) ? data.hvac2Name : SUP_FALLBACK.hvac2Name;
           state.hvac3Name = (typeof data.hvac3Name === 'string' && data.hvac3Name) ? data.hvac3Name : SUP_FALLBACK.hvac3Name;
           state.hvac4Name = (typeof data.hvac4Name === 'string' && data.hvac4Name) ? data.hvac4Name : SUP_FALLBACK.hvac4Name;
+          state.hvac5Name = (typeof data.hvac5Name === 'string' && data.hvac5Name) ? data.hvac5Name : SUP_FALLBACK.hvac5Name;
+          state.hvac6Name = (typeof data.hvac6Name === 'string' && data.hvac6Name) ? data.hvac6Name : SUP_FALLBACK.hvac6Name;
+          state.hvac7Name = (typeof data.hvac7Name === 'string' && data.hvac7Name) ? data.hvac7Name : SUP_FALLBACK.hvac7Name;
           var f = (data.foremen && typeof data.foremen === 'object') ? data.foremen : {};
           state.foremen = {
             sup2: Array.isArray(f.sup2) ? f.sup2.filter(function (t) { return typeof t === 'string' && t; }) : [],
@@ -3053,6 +3118,9 @@ var TM_EMAILJS_RECIPIENT_LABEL = 'Plumcore.com';
           confirmedNames.hvac2Name = state.hvac2Name;
           confirmedNames.hvac3Name = state.hvac3Name;
           confirmedNames.hvac4Name = state.hvac4Name;
+          confirmedNames.hvac5Name = state.hvac5Name;
+          confirmedNames.hvac6Name = state.hvac6Name;
+          confirmedNames.hvac7Name = state.hvac7Name;
         } else {
           // The shared board doc came back missing. This used to auto-recreate
           // it with blank default names/foremen — which is exactly how real
@@ -3256,11 +3324,12 @@ var TM_EMAILJS_RECIPIENT_LABEL = 'Plumcore.com';
       });
     });
     // ---- HVAC division ----
-    // First four HVAC Job Foremen (added 2026-09-25), same fixed-role
+    // HVAC Job Foremen: first four added 2026-09-25, hvac5-7 (Dalton Tate,
+    // Josh Blake, Terry Crawford) added 2026-11-12. Same fixed-role
     // pattern as the Plumbing sup4-7 block above (individually named,
     // each with its own Schedule tab) rather than the dynamic sup2/sup3
     // foreman-list mechanism, since there's no HVAC supervisor yet.
-    ['hvac1', 'hvac2', 'hvac3', 'hvac4'].forEach(function (hvacKey) {
+    ['hvac1', 'hvac2', 'hvac3', 'hvac4', 'hvac5', 'hvac6', 'hvac7'].forEach(function (hvacKey) {
       list.push({ key: hvacKey, name: state[hvacKey + 'Name'] || hvacKey, division: 'HVAC' });
     });
     return list;
@@ -3401,6 +3470,9 @@ var TM_EMAILJS_RECIPIENT_LABEL = 'Plumcore.com';
     if (document.activeElement !== els.hvac2Input) els.hvac2Input.value = state.hvac2Name;
     if (document.activeElement !== els.hvac3Input) els.hvac3Input.value = state.hvac3Name;
     if (document.activeElement !== els.hvac4Input) els.hvac4Input.value = state.hvac4Name;
+    if (document.activeElement !== els.hvac5Input) els.hvac5Input.value = state.hvac5Name;
+    if (document.activeElement !== els.hvac6Input) els.hvac6Input.value = state.hvac6Name;
+    if (document.activeElement !== els.hvac7Input) els.hvac7Input.value = state.hvac7Name;
     // Leadership names are locked for everyone, admins included — changes
     // are made only when Jonathan asks Claude to update them (see
     // window.__fabSetLeadershipName below), never by typing into these boxes.
@@ -3414,6 +3486,9 @@ var TM_EMAILJS_RECIPIENT_LABEL = 'Plumcore.com';
     els.hvac2Input.disabled = disable;
     els.hvac3Input.disabled = disable;
     els.hvac4Input.disabled = disable;
+    els.hvac5Input.disabled = disable;
+    els.hvac6Input.disabled = disable;
+    els.hvac7Input.disabled = disable;
   }
 
   // ---------------- Full-page schedule calendar ----------------
@@ -4851,7 +4926,7 @@ var TM_EMAILJS_RECIPIENT_LABEL = 'Plumcore.com';
     ['sup4', 'sup7'].forEach(function (supKey) {
       els.scheduleToggle[supKey].disabled = dbUnavailable;
     });
-    ['hvac1', 'hvac2', 'hvac3', 'hvac4'].forEach(function (hvacKey) {
+    ['hvac1', 'hvac2', 'hvac3', 'hvac4', 'hvac5', 'hvac6', 'hvac7'].forEach(function (hvacKey) {
       els.scheduleToggle[hvacKey].disabled = dbUnavailable;
     });
     ['sup2', 'sup3', 'sup7'].forEach(function (supKey) {
@@ -5432,6 +5507,9 @@ var TM_EMAILJS_RECIPIENT_LABEL = 'Plumcore.com';
     els.hvac2Input.addEventListener('input', function (e) { onSupInput('hvac2Name', e.target.value); });
     els.hvac3Input.addEventListener('input', function (e) { onSupInput('hvac3Name', e.target.value); });
     els.hvac4Input.addEventListener('input', function (e) { onSupInput('hvac4Name', e.target.value); });
+    els.hvac5Input.addEventListener('input', function (e) { onSupInput('hvac5Name', e.target.value); });
+    els.hvac6Input.addEventListener('input', function (e) { onSupInput('hvac6Name', e.target.value); });
+    els.hvac7Input.addEventListener('input', function (e) { onSupInput('hvac7Name', e.target.value); });
     els.sup1Input.addEventListener('blur', function () { clearTimeout(nameDebounce.sup1Name); saveSupName('sup1Name'); });
     els.sup2Input.addEventListener('blur', function () { clearTimeout(nameDebounce.sup2Name); saveSupName('sup2Name'); });
     els.sup3Input.addEventListener('blur', function () { clearTimeout(nameDebounce.sup3Name); saveSupName('sup3Name'); });
@@ -5441,11 +5519,14 @@ var TM_EMAILJS_RECIPIENT_LABEL = 'Plumcore.com';
     els.hvac2Input.addEventListener('blur', function () { clearTimeout(nameDebounce.hvac2Name); saveSupName('hvac2Name'); });
     els.hvac3Input.addEventListener('blur', function () { clearTimeout(nameDebounce.hvac3Name); saveSupName('hvac3Name'); });
     els.hvac4Input.addEventListener('blur', function () { clearTimeout(nameDebounce.hvac4Name); saveSupName('hvac4Name'); });
+    els.hvac5Input.addEventListener('blur', function () { clearTimeout(nameDebounce.hvac5Name); saveSupName('hvac5Name'); });
+    els.hvac6Input.addEventListener('blur', function () { clearTimeout(nameDebounce.hvac6Name); saveSupName('hvac6Name'); });
+    els.hvac7Input.addEventListener('blur', function () { clearTimeout(nameDebounce.hvac7Name); saveSupName('hvac7Name'); });
 
     ['sup4', 'sup7'].forEach(function (supKey) {
       els.scheduleToggle[supKey].addEventListener('click', function () { openCalendarView(supKey); });
     });
-    ['hvac1', 'hvac2', 'hvac3', 'hvac4'].forEach(function (hvacKey) {
+    ['hvac1', 'hvac2', 'hvac3', 'hvac4', 'hvac5', 'hvac6', 'hvac7'].forEach(function (hvacKey) {
       els.scheduleToggle[hvacKey].addEventListener('click', function () { openCalendarView(hvacKey); });
     });
 
@@ -5535,6 +5616,9 @@ var TM_EMAILJS_RECIPIENT_LABEL = 'Plumcore.com';
     els.hvac2Input = q('hvac2Input');
     els.hvac3Input = q('hvac3Input');
     els.hvac4Input = q('hvac4Input');
+    els.hvac5Input = q('hvac5Input');
+    els.hvac6Input = q('hvac6Input');
+    els.hvac7Input = q('hvac7Input');
     els.foremanList = { sup2: q('foremanList-sup2'), sup3: q('foremanList-sup3') };
     els.foremanInput = { sup2: q('foremanInput-sup2'), sup3: q('foremanInput-sup3') };
     els.foremanError = { sup2: q('foremanError-sup2'), sup3: q('foremanError-sup3') };
@@ -5543,7 +5627,7 @@ var TM_EMAILJS_RECIPIENT_LABEL = 'Plumcore.com';
 
     els.datetimeDate = q('datetimeDate');
     els.datetimeClock = q('datetimeClock');
-    els.scheduleToggle = { sup4: q('scheduleToggle-sup4'), sup7: q('scheduleToggle-sup7'), hvac1: q('scheduleToggle-hvac1'), hvac2: q('scheduleToggle-hvac2'), hvac3: q('scheduleToggle-hvac3'), hvac4: q('scheduleToggle-hvac4') };
+    els.scheduleToggle = { sup4: q('scheduleToggle-sup4'), sup7: q('scheduleToggle-sup7'), hvac1: q('scheduleToggle-hvac1'), hvac2: q('scheduleToggle-hvac2'), hvac3: q('scheduleToggle-hvac3'), hvac4: q('scheduleToggle-hvac4'), hvac5: q('scheduleToggle-hvac5'), hvac6: q('scheduleToggle-hvac6'), hvac7: q('scheduleToggle-hvac7') };
     els.calendarOverlay = q('calendarOverlay');
     els.calendarBackBtn = q('calendarBackBtn');
     els.calendarPersonName = q('calendarPersonName');
@@ -5608,7 +5692,7 @@ var TM_EMAILJS_RECIPIENT_LABEL = 'Plumcore.com';
     // sup6Name removed 2026-09-29 (Sid Carter moved to the sup2 dynamic
     // Job Foremen/"Trucks" list, renamed via addForeman/removeForeman
     // instead of this leadership-name mechanism — see standing constraint).
-    var LEADERSHIP_NAME_KEYS = ['sup1Name', 'sup2Name', 'sup3Name', 'sup4Name', 'sup7Name', 'hvac1Name', 'hvac2Name', 'hvac3Name', 'hvac4Name'];
+    var LEADERSHIP_NAME_KEYS = ['sup1Name', 'sup2Name', 'sup3Name', 'sup4Name', 'sup7Name', 'hvac1Name', 'hvac2Name', 'hvac3Name', 'hvac4Name', 'hvac5Name', 'hvac6Name', 'hvac7Name'];
     window.__fabSetLeadershipName = function (which, value) {
       if (LEADERSHIP_NAME_KEYS.indexOf(which) === -1) {
         return Promise.reject(new Error('Unknown field "' + which + '". Valid: ' + LEADERSHIP_NAME_KEYS.join(', ')));
@@ -5840,6 +5924,9 @@ var TM_EMAILJS_RECIPIENT_LABEL = 'Plumcore.com';
           hvac2Name: typeof values.hvac2Name === 'string' && values.hvac2Name ? values.hvac2Name : SUP_FALLBACK.hvac2Name,
           hvac3Name: typeof values.hvac3Name === 'string' && values.hvac3Name ? values.hvac3Name : SUP_FALLBACK.hvac3Name,
           hvac4Name: typeof values.hvac4Name === 'string' && values.hvac4Name ? values.hvac4Name : SUP_FALLBACK.hvac4Name,
+          hvac5Name: typeof values.hvac5Name === 'string' && values.hvac5Name ? values.hvac5Name : SUP_FALLBACK.hvac5Name,
+          hvac6Name: typeof values.hvac6Name === 'string' && values.hvac6Name ? values.hvac6Name : SUP_FALLBACK.hvac6Name,
+          hvac7Name: typeof values.hvac7Name === 'string' && values.hvac7Name ? values.hvac7Name : SUP_FALLBACK.hvac7Name,
           foremen: (values.foremen && typeof values.foremen === 'object') ? {
             sup2: Array.isArray(values.foremen.sup2) ? values.foremen.sup2.filter(function (t) { return typeof t === 'string' && t; }) : [],
             sup3: Array.isArray(values.foremen.sup3) ? values.foremen.sup3.filter(function (t) { return typeof t === 'string' && t; }) : []
