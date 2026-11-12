@@ -647,10 +647,22 @@
   }
   .topbar-brand-col > .page-title { margin: 0; line-height: 1.15; }
   @media (min-width: 721px) {
-    .topbar > .topbar-brand-col { order: -1; }
+    /* Logo + "Assignment Board" centered together in the header (2026-11-12):
+       an empty spacer before them and the right-hand buttons after them share
+       the leftover width equally, so the pair sits at the true page center. */
+    .topbar::before { content: ''; flex: 1 1 0; order: -2; min-width: 0; }
+    .topbar > .topbar-brand-col { order: -1; flex: 0 0 auto; }
+    .topbar > .topbar-right { flex: 1 1 0; }
   }
   @media (max-width: 720px) {
-    .topbar > .topbar-brand-col { order: -1; }
+    /* Full-width row so the logo + title are centered together (2026-11-12). */
+    .topbar > .topbar-brand-col { order: -1; flex: 0 0 100%; }
+    /* Centered, the logo/title would run under the date/time box pinned to the
+       top-right corner on narrow phones, so on those the pair starts just
+       below that box (still centered). Wider phones/tablets have room. */
+    @media (max-width: 520px) {
+      .topbar > .topbar-brand-col { padding-top: 54px; }
+    }
     /* A little smaller on phones so the title never runs under the date/time
        box pinned to the header's top-right corner (checked down to 320px). */
     .topbar-brand-col > .page-title { font-size: 1.15rem; }
