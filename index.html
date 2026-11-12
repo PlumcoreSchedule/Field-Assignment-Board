@@ -752,6 +752,79 @@
     gap: 10px 16px;
   }
   .section-divider-left { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+
+  /* ---------- Logo/title swap, Plumbing + HVAC home headers only (2026-11-12) ----------
+     Jonathan: "swap the logo for plumbing/hvac ops area" -> "swap with the
+     title": the logo now sits at the far LEFT of each home header and the
+     title block ("Plumcore ... Field Ops" + "Assignment Board") sits in the
+     horizontal CENTER (it used to be the other way round). Scoped with the
+     direct-child selectors `.topbar > ...` / `.section-divider > ...` so the
+     four overlay headers (Schedule/Projects/Combined Calendar/Gantt), which
+     keep their logo centered, are untouched. Wide screens: the logo is a
+     normal in-flow item at the left (order:-1) and the title is absolutely
+     centered over the header. Phones (<=720px): the logo is the first,
+     left-aligned line and the title is centered on its own line below it
+     (the date/time box stays pinned top-right on the Plumbing header). */
+  @media (min-width: 721px) {
+    .topbar > img.topbar-center-logo,
+    .section-divider > img.topbar-center-logo {
+      position: static;
+      left: auto;
+      top: auto;
+      transform: none;
+      order: -1;
+      z-index: auto;
+    }
+    .section-divider > .section-divider-left {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      align-items: center;
+      text-align: center;
+      z-index: 1;
+      max-width: 40%;
+    }
+    /* Plumbing header, medium widths (tablets / small windows): the right-hand
+       button block is ~300px wide, so a title absolutely centered on the page
+       would run into it below ~1000px. Here the title just fills the space
+       between the logo and the buttons, centered within it. */
+    .topbar > .topbar-left {
+      flex: 1 1 auto;
+      align-items: center;
+      text-align: center;
+    }
+    .topbar > .topbar-left .title-row,
+    .section-divider > .section-divider-left .title-row { justify-content: center; }
+  }
+  @media (min-width: 1000px) {
+    /* Plumbing header, wide screens: title exactly centered over the header. */
+    .topbar > .topbar-left {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      flex: none;
+      z-index: 1;
+      max-width: 40%;
+    }
+  }
+  @media (max-width: 720px) {
+    .topbar > img.topbar-center-logo,
+    .section-divider > img.topbar-center-logo {
+      order: -1;
+      margin: 0;
+    }
+    .topbar > .topbar-left,
+    .section-divider > .section-divider-left {
+      align-items: center;
+      text-align: center;
+      padding-right: 0;
+      flex-basis: 100%;
+    }
+    .topbar > .topbar-left .title-row,
+    .section-divider > .section-divider-left .title-row { justify-content: center; }
+  }
   .hvac-placeholder {
     color: var(--color-ink-muted);
     font-size: var(--text-sm);
