@@ -787,15 +787,18 @@
        would run into it below ~1000px. Here the title just fills the space
        between the logo and the buttons, centered within it. */
     .topbar > .topbar-left {
-      flex: 1 1 auto;
+      flex: 1 1 0;
+      min-width: 0;
       align-items: center;
       text-align: center;
     }
     .topbar > .topbar-left .title-row,
     .section-divider > .section-divider-left .title-row { justify-content: center; }
   }
-  @media (min-width: 1000px) {
-    /* Plumbing header, wide screens: title exactly centered over the header. */
+  @media (min-width: 1100px) {
+    /* Plumbing header, wide screens: title exactly centered over the header.
+       (1100px, not 1000px: the larger orange label makes the title ~370px wide,
+       which would touch the button block below ~1050px.) */
     .topbar > .topbar-left {
       position: absolute;
       left: 50%;
@@ -822,11 +825,18 @@
     .topbar > .topbar-left .title-row,
     .section-divider > .section-divider-left .title-row { justify-content: center; }
   }
-  /* HVAC header's orange label ("Plumcore HVAC Field Ops"): larger and bold
-     (2026-11-12). Only the HVAC header; the Plumbing header's label is unchanged. */
+  /* Orange header label ("Plumcore HVAC Field Ops" / "Plumcore Plumbing Field
+     Ops"): larger and bold (2026-11-12) - first on HVAC, then carried over to
+     Plumbing at Jonathan's request so both match. Shrinks a little on phones
+     so the longer Plumbing label fits on one line. */
+  .topbar .brand-mark,
   .section-divider .brand-mark {
     font-size: 1.15rem;
     font-weight: 700;
+  }
+  @media (max-width: 720px) {
+    .topbar .brand-mark,
+    .section-divider .brand-mark { font-size: 0.95rem; }
   }
   .hvac-placeholder {
     color: var(--color-ink-muted);
