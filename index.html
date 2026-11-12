@@ -530,6 +530,8 @@
     position: relative;
     background: var(--color-panel-green);
     margin-top: 8px;
+    margin-inline: -16px; /* same full width as the Plumbing band (matches .topbar) */
+    padding-inline: 16px;
     padding-block: 16px;
     border-top: 1px solid var(--color-border);
     border-bottom: 1px solid var(--color-border);
@@ -635,7 +637,7 @@
      so right:0 lines it up with the right edge of the HVAC cards below.) */
   .section-divider > .band-btns {
     position: absolute;
-    right: 0;
+    right: 16px;
     top: 50%;
     transform: translateY(-50%);
   }
