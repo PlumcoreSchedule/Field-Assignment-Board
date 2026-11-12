@@ -825,6 +825,38 @@
     .topbar > .topbar-left .title-row,
     .section-divider > .section-divider-left .title-row { justify-content: center; }
   }
+  /* "Assignment Board" title moved under the logo (2026-11-12): on the Plumbing
+     home header the logo and the large white "Assignment Board" title now sit
+     together in one left-aligned column (logo on top, title under it), and the
+     title was removed from the HVAC header entirely. Only the orange label is
+     centered now. The logo inside this column is a plain in-flow item (the
+     absolute centering that other headers use is turned off for it). */
+  .topbar-brand-col {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    min-width: 0;
+  }
+  .topbar-brand-col > img.topbar-center-logo {
+    position: static;
+    left: auto;
+    top: auto;
+    transform: none;
+    z-index: auto;
+    margin: 0;
+    order: 0; /* beats the phone-only ".topbar .topbar-center-logo {order:2}", which would put the logo under the title */
+  }
+  .topbar-brand-col > .page-title { margin: 0; line-height: 1.15; }
+  @media (min-width: 721px) {
+    .topbar > .topbar-brand-col { order: -1; }
+  }
+  @media (max-width: 720px) {
+    .topbar > .topbar-brand-col { order: -1; }
+    /* A little smaller on phones so the title never runs under the date/time
+       box pinned to the header's top-right corner (checked down to 320px). */
+    .topbar-brand-col > .page-title { font-size: 1.15rem; }
+  }
   /* Orange header label ("Plumcore HVAC Field Ops" / "Plumcore Plumbing Field
      Ops"): larger and bold (2026-11-12) - first on HVAC, then carried over to
      Plumbing at Jonathan's request so both match. Shrinks a little on phones
@@ -2124,11 +2156,11 @@
   <header class="topbar">
     <div class="topbar-left">
       <span class="brand-mark">Plumbing Field OPS</span>
-      <div class="title-row">
-        <h1 class="page-title">Assignment Board</h1>
-      </div>
     </div>
-    <img src="logo.png" alt="Plumcore logo" class="brand-logo topbar-center-logo" />
+    <div class="topbar-brand-col">
+      <img src="logo.png" alt="Plumcore logo" class="brand-logo topbar-center-logo" />
+      <h1 class="page-title">Assignment Board</h1>
+    </div>
     <span class="mobile-line-break" aria-hidden="true"></span>
     <div class="topbar-right">
       <div class="topbar-signout-row">
@@ -2234,9 +2266,6 @@
   <div class="section-divider">
     <div class="section-divider-left">
       <span class="brand-mark">HVAC Field Ops</span>
-      <div class="title-row">
-        <h2 class="page-title">Assignment Board</h2>
-      </div>
     </div>
   </div>
 
