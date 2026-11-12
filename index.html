@@ -782,36 +782,8 @@
       align-items: center;
       text-align: center;
     }
-    /* Plumbing header, medium widths (tablets / small windows): the right-hand
-       button block is ~300px wide, so a title absolutely centered on the page
-       would run into it below ~1000px. Here the title just fills the space
-       between the logo and the buttons, centered within it. */
-    .topbar > .topbar-left {
-      flex: 1 1 0;
-      min-width: 0;
-      align-items: center;
-      text-align: center;
-      /* Orange label sits at the bottom of the header, level with the
-         "Assignment Board" title (2026-11-12). */
-      align-self: flex-end;
-    }
     .topbar > .topbar-left .title-row,
     .section-divider > .section-divider-left .title-row { justify-content: center; }
-  }
-  @media (min-width: 1100px) {
-    /* Plumbing header, wide screens: title exactly centered over the header.
-       (1100px, not 1000px: the larger orange label makes the title ~370px wide,
-       which would touch the button block below ~1050px.) */
-    .topbar > .topbar-left {
-      position: absolute;
-      left: 50%;
-      top: auto;
-      bottom: 10px; /* = the header's bottom padding; puts the label text level with the title text */
-      transform: translateX(-50%);
-      flex: none;
-      z-index: 1;
-      max-width: 40%;
-    }
   }
   @media (max-width: 720px) {
     .topbar > img.topbar-center-logo,
@@ -819,7 +791,6 @@
       order: -1;
       margin: 0;
     }
-    .topbar > .topbar-left,
     .section-divider > .section-divider-left {
       align-items: center;
       text-align: center;
@@ -835,6 +806,25 @@
      title was removed from the HVAC header entirely. Only the orange label is
      centered now. The logo inside this column is a plain in-flow item (the
      absolute centering that other headers use is turned off for it). */
+  /* Plumbing label strip (2026-11-12): the orange "Plumbing Field OPS" label now
+     sits in its own full-width band at the bottom of the Plumbing header,
+     with a faint line above it (this border-top) and below it (the header's
+     own bottom border) - the same look as the HVAC band further down. The
+     logo, "Assignment Board" title, T&M / sign-in / date-time / Combined
+     Calendar / Gantt buttons stay above the new line. The negative side margins
+     make the line run as wide as the header's bottom line; the negative bottom
+     margin cancels the header's 10px bottom padding so the strip touches that
+     line; `order:10` keeps it last (including on phones, where the buttons use
+     orders 4-7). */
+  .topbar > .topbar-left {
+    flex: 0 0 calc(100% + 32px); /* full header width incl. the 16px side padding, so the line is as wide as the header's bottom line */
+    order: 10;
+    align-items: center;
+    text-align: center;
+    margin: 0 -16px -10px;
+    padding: 16px;
+    border-top: 1px solid var(--color-border);
+  }
   .topbar-brand-col {
     display: flex;
     flex-direction: column;
