@@ -2389,6 +2389,11 @@ var TM_EMAILJS_TEMPLATE_ID = 'template_uxlyxe8';
 // email" field is set to {{to_email}} per step 3 above, nothing on
 // EmailJS's own site ever needs to be touched for a recipient change.
 var TM_EMAILJS_RECIPIENT = 'jonathan@plumcore.com';
+// HVAC T&M tickets (submitted from the T&M button in the HVAC band) go to
+// these addresses INSTEAD of TM_EMAILJS_RECIPIENT (2026-11-12). Two addresses
+// separated by a comma - EmailJS's To Email field accepts a comma-separated
+// list. Plumbing tickets are unchanged.
+var TM_EMAILJS_RECIPIENT_HVAC = 'JHendricks@plumcore.com, Tom@plumcore.com';
 // What the on-screen "Ticket sent to ..." success message shows an employee
 // after they submit a ticket — deliberately NOT the same as the actual
 // address above, so the confirmation reads as "sent to the company" rather
@@ -2436,6 +2441,7 @@ var TM_EMAILJS_RECIPIENT_LABEL = 'Plumcore.com';
   var isAdminUser = false;
   var PLUMCORE_EMAIL_RE = /^[^\s@]+@plumcore\.com$/i;
   var tmTicketOpen = false;
+  var tmTicketDivision = 'Plumbing'; // which home-screen T&M button opened the form: 'Plumbing' or 'HVAC' (decides who the ticket is emailed to)
   var tmTicketSending = false;
   var tmTicketLogOpen = false;
   var TM_MATERIALS_ROW_COUNT = 20;
@@ -4545,7 +4551,8 @@ var TM_EMAILJS_RECIPIENT_LABEL = 'Plumcore.com';
   // it only ever touches its own separate `tmTickets` Firestore collection
   // (one new auto-ID document per submission), so it cannot affect any
   // existing schedule/project data no matter what happens to it.
-  function openTmTicketView() {
+  function openTmTicketView(division) {
+    tmTicketDivision = (division === 'HVAC') ? 'HVAC' : 'Plumbing';
     tmTicketOpen = true;
     resetTmTicketForm();
     setTmTicketStatus('', '');
@@ -4658,6 +4665,7 @@ var TM_EMAILJS_RECIPIENT_LABEL = 'Plumcore.com';
       materialsNone: !!q('tmMaterialsNone').checked,
       materials: collectTmMaterialsRows(),
       submittedByEmail: (currentUser && currentUser.email) || '',
+      division: tmTicketDivision,
       submittedAtClient: Date.now()
     };
   }
@@ -5000,7 +5008,7 @@ var TM_EMAILJS_RECIPIENT_LABEL = 'Plumcore.com';
         return;
       }
       var templateParams = {
-        to_email: TM_EMAILJS_RECIPIENT,
+        to_email: (payload.division === 'HVAC') ? TM_EMAILJS_RECIPIENT_HVAC : TM_EMAILJS_RECIPIENT,
         job_name: payload.jobName,
         address: payload.address,
         job_po: payload.jobPo,
@@ -5166,8 +5174,8 @@ var TM_EMAILJS_RECIPIENT_LABEL = 'Plumcore.com';
       saveProjectsList(projectsOpenSup, current);
     });
 
-    els.tmTicketBtn.addEventListener('click', openTmTicketView);
-    els.tmTicketBtnHvac.addEventListener('click', openTmTicketView);
+    els.tmTicketBtn.addEventListener('click', function () { openTmTicketView('Plumbing'); });
+    els.tmTicketBtnHvac.addEventListener('click', function () { openTmTicketView('HVAC'); });
     els.tmTicketBackBtn.addEventListener('click', closeTmTicketView);
     els.tmTicketViewLogBtn.addEventListener('click', openTmTicketLogView);
     els.tmTicketSendBtn.addEventListener('click', sendTmTicket);
