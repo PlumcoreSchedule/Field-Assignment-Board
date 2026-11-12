@@ -653,6 +653,12 @@
     .topbar::before { content: ''; flex: 1 1 0; order: -2; min-width: 0; }
     .topbar > .topbar-brand-col { order: -1; flex: 0 0 auto; }
     .topbar > .topbar-right { flex: 1 1 0; }
+    /* "Full Schedule" button moved to the far left of the header (2026-11-12),
+       staying on the same line it was on (level with the date/time box). With
+       only `left` set (no top/bottom), the absolutely positioned button keeps
+       its normal vertical spot inside its row; left:16px lines it up with the
+       left edge of the cards below. Phones keep their own layout (<=720px). */
+    .topbar #combinedCalendarBtn { position: absolute; left: 16px; }
   }
   @media (max-width: 720px) {
     /* Full-width row so the logo + title are centered together (2026-11-12). */
