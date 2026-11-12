@@ -759,7 +759,11 @@
     align-items: center;
     gap: 12px;
   }
+  /* Per-person color dots are intentionally hidden (Jonathan 2026-11-12:
+     "I dont like color coding people"). The dots and the --color-sup* /
+     --color-hvac* variables stay in place so this is easy to undo. */
   .swatch {
+    display: none;
     width: 22px;
     height: 22px;
     border-radius: 7px;
@@ -917,10 +921,12 @@
     padding: 7px 10px;
     box-shadow: var(--shadow-sm);
   }
-  .foreman-box-sup2 { border-left-color: var(--color-sup2); }
-  .foreman-box-sup3 { border-left-color: var(--color-sup3); }
-  .foreman-box-sup4 { border-left-color: var(--color-sup4); }
-  .foreman-box-sup7 { border-left-color: var(--color-sup7); }
+  /* Per-person colored left edge removed (no color coding people): every
+     foreman box now uses the same neutral edge. */
+  .foreman-box-sup2,
+  .foreman-box-sup3,
+  .foreman-box-sup4,
+  .foreman-box-sup7 { border-left-color: var(--color-border-strong); }
   .foreman-name-text { font-weight: 600; font-size: var(--text-sm); overflow-wrap: anywhere; }
   .foreman-empty {
     font-size: var(--text-xs);
