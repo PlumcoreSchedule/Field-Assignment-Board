@@ -824,6 +824,18 @@
     margin: 0 -16px -10px;
     padding: 16px;
     border-top: 1px solid var(--color-border);
+    position: relative;
+  }
+  /* T&M button (2026-11-12): moved out of the sign-in row to the far right of
+     this band, level with the orange label. Absolutely positioned so the label
+     stays exactly centered and the band's height doesn't change; right:16px
+     lines it up with the right edge of the buttons in the row above. */
+  .topbar > .topbar-left > #tmTicketBtn {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    order: 0;
   }
   .topbar-brand-col {
     display: flex;
@@ -863,6 +875,10 @@
   @media (max-width: 720px) {
     .topbar .brand-mark,
     .section-divider .brand-mark { font-size: 0.95rem; }
+  }
+  @media (max-width: 359px) {
+    /* Very small phones: keep the orange label clear of the T&M button that sits at the right end of its band. */
+    .topbar .brand-mark { font-size: 0.78rem; letter-spacing: 0.08em; }
   }
   .hvac-placeholder {
     color: var(--color-ink-muted);
@@ -2150,6 +2166,7 @@
   <header class="topbar">
     <div class="topbar-left">
       <span class="brand-mark">Plumbing Field OPS</span>
+      <button type="button" id="tmTicketBtn" class="combined-calendar-btn">T&amp;M</button>
     </div>
     <div class="topbar-brand-col">
       <img src="logo.png" alt="Plumcore logo" class="brand-logo topbar-center-logo" />
@@ -2158,7 +2175,6 @@
     <span class="mobile-line-break" aria-hidden="true"></span>
     <div class="topbar-right">
       <div class="topbar-signout-row">
-        <button type="button" id="tmTicketBtn" class="combined-calendar-btn">T&amp;M</button>
         <button type="button" id="authSignedInAs" class="authgate-signedout" hidden></button>
       </div>
       <div class="topbar-right-row">
