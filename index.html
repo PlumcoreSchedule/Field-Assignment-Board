@@ -86,6 +86,8 @@
        visible and high-contrast in both themes instead of silently
        inheriting whatever --color-ink happens to be. */
     --color-tm-label: #1E5631;
+    --color-panel-green: #EFF6EE; /* very light Plumcore-green tint for every person's name panel */
+    --color-panel-green-border: #D3E3D1;
     --color-tm-label-ink: #FFFFFF;
     --color-hvac1: #1F6F6F;
     --color-hvac1-ink: #FFFFFF;
@@ -151,6 +153,8 @@
       --color-sup7: #E8985A;
       --color-sup7-ink: #241004;
       --color-tm-label: #4FA868;
+      --color-panel-green: #1F2B21;
+      --color-panel-green-border: #34503A;
       --color-tm-label-ink: #0F2A18;
       --color-hvac1: #5BAFAF;
       --color-hvac1-ink: #072323;
@@ -202,6 +206,8 @@
     --color-sup7: #E8985A;
     --color-sup7-ink: #241004;
     --color-tm-label: #4FA868;
+    --color-panel-green: #1F2B21;
+    --color-panel-green-border: #34503A;
     --color-tm-label-ink: #0F2A18;
     --color-hvac1: #5BAFAF;
     --color-hvac1-ink: #072323;
@@ -796,8 +802,8 @@
     gap: 10px;
   }
   .crew-card {
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
+    background: var(--color-panel-green);
+    border: 1px solid var(--color-panel-green-border);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-sm);
     padding: 12px 14px;
@@ -962,8 +968,8 @@
     align-items: center;
     justify-content: space-between;
     gap: 8px;
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
+    background: var(--color-panel-green);
+    border: 1px solid var(--color-panel-green-border);
     border-left: 4px solid var(--color-border-strong);
     border-radius: var(--radius-sm);
     padding: 7px 10px;
