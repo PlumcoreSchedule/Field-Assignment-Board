@@ -727,6 +727,27 @@
     /* Very small phones: keep the orange label clear of the T&M button that sits at the right end of its band. */
     .topbar .brand-mark { font-size: 0.78rem; letter-spacing: 0.08em; }
   }
+  /* Dark mode only (2026-11-13): the green Field Ops bands get a thin white outline,
+     and the orange label text gets a thin white outline too (text-shadow halo - works the
+     same on Apple and Android browsers). Light mode is untouched. */
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .topbar > .topbar-left,
+    :root:not([data-theme="light"]) .section-divider {
+      border: 1px solid #FFFFFF;
+    }
+    :root:not([data-theme="light"]) .topbar > .topbar-left .brand-mark,
+    :root:not([data-theme="light"]) .section-divider .brand-mark {
+      text-shadow: -1px -1px 0 #FFFFFF, 0 -1px 0 #FFFFFF, 1px -1px 0 #FFFFFF, -1px 0 0 #FFFFFF, 1px 0 0 #FFFFFF, -1px 1px 0 #FFFFFF, 0 1px 0 #FFFFFF, 1px 1px 0 #FFFFFF;
+    }
+  }
+  :root[data-theme="dark"] .topbar > .topbar-left,
+  :root[data-theme="dark"] .section-divider {
+    border: 1px solid #FFFFFF;
+  }
+  :root[data-theme="dark"] .topbar > .topbar-left .brand-mark,
+  :root[data-theme="dark"] .section-divider .brand-mark {
+    text-shadow: -1px -1px 0 #FFFFFF, 0 -1px 0 #FFFFFF, 1px -1px 0 #FFFFFF, -1px 0 0 #FFFFFF, 1px 0 0 #FFFFFF, -1px 1px 0 #FFFFFF, 0 1px 0 #FFFFFF, 1px 1px 0 #FFFFFF;
+  }
   .hvac-placeholder {
     color: var(--color-ink-muted);
     font-size: var(--text-sm);
