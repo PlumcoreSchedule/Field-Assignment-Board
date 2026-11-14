@@ -727,6 +727,12 @@
     /* Very small phones: keep the orange label clear of the T&M button that sits at the right end of its band. */
     .topbar .brand-mark { font-size: 0.78rem; letter-spacing: 0.08em; }
   }
+  /* Light mode (2026-11-14): the green Field Ops bands get a thin gold outline
+     (dark mode uses the white outline below, which overrides this). */
+  .topbar > .topbar-left,
+  .section-divider {
+    border: 1px solid #C9A227;
+  }
   /* Dark mode only (2026-11-13): the green Field Ops bands get a thin white outline.
      (The white outline around the orange label letters was removed at Jonathan's request.)
      Light mode is untouched. */
