@@ -727,11 +727,11 @@
     /* Very small phones: keep the orange label clear of the T&M button that sits at the right end of its band. */
     .topbar .brand-mark { font-size: 0.78rem; letter-spacing: 0.08em; }
   }
-  /* Light mode (2026-11-14): the green Field Ops bands get a shiny metallic-gold
+  /* Light AND dark mode (2026-11-14): the green Field Ops bands get a shiny metallic-gold
      outline (a gold gradient with bright and dark highlights, 2px wide) and a few
      small sparkles that glint at random spots along it (made by the small script
-     at the bottom of the page). Dark mode uses the plain white outline below,
-     which overrides all of this. */
+     at the bottom of the page). In dark mode this replaced the earlier thin white
+     outline (Jonathan's request); the band fill color follows the dark green token. */
   .topbar > .topbar-left,
   .section-divider {
     border: 2px solid transparent;
@@ -782,23 +782,6 @@
   @media (prefers-reduced-motion: reduce) {
     .gold-sparkles { display: none; }
   }
-  /* Dark mode only (2026-11-13): the green Field Ops bands get a thin white outline.
-     (The white outline around the orange label letters was removed at Jonathan's request.)
-     Light mode is untouched. */
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) .topbar > .topbar-left,
-    :root:not([data-theme="light"]) .section-divider {
-      border: 1px solid #FFFFFF;
-      background: var(--color-panel-green);
-    }
-    :root:not([data-theme="light"]) .gold-sparkles { display: none; }
-  }
-  :root[data-theme="dark"] .topbar > .topbar-left,
-  :root[data-theme="dark"] .section-divider {
-    border: 1px solid #FFFFFF;
-    background: var(--color-panel-green);
-  }
-  :root[data-theme="dark"] .gold-sparkles { display: none; }
   .hvac-placeholder {
     color: var(--color-ink-muted);
     font-size: var(--text-sm);
@@ -6056,7 +6039,7 @@ var TIMEOFF_EMAILJS_RECIPIENT_HVAC = 'jhendricks@plumcore.com, tom@plumcore.com'
 
 <script>
 /* Gold sparkles (2026-11-14): every so often a tiny star glints at a random spot on the
-   gold outline of the two Field Ops bands (light mode only; hidden in dark mode and when the
+   gold outline of the two Field Ops bands (light and dark mode; hidden when the
    device asks for reduced motion). Plain ES5, no libraries. */
 (function () {
   try {
