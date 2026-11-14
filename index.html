@@ -727,60 +727,56 @@
     /* Very small phones: keep the orange label clear of the T&M button that sits at the right end of its band. */
     .topbar .brand-mark { font-size: 0.78rem; letter-spacing: 0.08em; }
   }
-  /* Light AND dark mode (2026-11-14): the green Field Ops bands get a shiny metallic-gold
-     outline (a gold gradient with bright and dark highlights, 2px wide) and a few
-     small sparkles that glint at random spots along it (made by the small script
-     at the bottom of the page). In dark mode this replaced the earlier thin white
-     outline (Jonathan's request); the band fill color follows the dark green token. */
+  /* Light AND dark mode (2026-11-14): the green Field Ops bands have a shiny metallic-gold
+     outline (a gold gradient with bright and dark highlights, 2px wide). Every so often a soft
+     bright glint sweeps along that outline, like the one that sweeps across the gold letters
+     in the logo. Each band runs its own random timing, speed and direction (made by the small
+     script at the bottom of the page). The glint is a second background layer that sits
+     between the green fill and the gold gradient, so it only shows on the 2px outline.
+     In dark mode this replaced the earlier thin white outline (Jonathan's request). */
   .topbar > .topbar-left,
   .section-divider {
     border: 2px solid transparent;
     background:
       linear-gradient(var(--color-panel-green), var(--color-panel-green)) padding-box,
+      linear-gradient(105deg, rgba(255, 238, 150, 0) 0%, rgba(255, 238, 150, 0) 45%, rgba(255, 238, 150, 0.95) 50%, rgba(255, 238, 150, 0) 55%, rgba(255, 238, 150, 0) 100%) 0% 0% / 300% 100% no-repeat border-box,
       linear-gradient(115deg, #7a5a12 0%, #d4af37 9%, #f9e27d 19%, #b8860b 31%, #e9c85a 43%, #fff6c4 51%, #c9a227 60%, #8a6414 73%, #e8c75a 86%, #a67c00 100%) border-box;
   }
-  .gold-sparkles {
-    position: absolute;
-    left: 0; top: 0; right: 0; bottom: 0;
-    pointer-events: none;
-    z-index: 3;
+  .gold-shimmer-a {
+    -webkit-animation-name: goldShimmerA;
+    animation-name: goldShimmerA;
+    -webkit-animation-timing-function: ease-in-out;
+    animation-timing-function: ease-in-out;
+    -webkit-animation-iteration-count: 1;
+    animation-iteration-count: 1;
+    -webkit-animation-fill-mode: both;
+    animation-fill-mode: both;
   }
-  .gold-spark {
-    position: absolute;
-    width: 14px;
-    height: 14px;
-    margin: -7px 0 0 -7px;
-    opacity: 0;
-    pointer-events: none;
-    background: radial-gradient(circle, #ffffff 0%, #fff6c4 22%, rgba(255, 233, 140, 0.55) 40%, rgba(255, 233, 140, 0) 68%);
-    -webkit-animation: goldSpark 1.3s ease-in-out forwards;
-    animation: goldSpark 1.3s ease-in-out forwards;
+  .gold-shimmer-b {
+    -webkit-animation-name: goldShimmerB;
+    animation-name: goldShimmerB;
+    -webkit-animation-timing-function: ease-in-out;
+    animation-timing-function: ease-in-out;
+    -webkit-animation-iteration-count: 1;
+    animation-iteration-count: 1;
+    -webkit-animation-fill-mode: both;
+    animation-fill-mode: both;
   }
-  .gold-spark::before,
-  .gold-spark::after {
-    content: '';
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    background: linear-gradient(to right, rgba(255,255,255,0), #ffffff 50%, rgba(255,255,255,0));
+  @-webkit-keyframes goldShimmerA {
+    from { background-position: 0 0, 0% 0, 0 0; }
+    to   { background-position: 0 0, 100% 0, 0 0; }
   }
-  .gold-spark::before { width: 150%; height: 2px; margin: -1px 0 0 -75%; }
-  .gold-spark::after {
-    width: 2px; height: 150%; margin: -75% 0 0 -1px;
-    background: linear-gradient(to bottom, rgba(255,255,255,0), #ffffff 50%, rgba(255,255,255,0));
+  @keyframes goldShimmerA {
+    from { background-position: 0 0, 0% 0, 0 0; }
+    to   { background-position: 0 0, 100% 0, 0 0; }
   }
-  @-webkit-keyframes goldSpark {
-    0%   { opacity: 0; -webkit-transform: scale(0.2) rotate(0deg); transform: scale(0.2) rotate(0deg); }
-    40%  { opacity: 1; -webkit-transform: scale(1) rotate(25deg); transform: scale(1) rotate(25deg); }
-    100% { opacity: 0; -webkit-transform: scale(0.3) rotate(60deg); transform: scale(0.3) rotate(60deg); }
+  @-webkit-keyframes goldShimmerB {
+    from { background-position: 0 0, 100% 0, 0 0; }
+    to   { background-position: 0 0, 0% 0, 0 0; }
   }
-  @keyframes goldSpark {
-    0%   { opacity: 0; transform: scale(0.2) rotate(0deg); }
-    40%  { opacity: 1; transform: scale(1) rotate(25deg); }
-    100% { opacity: 0; transform: scale(0.3) rotate(60deg); }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .gold-sparkles { display: none; }
+  @keyframes goldShimmerB {
+    from { background-position: 0 0, 100% 0, 0 0; }
+    to   { background-position: 0 0, 0% 0, 0 0; }
   }
   .hvac-placeholder {
     color: var(--color-ink-muted);
@@ -2076,7 +2072,6 @@
   <header class="topbar">
     <div class="topbar-left">
       <span class="brand-mark">Plumbing Field OPS</span>
-      <span class="gold-sparkles" aria-hidden="true"></span>
       <span class="band-btns">
         <button type="button" id="timeOffBtn" class="combined-calendar-btn">Time-Off</button>
         <button type="button" id="tmTicketBtn" class="combined-calendar-btn">T&amp;M</button>
@@ -2190,7 +2185,6 @@
     <div class="section-divider-left">
       <span class="brand-mark">HVAC Field Ops</span>
     </div>
-    <span class="gold-sparkles" aria-hidden="true"></span>
     <span class="band-btns">
       <button type="button" id="timeOffBtnHvac" class="combined-calendar-btn">Time-Off</button>
       <button type="button" id="tmTicketBtnHvac" class="combined-calendar-btn">T&amp;M</button>
@@ -6038,46 +6032,36 @@ var TIMEOFF_EMAILJS_RECIPIENT_HVAC = 'jhendricks@plumcore.com, tom@plumcore.com'
 </script>
 
 <script>
-/* Gold sparkles (2026-11-14): every so often a tiny star glints at a random spot on the
-   gold outline of the two Field Ops bands (light and dark mode; hidden when the
-   device asks for reduced motion). Plain ES5, no libraries. */
+/* Gold outline shimmer (2026-11-14): every so often a soft bright glint sweeps along the gold
+   outline of the two Field Ops bands, the same idea as the glint that sweeps across the gold
+   letters in the logo. Each band has its own random timer, speed and direction, so the two
+   bands and the logo never move together. Light and dark mode. Skipped when the device asks for
+   reduced motion, and paused while the tab is hidden. Plain ES5, no libraries; any problem
+   just means no shimmer. */
 (function () {
   try {
-    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (reduce) { return; }
-    var holders = document.querySelectorAll('.gold-sparkles');
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) { return; }
+    var bands = [document.querySelector('.topbar > .topbar-left'), document.querySelector('.section-divider')];
     function rand(a, b) { return a + Math.random() * (b - a); }
-    function glint(h) {
-      if (document.hidden) { return; }
-      if (window.getComputedStyle(h).display === 'none') { return; }
-      var w = h.offsetWidth, ht = h.offsetHeight;
-      if (!w || !ht) { return; }
-      var side = Math.random() * (2 * w + 2 * ht), x, y;
-      if (side < w) { x = side; y = -1; }
-      else if (side < 2 * w) { x = side - w; y = ht + 1; }
-      else if (side < 2 * w + ht) { x = -1; y = side - 2 * w; }
-      else { x = w + 1; y = side - 2 * w - ht; }
-      var s = document.createElement('span');
-      var size = Math.round(rand(10, 19)), dur = Math.round(rand(1000, 1600));
-      s.className = 'gold-spark';
-      s.style.left = Math.round(x) + 'px';
-      s.style.top = Math.round(y) + 'px';
-      s.style.width = size + 'px';
-      s.style.height = size + 'px';
-      s.style.margin = (-size / 2) + 'px 0 0 ' + (-size / 2) + 'px';
-      s.style.webkitAnimationDuration = dur + 'ms';
-      s.style.animationDuration = dur + 'ms';
-      h.appendChild(s);
-      window.setTimeout(function () { if (s.parentNode) { s.parentNode.removeChild(s); } }, dur + 150);
+    function loop(el) {
+      var wait = Math.round(rand(2500, 9500));
+      window.setTimeout(function () {
+        if (document.hidden) { loop(el); return; }
+        var dur = Math.round(rand(1800, 3800));
+        var cls = Math.random() < 0.5 ? 'gold-shimmer-a' : 'gold-shimmer-b';
+        el.style.webkitAnimationDuration = dur + 'ms';
+        el.style.animationDuration = dur + 'ms';
+        el.classList.add(cls);
+        window.setTimeout(function () {
+          el.classList.remove(cls);
+          loop(el);
+        }, dur + 120);
+      }, wait);
     }
-    function loop(h) {
-      glint(h);
-      window.setTimeout(function () { loop(h); }, Math.round(rand(900, 3400)));
+    for (var i = 0; i < bands.length; i++) {
+      if (bands[i]) { loop(bands[i]); }
     }
-    for (var i = 0; i < holders.length; i++) {
-      (function (h, k) { window.setTimeout(function () { loop(h); }, 400 + k * 700); })(holders[i], i);
-    }
-  } catch (e) { /* sparkles are decoration only; never break the board */ }
+  } catch (e) { /* the shimmer is decoration only; never break the board */ }
 })();
 </script>
 <script>
