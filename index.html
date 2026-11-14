@@ -2550,14 +2550,14 @@ var TM_EMAILJS_RECIPIENT_LABEL = 'Plumcore.com';
 
 // TIME-OFF REQUEST FORM (added 2026-11-12): the "Time-Off" button next to T&M in
 // each band. It emails the filled-in form (as the email body plus a PDF) through
-// the SAME EmailJS service/template as the T&M tickets, with its own recipients:
-// Plumbing -> 5-8@plumcore.com; HVAC -> jhendricks@plumcore.com and
-// tom@plumcore.com (comma-separated list, as with the HVAC T&M tickets). To give
-// Time-Off its own EmailJS template (e.g. so the email subject doesn't say
-// "T&M"), create one with "To email" = {{to_email}}, body {{full_ticket_text}} and
-// the same Variable Attachment (ticket_pdf / ticket_filename), then paste its
-// template ID below in place of TM_EMAILJS_TEMPLATE_ID.
-var TIMEOFF_EMAILJS_TEMPLATE_ID = TM_EMAILJS_TEMPLATE_ID;
+// the same EmailJS service as the T&M tickets, but with its OWN EmailJS template
+// ("Time-Off Request", made 2026-11-14) so the email subject/body/sender name say
+// Time-Off instead of T&M. That template's subject is {{subject}}, its body uses
+// {{techs}}, {{work_date}}, {{end_time}} and {{submitted_by}}, "To email" is
+// {{to_email}}, and it has the same Variable Attachment as the T&M template.
+// Recipients: Plumbing -> 5-8@plumcore.com; HVAC -> jhendricks@plumcore.com and
+// tom@plumcore.com (comma-separated list, as with the HVAC T&M tickets).
+var TIMEOFF_EMAILJS_TEMPLATE_ID = 'template_rge28yi';
 var TIMEOFF_EMAILJS_RECIPIENT = '5-8@plumcore.com';
 var TIMEOFF_EMAILJS_RECIPIENT_HVAC = 'jhendricks@plumcore.com, tom@plumcore.com';
 
