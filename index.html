@@ -6097,5 +6097,84 @@ var TIMEOFF_EMAILJS_RECIPIENT_HVAC = 'jhendricks@plumcore.com, tom@plumcore.com'
   } catch (e) { /* sparkles are decoration only; never break the board */ }
 })();
 </script>
+<script>
+/* Logo gold-letter wave (2026-11-14): every so often a soft glint "wave" sweeps across
+   the gold tagline letters (PLUMBING - LINING - UTILITIES - MECHANICAL) in the logo, at random
+   times and sometimes in the opposite direction. The logo picture is loaded once into a
+   canvas, a handful of frames with the glint at different spots are drawn (only the gold
+   pixels along the bottom of the logo are touched, the green PLUMCORE letters are not), and
+   the logo images briefly show those frames one after another, then go back to the normal
+   logo. Works in light and dark mode. Skipped when the device asks for reduced motion,
+   and paused while the tab is hidden. Plain ES5; any problem just means no wave. */
+(function () {
+  try {
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) { return; }
+    var imgs = document.querySelectorAll('img[src="logo.png"]');
+    if (!imgs.length) { return; }
+    var N = 18, STEP = 85, frames = [], preload = [], running = false;
+    var originals = [];
+    for (var q = 0; q < imgs.length; q++) { originals.push(imgs[q].getAttribute('src')); }
+    function rand(a, b) { return a + Math.random() * (b - a); }
+    function visible(img) { return img.offsetWidth > 0 && img.offsetHeight > 0; }
+    function restore() {
+      for (var i = 0; i < imgs.length; i++) { imgs[i].setAttribute('src', originals[i]); }
+    }
+    function wave() {
+      if (running) { return; }
+      if (document.hidden) { schedule(); return; }
+      running = true;
+      var rev = Math.random() < 0.3, k = 0;
+      (function tick() {
+        if (k >= N) { restore(); running = false; schedule(); return; }
+        var f = frames[rev ? (N - 1 - k) : k];
+        for (var i = 0; i < imgs.length; i++) { if (visible(imgs[i])) { imgs[i].setAttribute('src', f); } }
+        k++;
+        window.setTimeout(tick, STEP);
+      })();
+    }
+    function schedule() { window.setTimeout(wave, Math.round(rand(3500, 9000))); }
+    function build(base) {
+      var W = base.naturalWidth, H = base.naturalHeight;
+      if (!W || !H) { return; }
+      var c0 = document.createElement('canvas'); c0.width = W; c0.height = H;
+      var x0 = c0.getContext('2d'); x0.drawImage(base, 0, 0);
+      var src = x0.getImageData(0, 0, W, H);   /* throws if the canvas is tainted; caught below */
+      var y0 = Math.floor(H * 0.70), HALF = Math.max(40, Math.round(W * 0.12)), k = 0;
+      function one() {
+        var cx = -HALF + (W + 2 * HALF) * k / (N - 1);
+        var out = x0.createImageData(W, H);
+        out.data.set(src.data);
+        var d = out.data;
+        for (var y = y0; y < H; y++) {
+          for (var x = 0; x < W; x++) {
+            var p = (y * W + x) * 4;
+            if (d[p + 3] < 8) { continue; }
+            var dist = Math.abs((x + (y - y0) * 0.7) - cx);
+            if (dist > HALF) { continue; }
+            var t = (0.5 + 0.5 * Math.cos(Math.PI * dist / HALF)) * 0.95;
+            d[p] = d[p] + (255 - d[p]) * t;
+            d[p + 1] = d[p + 1] + (214 - d[p + 1]) * t;
+            d[p + 2] = d[p + 2] + (90 - d[p + 2]) * t;
+          }
+        }
+        var c = document.createElement('canvas'); c.width = W; c.height = H;
+        c.getContext('2d').putImageData(out, 0, 0);
+        var url = c.toDataURL('image/png');
+        var im = new Image(); im.src = url; preload.push(im);
+        frames.push(url);
+        k++;
+        if (k < N) { window.setTimeout(one, 30); }
+        else { window.setTimeout(wave, Math.round(rand(1500, 3500))); }
+      }
+      one();
+    }
+    var base = new Image();
+    base.onload = function () { try { build(base); } catch (e) { /* no wave; logo stays as is */ } };
+    base.src = originals[0];
+    /* console-only hook, used for checking the effect */
+    window.__fabLogoWave = function () { if (frames.length === N) { running = false; wave(); } };
+  } catch (e) { /* decoration only; never break the board */ }
+})();
+</script>
 </body>
 </html>
